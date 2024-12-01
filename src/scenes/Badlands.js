@@ -1,6 +1,6 @@
-import preload from '../preload.js';
-import StageManager from '../classes/StageManager.js';
-import InputManager from '../classes/InputManager.js';
+import preload from './src/preload.js';
+import StageManager from './src/classes/StageManager.js';
+import InputManager from './src/classes/InputManager.js';
 
 
 export default class Badlands extends Phaser.Scene {
