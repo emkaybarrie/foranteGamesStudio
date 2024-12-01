@@ -95,7 +95,7 @@ export default class Badlands extends Phaser.Scene {
             });
 
         this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
-            `Welcome to the Badlands - Region ${this.region}`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
+            `Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
 
         var textAnchorPointX = 0.05
         var textAnchorPointY = 0.05
