@@ -180,14 +180,14 @@ export default class Badlands extends Phaser.Scene {
         `;
 
         // Create the text object on the screen
-        const textObject = scene.add.text(scene.scale.width * (1 - 0.05), scene.scale.height * (1 - 0.15), controlsText, {
+        const textObject = scene.add.text(scene.scale.width * (1 - 0.05), scene.scale.height * 0.15, controlsText, {
             font: '24px Arial',  // Font style
             fill: '#ffffff',     // Text color
             align: 'right'        // Align text to the left
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0);
 
         // Make the text object scrollable if needed
-        textObject.setWordWrapWidth(300);  // Set word wrap to handle long lines
+        textObject.setWordWrapWidth(1000);  // Set word wrap to handle long lines
     }
 
     incrementLevel() {
