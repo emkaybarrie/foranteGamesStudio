@@ -69,7 +69,7 @@ export default class TerrainManager {
                 this.scene.tweens.add({
                     targets: generatedTerrain,  // The terrain to animate
                     alpha: {from: 1, to: 0.95},
-                    tint: { from: 0xFFFFFF, to: 0xFFFF00 },  // Change color to yellow (glowing effect)
+                    //tint: { from: 0xFFFFFF, to: 0xFFFF00 },  // Change color to yellow (glowing effect)
                     //displayHeight: generatedTerrain.displayHeight * 1.01, // Increase height by 1%
                     yoyo: true,                 // Return to the starting position
                     repeat: -1,                 // Repeat infinitely
