@@ -14,6 +14,7 @@ const preload = (scene) => {
     // Load Sprites
 
     // Load audio
+    scene.load.audio('backgroundMusic', 'assets/music/placeholder_C2C_Kings_Season.mp3');
 };
 
 export default preload;                                                                                

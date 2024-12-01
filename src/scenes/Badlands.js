@@ -60,8 +60,7 @@ export default class Badlands extends Phaser.Scene {
     preload(){
         // Load assets if needed
         preload(this);
-         // Preload the background music file (e.g., "background-music.mp3")
-         this.load.audio('backgroundMusic', 'assets/music/placeholder_C2C_Kings Season.mp3');
+         
     }
 
     create() {
@@ -169,27 +168,27 @@ export default class Badlands extends Phaser.Scene {
 
     // Create a text object to display the controls in Phaser 3
     createControlsText(scene) {
-    // Text content for controls, each action on its own line
-    const controlsText = `
-    Move: [LEFT ARROW] / [RIGHT ARROW]
-    Jump: [UP] or [SPACE]
-    Duck/Descend: [DOWN ARROW]
-    Dodge: [Q] - Uses STAMINA
-    Attack: [E] - Uses STAMINA
-    Sprint: [D] - Uses MANA
-    Slow/Heal: [A] - Uses MANA
-    `;
+        // Text content for controls, each action on its own line
+        const controlsText = `
+        Move: [LEFT ARROW] / [RIGHT ARROW]
+        Jump: [UP] or [SPACE]
+        Duck/Descend: [DOWN ARROW]
+        Dodge: [Q] - Uses STAMINA
+        Attack: [E] - Uses STAMINA
+        Sprint: [D] - Uses MANA
+        Slow/Heal: [A] - Uses MANA
+        `;
 
-    // Create the text object on the screen
-    const textObject = scene.add.text(scene.scale.width * (1 - 0.05), scene.scale.height * (1 - 0.15), controlsText, {
-        font: '24px Arial',  // Font style
-        fill: '#ffffff',     // Text color
-        align: 'right'        // Align text to the left
-    }).setDepth(9).setScrollFactor(0);
+        // Create the text object on the screen
+        const textObject = scene.add.text(scene.scale.width * (1 - 0.05), scene.scale.height * (1 - 0.15), controlsText, {
+            font: '24px Arial',  // Font style
+            fill: '#ffffff',     // Text color
+            align: 'right'        // Align text to the left
+        }).setDepth(9).setScrollFactor(0);
 
-    // Make the text object scrollable if needed
-    textObject.setWordWrapWidth(300);  // Set word wrap to handle long lines
-}
+        // Make the text object scrollable if needed
+        textObject.setWordWrapWidth(300);  // Set word wrap to handle long lines
+    }
 
     incrementLevel() {
         // Increment the level
