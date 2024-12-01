@@ -423,7 +423,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         action2(){
             
 
-            if (this.animationsLoaded && this.currentStamina > 50 ){
+            if (this.animationsLoaded && this.currentStamina > 35 ){
                 
      
                 
@@ -432,7 +432,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     this.isDoingAction = true
 
                     const previousStamina = this.currentStamina;
-                this.currentStamina -= 50
+                this.currentStamina -= 35
                 // Emit event when health changes
                 this.emit('staminaChanged', previousStamina, this.currentStamina);
 

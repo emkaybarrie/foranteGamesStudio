@@ -74,7 +74,7 @@ export default class Badlands extends Phaser.Scene {
             });
             // Controls
             // Show controls text on screen
-            createControlsText(this);
+            this.createControlsText(this);
 
         this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
             `Welcome to the Badlands - Region ${this.region}`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
