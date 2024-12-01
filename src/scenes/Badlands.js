@@ -190,7 +190,9 @@ export default class Badlands extends Phaser.Scene {
         Sprint: [D] - Uses MANA
         Slow/Heal: [A] - Uses MANA
 
-        Avatar get's stronger the further you get.  
+        Main Menu: [F5]
+
+        Avatar get's stronger the further you get  
         
         All feedback welcome! :D
          - Emkay
