@@ -77,8 +77,19 @@ export default class Badlands extends Phaser.Scene {
             // Show controls text on screen
             this.createControlsText(this);
 
+            const musicList = {
+                1:'142',
+                2:'BlameBrett',
+                3:'Francesca',
+                4:'FromEden',
+                5:'KingsSeason',
+                6:'Spartacus',
+                7:'StayCrunchy',
+                8:'XylemUp',
+            }
+
             // Play the background music on loop
-            this.sound.play('backgroundMusic', {
+            this.sound.play('backgroundMusic' + Phaser.Math.Between(1,8), {
                 loop: true,  // Set to true to make the music repeat
                 volume: 0.5  // Adjust the volume (optional, between 0 and 1)
             });

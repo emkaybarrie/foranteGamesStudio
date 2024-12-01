@@ -14,7 +14,24 @@ const preload = (scene) => {
     // Load Sprites
 
     // Load audio
-    scene.load.audio('backgroundMusic', 'assets/music/placeholder_C2C_Kings_Season.mp3');
+    const musicList = {
+        1:'142',
+        2:'BlameBrett',
+        3:'Francesca',
+        4:'FromEden',
+        5:'KingsSeason',
+        6:'Spartacus',
+        7:'StayCrunchy',
+        8:'XylemUp',
+    }
+    scene.load.audio('backgroundMusic1', 'assets/music/placeholder_142.mp3');
+    scene.load.audio('backgroundMusic2', 'assets/music/placeholder_BlameBrett.mp3');
+    scene.load.audio('backgroundMusic3', 'assets/music/placeholder_Francesca.mp3');
+    scene.load.audio('backgroundMusic4', 'assets/music/placeholder_FromEden.mp3');
+    scene.load.audio('backgroundMusic5', 'assets/music/placeholder_KingsSeason.mp3');
+    scene.load.audio('backgroundMusic6', 'assets/music/placeholder_Spartacus.mp3');
+    scene.load.audio('backgroundMusic7', 'assets/music/placeholder_StayCrunchy.mp3');
+    scene.load.audio('backgroundMusic8', 'assets/music/placeholder_XylemUp.mp3');
 };
 
 export default preload;                                                                                
