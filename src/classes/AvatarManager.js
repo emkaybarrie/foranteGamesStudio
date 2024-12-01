@@ -132,9 +132,9 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             this.createAndLoadAnimation(avatarId, 'jump', 6, 6, 0);  // Creates 'jump' animation with 5 frames at 8 FPS
         }
 
-        this.currentHealth = 200 //this.maxHealth
-        this.currentMana = 0 //this.maxMana
-        this.currentStamina = 0 //this.maxStamina
+        this.currentHealth = this.maxHealth
+        this.currentMana = 25 //this.maxMana
+        this.currentStamina = 25 //this.maxStamina
         // Start the regeneration timer
         this.startRegen();
         
