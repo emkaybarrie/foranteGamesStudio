@@ -166,7 +166,7 @@ export default class Badlands extends Phaser.Scene {
     Move: [LEFT ARROW] / [RIGHT ARROW]
     Jump: [UP] or [SPACE]
     Duck/Descend: [DOWN ARROW]
-    Dodge: [A] - Uses STAMINA
+    Dodge: [Q] - Uses STAMINA
     Attack: [E] - Uses STAMINA
     Sprint: [D] - Uses MANA
     Slow/Heal: [A] - Uses MANA
@@ -177,7 +177,7 @@ export default class Badlands extends Phaser.Scene {
         font: '24px Arial',  // Font style
         fill: '#ffffff',     // Text color
         align: 'right'        // Align text to the left
-    });
+    }).setDepth(9).setScrollFactor(0);
 
     // Make the text object scrollable if needed
     textObject.setWordWrapWidth(300);  // Set word wrap to handle long lines
