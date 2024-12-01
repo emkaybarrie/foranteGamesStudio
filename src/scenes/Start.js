@@ -1,5 +1,5 @@
-import preload from "./src/preload";
-import { config } from "./src/config";
+import preload from "/src/preload";
+import { config } from "/src/config";
 
 export default class Start extends Phaser.Scene {
     constructor() {
