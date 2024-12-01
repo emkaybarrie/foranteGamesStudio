@@ -60,6 +60,8 @@ export default class Badlands extends Phaser.Scene {
     preload(){
         // Load assets if needed
         preload(this);
+         // Preload the background music file (e.g., "background-music.mp3")
+         this.load.audio('backgroundMusic', 'assets/music/placeholder_C2C_Kings Season.mp3');
     }
 
     create() {
@@ -75,6 +77,12 @@ export default class Badlands extends Phaser.Scene {
             // Controls
             // Show controls text on screen
             this.createControlsText(this);
+
+            // Play the background music on loop
+            this.sound.play('backgroundMusic', {
+                loop: true,  // Set to true to make the music repeat
+                volume: 0.5  // Adjust the volume (optional, between 0 and 1)
+            });
 
         this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
             `Welcome to the Badlands - Region ${this.region}`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
