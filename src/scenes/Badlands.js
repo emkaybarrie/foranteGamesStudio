@@ -192,7 +192,7 @@ export default class Badlands extends Phaser.Scene {
 
         Main Menu: [F5]
 
-        Avatar get's stronger the further you get  
+        Avatar get's stronger the further you get 
         
         All feedback welcome! :D
          - Emkay
