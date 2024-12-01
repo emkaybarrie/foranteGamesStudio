@@ -173,14 +173,16 @@ export default class Badlands extends Phaser.Scene {
         Move: [LEFT ARROW] / [RIGHT ARROW]
         Jump: [UP] or [SPACE]
         Duck/Descend: [DOWN ARROW]
-        
+
         Dodge: [Q] - Uses STAMINA
         Attack: [E] - Uses STAMINA
         Sprint: [D] - Uses MANA
         Slow/Heal: [A] - Uses MANA
 
         Avatar get's stronger the further you get.  
+        
         All feedback welcome! :D
+         - Emkay
         `;
 
         // Create the text object on the screen
