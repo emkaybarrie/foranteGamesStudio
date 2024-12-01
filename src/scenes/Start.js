@@ -28,6 +28,7 @@ export default class Start extends Phaser.Scene {
         // Add Start screen text
         this.add.text(this.scale.width * 0.65, this.scale.height * 0.4, 'The Badlands', { fontSize: '38px', fill: '#fff' }).setOrigin(0.5);
         this.add.text(this.scale.width * 0.65, this.scale.height * 0.5, 'Press Enter to start', { fontSize: '26px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(this.scale.width * 0.65, this.scale.height * 0.6, 'Current Supported: Computer', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
         
         this.input.keyboard.on('keydown-ENTER', () => {
             this.scene.start('Base');
