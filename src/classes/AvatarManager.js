@@ -905,7 +905,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                 } else
                 if (controls.right && this.sprite.x < this.scene.scale.height * 0.5) {
                     this.moveRight();
-                } else if (!this.isDoingAction && !controls.action1 && !controls.action2 && !controls.special1 && !controls.special2) {
+                } else if (!this.isDoingAction && !controls.action1 && !controls.action2 && !controls.special1 && !controls.special2 && !controls.down) {
                     this.stop();  
                 }
                 
