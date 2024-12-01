@@ -64,14 +64,20 @@ export default class Badlands extends Phaser.Scene {
 
     create() {
 
-        // Stub Controls
-        // Set up a timed event to increase level every 30 seconds
-        this.time.addEvent({
-            delay: 10000, // 10 seconds in milliseconds
-            callback: this.incrementLevel,
-            callbackScope: this,
-            loop: true // Repeat this event every 30 seconds
-        });
+        // Stubs
+            // Set up a timed event to increase level every 30 seconds
+            this.time.addEvent({
+                delay: 10000, // 10 seconds in milliseconds
+                callback: this.incrementLevel,
+                callbackScope: this,
+                loop: true // Repeat this event every 30 seconds
+            });
+            // Controls
+            // Show controls text on screen
+            createControlsText(this);
+
+        this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
+            `Welcome to the Badlands - Region ${this.region}`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
 
         var textAnchorPointX = 0.05
         var textAnchorPointY = 0.05
@@ -152,6 +158,30 @@ export default class Badlands extends Phaser.Scene {
   
         
     }
+
+    // Create a text object to display the controls in Phaser 3
+    createControlsText(scene) {
+    // Text content for controls, each action on its own line
+    const controlsText = `
+    Move: [LEFT ARROW] / [RIGHT ARROW]
+    Jump: [UP] or [SPACE]
+    Duck/Descend: [DOWN ARROW]
+    Dodge: [A] - Uses STAMINA
+    Attack: [E] - Uses STAMINA
+    Sprint: [D] - Uses MANA
+    Slow/Heal: [A] - Uses MANA
+    `;
+
+    // Create the text object on the screen
+    const textObject = scene.add.text(scene.scale.width * (1 - 0.05), scene.scale.height * (1 - 0.15), controlsText, {
+        font: '24px Arial',  // Font style
+        fill: '#ffffff',     // Text color
+        align: 'right'        // Align text to the left
+    });
+
+    // Make the text object scrollable if needed
+    textObject.setWordWrapWidth(300);  // Set word wrap to handle long lines
+}
 
     incrementLevel() {
         // Increment the level
