@@ -213,6 +213,9 @@ export default class Badlands extends Phaser.Scene {
         
         //this.avatar.showLevelUpMenu()
          } else {
+            this.stageManager.avatarManager.vitality += 0.5
+            this.stageManager.avatarManager.focus += 1
+            this.stageManager.avatarManager.adaptability += 2
             this.stageManager.addedSpeed += 0.5
            // this.avatar.showLevelUpMenu()
         }
