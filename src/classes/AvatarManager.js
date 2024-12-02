@@ -920,16 +920,16 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             }
     
     
-                if (controls.special2){
+                if (controls.special2 && !this.isDoingAction){
                     this.special2();
                 } else
-                if (controls.special1){
+                if (controls.special1 && !this.isDoingAction){
                     this.special1();
                 } else
-                if (controls.action2){
+                if (controls.action2 && !this.isDoingAction){
                     this.action2();
                 } else
-                if (controls.action1){
+                if (controls.action1 && !this.isDoingAction){
                     this.action1()
                 }
             } else {

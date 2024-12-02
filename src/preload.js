@@ -3,6 +3,7 @@ const preload = (scene) => {
     scene.load.image('titleScreen', 'assets/images/titleScreens/titleScreen_01.png');
     scene.load.image('gold', 'assets/images/gold.png');
     scene.load.image('enemy', 'assets/images/enemy.png');
+    scene.load.image('enemy2', 'assets/images/enemy2.png');
     scene.load.image('dTerrainPlaceholder', 'assets/images/dTerrainPlaceholder.png');
     scene.load.image('ground_common', 'assets/images/ground_common.png');
     scene.load.image('ground_uncommon', 'assets/images/ground_uncommon.png');

@@ -39,14 +39,30 @@ export default class InputManager {
             mode: this.modeKey && Phaser.Input.Keyboard.JustDown(this.modeKey)
         };
 
-        return controls;
+        
 
 
         // Handle gamepad controls if connected
         if (this.gamepad) {
-            if (this.gamepad.A) {
-                // Handle attack
-            }
+            // Joystick for movement
+            const leftStickX = this.gamepad.axes[0] ? this.gamepad.axes[0].getValue() : 0;
+            const leftStickY = this.gamepad.axes[1] ? this.gamepad.axes[1].getValue() : 0;
+
+            controls.left = leftStickX < -0.5; // Tilt joystick left
+            controls.right = leftStickX > 0.5; // Tilt joystick right
+            controls.up = leftStickY < -0.75; // Tilt joystick up
+            controls.down = leftStickY > 0.75; // Tilt joystick down
+
+            // Buttons for actions
+            controls.jump = this.gamepad.buttons[0] && this.gamepad.buttons[0].pressed; // A button
+            controls.action1 = this.gamepad.buttons[5] && this.gamepad.buttons[5].pressed; // Right bumper
+            controls.action2 = this.gamepad.buttons[4] && this.gamepad.buttons[4].pressed; // Left bumper
+            controls.special1 = this.gamepad.buttons[7] && this.gamepad.buttons[7].pressed; // Right trigger
+            controls.special2 = this.gamepad.buttons[6] && this.gamepad.buttons[6].pressed; // Left trigger
+
+            
         }
+
+        return controls;
     }
 }

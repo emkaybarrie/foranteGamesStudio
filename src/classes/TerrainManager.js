@@ -10,10 +10,10 @@ export default class TerrainManager {
 
         // Chaos Factor Settings
         this.chaosFactorSettings = {
-            ground: { chaosLowerBound: 1, chaosUpperBound: 2.5},
-            low: { chaosLowerBound: 0.75, chaosUpperBound: 2.75 },
-            medium: { chaosLowerBound: 0.50, chaosUpperBound: 3 },
-            high: { chaosLowerBound: 0.25, chaosUpperBound: 3.25 }
+            ground: { chaosLowerBound: 0.975, chaosUpperBound: 1.025},
+            low: { chaosLowerBound: 0.95, chaosUpperBound: 1.05 },
+            medium: { chaosLowerBound: 0.90, chaosUpperBound: 1.075 },
+            high: { chaosLowerBound: 0.85, chaosUpperBound: 1.10 }
         };
 
 
@@ -126,7 +126,7 @@ export default class TerrainManager {
         const terrainElevation = this.elevationSettings[elevation].baseHeight
         const terrainDistance = this.distanceSettings[distance].baseWidth
         
-        terrain.displayHeight = terrainElevation;
+        terrain.displayHeight = terrainElevation * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound) 
         terrain.displayWidth = terrainDistance * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound) ;
 
         terrain.isSequenceEnd = false
@@ -137,11 +137,16 @@ export default class TerrainManager {
         // Populate Terrain
         const terrainBounds = terrain.getBounds()
         // Obstacles
+        if(Phaser.Math.FloatBetween(0,100) < 75){
         this.stageManager.obstacleManager.addObstacle(terrainBounds.x + (Phaser.Math.FloatBetween(0.1,0.9) * terrainBounds.width), terrainBounds.top, elevation)
+        }
         // Loot 
         this.stageManager.lootManager.addLoot(terrainBounds.x + (Phaser.Math.FloatBetween(0.1,0.9) * terrainBounds.width), terrainBounds.top, elevation)
         // Enemies
-        this.stageManager.enemyManager.addEnemy(terrainBounds.x + (Phaser.Math.FloatBetween(0.1,0.9) * terrainBounds.width), terrainBounds.top, elevation)
+        if(Phaser.Math.FloatBetween(0,100) < 50){
+            this.stageManager.enemyManager.addEnemy(terrainBounds.x + (Phaser.Math.FloatBetween(0.1,0.9) * terrainBounds.width), terrainBounds.top, elevation)
+        }
+        
         return terrain
 
 
