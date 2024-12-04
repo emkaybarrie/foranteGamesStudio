@@ -132,7 +132,7 @@ export default class TerrainManager {
         terrain.isSequenceEnd = false
         terrain.triggeredNewSequence = false
 
-        console.log(this.stageManager.obstacleManager)
+        terrain.setPipeline('GlowPipeline')
 
         // Populate Terrain
         const terrainBounds = terrain.getBounds()
@@ -152,13 +152,13 @@ export default class TerrainManager {
 
     }
 
-    update(){
+    update(time, delta){
 
         Object.keys(this.terrainGroups).forEach(elevation => {
             const group = this.terrainGroups[elevation];
 
             group.getChildren().forEach(terrain => {
-                terrain.x -= this.stageManager.baseSpeed;
+                terrain.x -= this.stageManager.baseSpeed
 
                 if (terrain.isSequenceEnd && terrain.x < this.scene.scale.width && !terrain.triggeredNewSequence){
                     console.log(`Generating new ${terrain.elevation} terrain sequence`);

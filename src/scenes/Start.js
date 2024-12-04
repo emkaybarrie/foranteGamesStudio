@@ -4,6 +4,7 @@ import { config } from "../config.js";
 export default class Start extends Phaser.Scene {
     constructor() {
         super('Start');
+        
     }
 
     preload() {
@@ -32,6 +33,7 @@ export default class Start extends Phaser.Scene {
         
         this.input.keyboard.on('keydown-ENTER', () => {
             this.scene.start('Base');
+            this.scale.startFullscreen()
         });
     }
 

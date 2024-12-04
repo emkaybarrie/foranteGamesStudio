@@ -133,7 +133,7 @@ export default class StageManager {
             // Sub Managers
             this.cameraManager.update()
             this.avatarManager.update(time, delta); // Call avatar update to manage state
-            this.terrainManager.update()
+            this.terrainManager.update(time, delta)
             this.obstacleManager.update()
             this.lootManager.update()
             this.enemyManager.update()
