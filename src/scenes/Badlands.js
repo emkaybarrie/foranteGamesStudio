@@ -54,7 +54,9 @@ export default class Badlands extends Phaser.Scene {
     }
 
     init(data) {
+        console.log(data)
         this.region = data.region;
+        this.playerAlias = data.playerData.alias
     }
 
     preload(){
@@ -95,11 +97,13 @@ export default class Badlands extends Phaser.Scene {
             });
 
         this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
-            `Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
+            //`${this.playerAlias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
+            `${this.playerAlias} - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
 
         var textAnchorPointX = 0.05
         var textAnchorPointY = 0.05
-        this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, `Welcome to the Badlands - Region ${this.region}`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
+        this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
+            `${this.playerAlias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
 
         // Initialize the score display
         this.scoreText = this.add.text(this.scale.width * textAnchorPointX, this.titleText.y + (this.scale.height * textAnchorPointY), `Score: ${this.score}`, {

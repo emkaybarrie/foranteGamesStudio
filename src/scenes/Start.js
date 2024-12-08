@@ -13,7 +13,7 @@ export default class Start extends Phaser.Scene {
     }
 
     create() {
-        const titleScreen = this.add.image(0,0,'titleScreen').setOrigin(0)
+        const titleScreen = this.add.image(0,0,'titleScreen').setOrigin(0).setInteractive();
 
         // Scale the image to fit the screen
         scaleImageToFitCanvas(titleScreen);
@@ -27,14 +27,61 @@ export default class Start extends Phaser.Scene {
         });
 
         // Add Start screen text
-        this.add.text(this.scale.width * 0.65, this.scale.height * 0.4, 'The Badlands', { fontSize: '38px', fill: '#fff' }).setOrigin(0.5);
-        this.add.text(this.scale.width * 0.65, this.scale.height * 0.5, 'Press Enter to start', { fontSize: '26px', fill: '#fff' }).setOrigin(0.5);
-        this.add.text(this.scale.width * 0.65, this.scale.height * 0.6, 'Current Supported: Keyboard, Gamepad', { fontSize: '16px', fill: '#fff' }).setOrigin(0.5);
+        const startText = this.add.text(this.scale.width * 0.65, this.scale.height * 0.4, 'The Badlands', {
+            fontSize: '38px',
+            fill: '#fff',
+        }).setOrigin(0.5);
         
-        this.input.keyboard.on('keydown-ENTER', () => {
-            this.scene.start('Base');
-            this.scale.startFullscreen()
+        const instructionText = this.add.text(this.scale.width * 0.65, this.scale.height * 0.5, 'Press Space to start', {
+            fontSize: '26px',
+            fill: '#fff',
+        }).setOrigin(0.5);
+        
+        this.add.text(this.scale.width * 0.65, this.scale.height * 0.6, 'Current Supported: Keyboard, Gamepad', {
+            fontSize: '16px',
+            fill: '#fff',
+        }).setOrigin(0.5);
+        
+        // Track input mode (default to keyboard)
+        let inputMode = 'keyboard';
+        
+        // Update instruction text dynamically based on input
+        this.input.keyboard.on('keydown', () => {
+            inputMode = 'keyboard';
+            instructionText.setText('Press Space to start');
         });
+        
+        this.input.gamepad.on('connected', () => {
+            inputMode = 'gamepad';
+            instructionText.setText('Press A to start');
+        });
+        
+        // Handle "start" based on input mode
+        this.input.keyboard.on('keydown-SPACE', () => {
+            if (inputMode === 'keyboard') {
+            this.startMenuScene();
+            }
+        });
+
+        this.input.keyboard.on('keydown-SPACE', () => {
+            if (inputMode === 'keyboard') {
+            this.startMenuScene();
+            }
+        });
+
+        titleScreen.on('pointerdown', () => this.startMenuScene());
+        
+        this.input.gamepad.on('down', (pad, button) => {
+            if (inputMode === 'gamepad' && button.index === 0) { // Button 0 is typically A on most gamepads
+            this.startMenuScene();
+            }
+        });
+        
+        // Method to start the MenuScene and enter fullscreen
+        this.startMenuScene = () => {
+            this.scene.start('MainMenu');
+            this.scale.startFullscreen();
+        };
     }
 
     

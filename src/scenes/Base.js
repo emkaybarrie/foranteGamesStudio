@@ -3,8 +3,17 @@ export default class Base extends Phaser.Scene {
         super('Base');
     }
 
+    init(data) {
+        this.playerData = data.playerData
+        this.playerAlias = this.playerData.alias;
+        this.playerEmail = this.playerData.email;
+    }
+
     create() {
-        this.add.text(400, 100, 'Select a Region', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(400, 50, this.playerAlias, { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
+        this.add.text(400, 100, this.playerEmail, { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
+
+        this.add.text(400, 150, 'Select a Region', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
         
         const regions = ['Region 1', 'Region 2', 'Region 3', 'Region 4'];
         this.regionTexts = regions.map((region, index) => {
@@ -34,6 +43,6 @@ export default class Base extends Phaser.Scene {
     }
 
     startBadlands() {
-        this.scene.start('Badlands', { region: this.selectedRegion + 1 });
+        this.scene.start('Badlands', { region: this.selectedRegion + 1, playerData: this.playerData });
     }
 }

@@ -1,6 +1,11 @@
 const preload = (scene) => {
     // Load images
     scene.load.image('titleScreen', 'assets/images/titleScreens/titleScreen_01.png');
+
+    scene.load.image('prologue', 'assets/images/MainMenu/prologue.png');
+    scene.load.image('story', 'assets/images/MainMenu/story.png');
+    scene.load.image('explore_1', 'assets/images/MainMenu/explore_1.png');
+
     scene.load.image('gold', 'assets/images/gold.png');
     scene.load.image('enemy', 'assets/images/enemy.png');
     scene.load.image('enemy2', 'assets/images/enemy2.png');
