@@ -176,7 +176,7 @@ export default class Login extends Phaser.Scene {
     const response = await fetch(formUrl, {
       method: 'POST',
       body: formData,
-      mode: 'no-cors'
+      //mode: 'no-cors'
     });
 
     const data = await response.json();
