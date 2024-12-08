@@ -294,6 +294,8 @@ export default class Login extends Phaser.Scene {
       // New account: Create player data
       //const newPlayerId = `player${Object.keys(this.playerData).length + 1}`;
 
+      this.showNewAccountMessage(alias);
+
       const newPlayerId = Object.keys(this.playerData).length + 1;
 
       try {
@@ -393,7 +395,7 @@ async hashPassword(password) {
     this.welcomeText = welcome
   }
 
-  showAccountCreationMessage(alias) {
+  showNewAccountMessage(alias) {
     // Clear existing messages
     this.clearMessages();
 
