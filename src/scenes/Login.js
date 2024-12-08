@@ -346,6 +346,11 @@ async hashPassword(password) {
       this.welcomeText.destroy();
       this.welcomeText = null;
     }
+
+    if (this.newAccountText) {
+      this.newAccountText.destroy();
+      this.newAccountText = null;
+    }
   }
 
   showError(message) {
@@ -386,6 +391,24 @@ async hashPassword(password) {
     });
 
     this.welcomeText = welcome
+  }
+
+  showAccountCreationMessage(alias) {
+    // Clear existing messages
+    this.clearMessages();
+
+    const newAccount = this.add.text(400, 500, `Creating account for ${alias}...`, {
+      fontSize: '16px',
+      fill: '#0f0',
+      fontFamily: 'Arial',
+    }).setOrigin(0.5);
+    this.tweens.add({
+      targets: newAccount,
+      alpha: { from: 0, to: 1 },
+      duration: 500,
+    });
+
+    this.newAccountText = newAccount
   }
 
   updateDynamicText() {
