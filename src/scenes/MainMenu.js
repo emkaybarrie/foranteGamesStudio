@@ -110,7 +110,23 @@ export default class MainMenu extends Phaser.Scene {
           if (index + 1 == 2){
             this.scene.start(`Login`);
           } else {
-            this.scene.start(`Base`);
+            // Freeplay
+            this.playerData = {
+              id: 0,
+              alias: 'Guest',
+              level: 1,
+              score: 0,
+              spiritLevel: 1,
+              power: 0,
+              powerToNextLevel: 20,
+              spiritPoints: 5,
+              vitality: 1,
+              focus: 1,
+              adaptability: 1
+            }
+
+            console.log(this.playerData)
+            this.scene.start(`Base`, { dataPacket: this.playerData});
           }
           
         },

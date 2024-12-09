@@ -1,7 +1,7 @@
 
 export default class AvatarManager extends Phaser.Events.EventEmitter {
     constructor(scene, stageManager,avatarId, x, y, input) {
-        //this.avatarInputManager = new Input();
+
         super()
         this.scene = scene;
         this.input = input; // Accept Input instance
@@ -46,9 +46,13 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         // Core
         // Vitals
-        this.vitality = 100
-        this.focus = 100
-        this.adaptability = 100
+        this.vitality = 100 + this.scene.playerData.vitality
+        this.focus = 100 + this.scene.playerData.focus
+        this.adaptability = 100 + this.scene.playerData.adaptability
+
+        console.log(this.vitality)
+        console.log(this.focus)
+        console.log(this.adaptability)
 
 
         this.healthRegenAllocation = 10 / 100
@@ -796,9 +800,9 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                 this.sprite.y = 0
                 this.sprite.setVelocity(0)
                 this.stageManager.cameraManager.mainCamera.flash(400, 255, 255, 255)
-                this.vitality = 100
-                this.focus = 100
-                this.adaptability = 100
+                this.vitality = 100 + this.scene.playerData.vitality
+                this.focus = 100 + this.scene.playerData.focus
+                this.adaptability = 100 + this.scene.playerData.adaptability
                 this.resetVitals()
 
                 this.canAct = true

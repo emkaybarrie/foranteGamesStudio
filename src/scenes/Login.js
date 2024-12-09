@@ -5,16 +5,17 @@ export default class Login extends Phaser.Scene {
     super({ key: 'Login' });
     this.scriptId = 'AKfycbw1zakrf0zclJNWzBSXjIKTfudd6Q9-YHNq6EvP7JGQ4OrtPIs0SwrgJCsAyoB4Y5eu'
     this.sheetUrl = `https://script.google.com/macros/s/${this.scriptId}/exec`;
+    this.isProcessing = false; // Track if a request is in progress
+
+    this.statusText = null
+    this.promptText1 = null
+    this.promptText2 = null
+
+    this.submitButton = null
   }
 
   preload() {
     // Preload assets
-  }
-
-  create() {
-    
-    // Left side: Image and dynamic text
-    const leftImage = this.add.image(0, 0, 'story').setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
     // this.dynamicText = this.add.text(150, 450, 'Dynamic text here', {
     //   fontSize: '16px',
     //   fill: '#fff',
@@ -24,6 +25,13 @@ export default class Login extends Phaser.Scene {
     // }).setOrigin(0.5);
 
     // this.updateDynamicText(); // Replace with dynamic logic when needed
+  }
+
+  create() {
+    
+    // Left side: Image and dynamic text
+    const leftImage = this.add.image(0, 0, 'story').setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
+    
 
     // Right side: Input fields and button
     this.add.text(200, 160, 'Alias/Email', { fontSize: '16px', fill: '#fff', fontFamily: 'Arial' });
@@ -41,7 +49,9 @@ export default class Login extends Phaser.Scene {
     })
       .setOrigin(0.5)
       .setInteractive()
-      .on('pointerdown', () => this.handleLogin(this.aliasOrEmailInput.text, this.passwordInput.text));
+      .on('pointerdown', () => this.handleLogin(this.aliasOrEmailInput.text, this.passwordInput.text))
+      .on('pointerover', () => this.highlightButton(this.loginButton, true)) // Highlight on hover
+      .on('pointerout', () => this.highlightButton(this.loginButton, false)); // Remove highlight
 
     this.additionalInput = this.createInputBox(350, 550, false).setVisible(false);
 
@@ -63,9 +73,10 @@ export default class Login extends Phaser.Scene {
     inputBox.isPassword = isPassword;
   
     // Enable clicking on the input box to activate it
-    inputBox.setInteractive().on('pointerdown', () => {
-      this.setActiveInput(inputBox);
-    });
+    inputBox.setInteractive()
+      .on('pointerdown', () => this.setActiveInput(inputBox))
+      .on('pointerover', () => this.highlightInput(inputBox, true)) // Highlight on hover
+      .on('pointerout', () => this.highlightInput(inputBox, false)); // Remove highlight
   
     // Add a blinking cursor
     inputBox.cursor = '|';
@@ -88,16 +99,41 @@ export default class Login extends Phaser.Scene {
     return inputBox;
   }
 
+  highlightButton(button, highlight) {
+    if (highlight) {
+      button.setStyle({ fill: '#ffcc00', backgroundColor: '#0056b3' });
+    } else {
+      button.setStyle({ fill: '#fff', backgroundColor: '#007bff' });
+    }
+  }
+
+  highlightInput(inputBox, highlight) {
+    if (highlight) {
+      inputBox.setStrokeStyle(4, 0x00ff00); // Highlight input box
+    } else {
+      inputBox.setStrokeStyle(2, 0xffffff); // Reset input box style
+    }
+  }
+
 
   async handleLogin(aliasOrEmail, password) {
-        
+    if (this.isProcessing) return; // Prevent double submissions
+    this.clearMessages();
+    this.isProcessing = true;    
+
     const inputAliasOrEmail = aliasOrEmail.trim();
     const inputPassword = password.trim();
 
     if (!inputAliasOrEmail || !inputPassword) {
       console.error("Alias/Email and Password are required.");
+      this.showError("Alias/Email and Password are required.")
+      this.isProcessing = false;  
       return;
     }
+
+    // Show loading spinner and disable interactivity
+    this.showLoadingIndicator("Logging in...");
+    this.disableInteractivity();
 
     try {
       const response = await fetch(
@@ -107,42 +143,68 @@ export default class Login extends Phaser.Scene {
       );
 
       const result = await response.json();
+      this.hideLoadingIndicator(); // Hide the loading indicator
 
       console.log(result)
 
       if (result.status === "success") {
+        this.additionalInput.setVisible(false)
         // Player found and authenticated
         const { id, alias } = result.player;
         console.log(`Login successful! Player ID: ${id}, Alias: ${alias}`);
         console.log(result.player);
         this.scene.start("Base", { dataPacket: result.player});
-      } else if (result.status === "error" && result.message === "Player not found") {
-        // Player doesn't exist, prompt for account creation
-        console.log(result.message)
-        this.promptAccountCreation(inputAliasOrEmail, inputPassword);
-      } else {
-        console.error(result.message);
+      } else if (result.status === "error") {
+        if (result.message === "Player not found") {
+          // Alias or email not found, handle accordingly
+          this.showError("Player not found. Please check your alias/email, or continue to account creation.");
+          // // Optionally clear the alias/email input
+          // this.aliasOrEmailInput.text = '';
+          // this.setActiveInput(this.aliasOrEmailInput);
+
+          this.promptAccountCreation(inputAliasOrEmail, inputPassword);
+        } else if (result.message === "Incorrect password") {
+          // Password incorrect, handle accordingly
+          this.showError("Incorrect password. Please try again.");
+          this.setActiveInput(this.additionalInput);
+          this.additionalInput.text = '';
+          // Optionally clear the password input
+          this.passwordInput.text = '';
+          this.setActiveInput(this.passwordInput);
+          
+        } else {
+          console.error(result.message);
+        }
       }
     } catch (error) {
       console.error("Error logging in:", error);
+      this.showError("Login failed. Please try again.");
     }
+
+    this.isProcessing = false;
 }
 
   promptAccountCreation(aliasOrEmail, password) {
-    console.log('Prompting player to create an account')
     const isEmail = aliasOrEmail.includes("@");
     console.log('Email entered: ' + isEmail)
 
-    this.add.text(200, 450, `Account not found. Create one?`).setInteractive()
+   this.promptText1 = this.add.text(200, 450, `Account not found. Create one?`).setInteractive()
+      .on('pointerover', () => {
+        this.promptText1.setStyle({ fill: '#00ff00' }); // Change text color on hover
+      })
+      .on('pointerout', () => {
+        this.promptText1.setStyle({ fill: '#fff' }); // Reset color when hover ends
+      })
       .on('pointerdown', () => this.collectAdditionalInfo(aliasOrEmail, password, isEmail));
   }
 
   collectAdditionalInfo(aliasOrEmail, password, isEmail) {
     this.additionalInput.setVisible(true)
+    this.setActiveInput(this.additionalInput);
 
     const promptText = isEmail ? "Enter Alias:" : "Enter Email:";
-    this.add.text(200, 500, promptText);
-    const submitButton = this.add.text(350, 600, "Submit",{
+    this.promptText2 = this.add.text(200, 500, promptText);
+    this.submitButton = this.add.text(350, 625, "Submit",{
       fontSize: '20px',
       fill: '#fff',
       backgroundColor: '#007bff',
@@ -150,19 +212,26 @@ export default class Login extends Phaser.Scene {
       fontFamily: 'Arial',
     }).setOrigin(0.5)
       .setInteractive()
+      .on('pointerover', () => this.highlightButton(this.submitButton, true))
+      .on('pointerout', () => this.highlightButton(this.submitButton, false))
 
-    submitButton.on('pointerdown', async () => {
+      this.submitButton.on('pointerdown', async () => {
       const alias = isEmail ? this.additionalInput.text.trim() : aliasOrEmail;
       const email = isEmail ? aliasOrEmail : this.additionalInput.text.trim();
 
 
-      if (!alias || !email) {
+      if (!alias || !email || !email.includes("@")) {
         console.error("Alias and Email are required for account creation.");
+        this.showError("Alias, Password and Email are required for account creation.")
         return;
       }
 
 
       try {
+        this.clearMessages();
+        this.showLoadingIndicator("Creating account...");
+          this.disableInteractivity();
+
         const response = await fetch(
           `${this.sheetUrl}?request=addPlayer&alias=${alias}&email=${email}&password=${password}`,{
             method: "POST",
@@ -170,6 +239,7 @@ export default class Login extends Phaser.Scene {
         );
       
         const result = await response.json();
+        this.hideLoadingIndicator(); // Hide the loading indicator
 
         if (result.status === "success") {
           const { id, alias } = result.player;
@@ -180,19 +250,96 @@ export default class Login extends Phaser.Scene {
         }
       } catch (error) {
         console.error("Error creating account:", error);
+        this.showError("Account creation failed. Please try again.");
       }
     });
+  }
+
+  showLoadingIndicator(message) {
+    this.statusText = this.add.text(config.width / 2, config.height / 2, message, {
+      fontSize: '18px',
+      fill: '#fff',
+      fontFamily: 'Arial',
+    }).setOrigin(0.5);
+    this.loadingSpinner = this.add.graphics();
+    this.loadingSpinner.lineStyle(4, 0xffffff);
+    this.loadingSpinner.arc(config.width / 2, config.height / 2 + 40, 30, 0, Math.PI * 2, false);
+    this.loadingSpinner.strokePath();
+
+    // Rotate the spinner continuously
+    this.tweens.add({
+      targets: this.loadingSpinner,
+      angle: 360,
+      duration: 1000,
+      repeat: -1, // Repeat forever
+    });
+  }
+
+  hideLoadingIndicator() {
+    if (this.statusText) this.statusText.destroy();
+    if (this.loadingSpinner) this.loadingSpinner.destroy();
+  }
+
+  disableInteractivity() {
+    this.isProcessing = true;
+    this.loginButton.setInteractive(false);
+    this.aliasOrEmailInput.setInteractive(false);
+    this.passwordInput.setInteractive(false);
+    if (this.additionalInput) this.additionalInput.setInteractive(false);
+  }
+
+  enableInteractivity() {
+    this.isProcessing = false;
+    this.loginButton.setInteractive(true);
+    this.aliasOrEmailInput.setInteractive(true);
+    this.passwordInput.setInteractive(true);
+    if (this.additionalInput) this.additionalInput.setInteractive(true);
+  }
+
+  showError(message) {
+    this.clearMessages();
+    this.statusText = this.add.text(config.width / 2, config.height / 2, message, {
+      fontSize: '18px',
+      //fill: '#f00',
+      fill: '#fff',
+      fontFamily: 'Arial',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+    this.tweens.add({
+      targets: this.statusText,
+      alpha: { from: 0, to: 1 },
+      duration: 500,
+    });
+  }
+
+  clearMessages() {
+    if (this.statusText) {
+      this.statusText.destroy();
+      this.statusText = null;
+    }
+
   }
 
 
 
   setActiveInput(inputBox) {
-    // Update the active input box
-    if (this.activeInput) {
-      this.activeInput.setStrokeStyle(2, 0xffffff); // Reset outline of previous box
-    }
-    this.activeInput = inputBox;
-    this.activeInput.setStrokeStyle(4, 0x00ff00); // Highlight active box
+    // If there was a previously active input box, reset its style
+  if (this.activeInput && this.activeInput !== inputBox) {
+    this.activeInput.setStrokeStyle(2, 0xffffff); // Reset previous input box style
+  }
+
+  this.activeInput = inputBox;
+
+  // Set the stroke style to highlight the active input box
+  this.activeInput.setStrokeStyle(4, 0x00ff00); // Highlight the active box
+
+  // Ensure the active input box text is showing
+  if (this.activeInput.isPassword) {
+    const maskedText = '*'.repeat(this.activeInput.text.length);
+    this.activeInput.textObject.setText(maskedText + this.activeInput.cursor);
+  } else {
+    this.activeInput.textObject.setText(this.activeInput.text + this.activeInput.cursor);
+  }
 
     
   }
@@ -251,79 +398,79 @@ export default class Login extends Phaser.Scene {
   //   this.loginButton.setText(this.isNewAccount ? 'Create Account' : 'Login');
   // }
 
-  clearMessages() {
-    if (this.errorText) {
-      this.errorText.destroy();
-      this.errorText = null;
-    }
-    if (this.welcomeText) {
-      this.welcomeText.destroy();
-      this.welcomeText = null;
-    }
+  // clearMessages() {
+  //   if (this.errorText) {
+  //     this.errorText.destroy();
+  //     this.errorText = null;
+  //   }
+  //   if (this.welcomeText) {
+  //     this.welcomeText.destroy();
+  //     this.welcomeText = null;
+  //   }
 
-    if (this.newAccountText) {
-      this.newAccountText.destroy();
-      this.newAccountText = null;
-    }
-  }
+  //   if (this.newAccountText) {
+  //     this.newAccountText.destroy();
+  //     this.newAccountText = null;
+  //   }
+  // }
 
-  showError(message) {
-    // Clear any existing error message
-      // Clear existing messages
-      this.clearMessages();
+  // showError(message) {
+  //   // Clear any existing error message
+  //     // Clear existing messages
+  //     this.clearMessages();
 
-    const errorText = this.add.text(400, 500, message, {
-      fontSize: '16px',
-      fill: '#f00',
-      fontFamily: 'Arial',
-    }).setOrigin(0.5).setAlpha(0); // Start fully transparent
+  //   const errorText = this.add.text(400, 500, message, {
+  //     fontSize: '16px',
+  //     fill: '#f00',
+  //     fontFamily: 'Arial',
+  //   }).setOrigin(0.5).setAlpha(0); // Start fully transparent
   
-    // Fade in the error text
-    this.tweens.add({
-      targets: errorText,
-      alpha: { from: 0, to: 1 },
-      duration: 500, // 500ms fade-in duration
-    });
+  //   // Fade in the error text
+  //   this.tweens.add({
+  //     targets: errorText,
+  //     alpha: { from: 0, to: 1 },
+  //     duration: 500, // 500ms fade-in duration
+  //   });
 
-    // Assign the new error text for future reference
-    this.errorText = errorText;
-  }
+  //   // Assign the new error text for future reference
+  //   this.errorText = errorText;
+  // }
 
-  showWelcomeMessage(alias) {
-    // Clear existing messages
-    this.clearMessages();
+  // showWelcomeMessage(alias) {
+  //   // Clear existing messages
+  //   this.clearMessages();
 
-    const welcome = this.add.text(400, 500, `Welcome back, ${alias}!`, {
-      fontSize: '16px',
-      fill: '#0f0',
-      fontFamily: 'Arial',
-    }).setOrigin(0.5);
-    this.tweens.add({
-      targets: welcome,
-      alpha: { from: 0, to: 1 },
-      duration: 500,
-    });
+  //   const welcome = this.add.text(400, 500, `Welcome back, ${alias}!`, {
+  //     fontSize: '16px',
+  //     fill: '#0f0',
+  //     fontFamily: 'Arial',
+  //   }).setOrigin(0.5);
+  //   this.tweens.add({
+  //     targets: welcome,
+  //     alpha: { from: 0, to: 1 },
+  //     duration: 500,
+  //   });
 
-    this.welcomeText = welcome
-  }
+  //   this.welcomeText = welcome
+  // }
 
-  showNewAccountMessage(alias) {
-    // Clear existing messages
-    this.clearMessages();
+  // showNewAccountMessage(alias) {
+  //   // Clear existing messages
+  //   this.clearMessages();
 
-    const newAccount = this.add.text(400, 500, `Creating account for ${alias}...`, {
-      fontSize: '16px',
-      fill: '#0f0',
-      fontFamily: 'Arial',
-    }).setOrigin(0.5);
-    this.tweens.add({
-      targets: newAccount,
-      alpha: { from: 0, to: 1 },
-      duration: 500,
-    });
+  //   const newAccount = this.add.text(400, 500, `Creating account for ${alias}...`, {
+  //     fontSize: '16px',
+  //     fill: '#0f0',
+  //     fontFamily: 'Arial',
+  //   }).setOrigin(0.5);
+  //   this.tweens.add({
+  //     targets: newAccount,
+  //     alpha: { from: 0, to: 1 },
+  //     duration: 500,
+  //   });
 
-    this.newAccountText = newAccount
-  }
+  //   this.newAccountText = newAccount
+  // }
 
   // updateDynamicText() {
   //   // Placeholder for dynamic text logic

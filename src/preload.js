@@ -6,6 +6,11 @@ const preload = (scene) => {
     scene.load.image('story', 'assets/images/MainMenu/story.png');
     scene.load.image('explore_1', 'assets/images/MainMenu/explore_1.png');
 
+    scene.load.image('regionNorth', 'assets/images/Base/regionNorth.png');
+    scene.load.image('regionSouth', 'assets/images/Base/regionSouth.png');
+    scene.load.image('regionEast', 'assets/images/Base/regionEast.png');
+    scene.load.image('regionWest', 'assets/images/Base/regionWest.png');
+
     scene.load.image('gold', 'assets/images/gold.png');
     scene.load.image('enemy', 'assets/images/enemy.png');
     scene.load.image('enemy2', 'assets/images/enemy2.png');
