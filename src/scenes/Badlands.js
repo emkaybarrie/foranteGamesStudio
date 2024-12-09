@@ -179,7 +179,7 @@ export default class Badlands extends Phaser.Scene {
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
 
-        this.recordText_Level = this.add.text(this.scale.width * (1 - textAnchorPointX), this.levelText.y , `Furthest Level: ${this.highestLevel}`, {
+        this.recordText_Level = this.add.text(this.scale.width * (1 - textAnchorPointX), this.levelText.y , `Furthest Level: ${this.highScoreLevel}`, {
             fontSize: '24px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)

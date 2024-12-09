@@ -206,7 +206,7 @@ export default class Login extends Phaser.Scene {
   
     if (event.key === 'Backspace') {
       inputBox.text = inputBox.text.slice(0, -1); // Remove last character
-    } else if (event.key.length === 1 && inputBox.text.length < 20) {
+    } else if (event.key.length === 1 && inputBox.text.length < 25) {
       inputBox.text += event.key; // Add typed character
   
       if (inputBox.isPassword) {
