@@ -3,6 +3,8 @@ import { config } from "../config.js";
 export default class Login extends Phaser.Scene {
   constructor() {
     super({ key: 'Login' });
+    this.scriptId = 'AKfycbw1zakrf0zclJNWzBSXjIKTfudd6Q9-YHNq6EvP7JGQ4OrtPIs0SwrgJCsAyoB4Y5eu'
+    this.sheetUrl = `https://script.google.com/macros/s/${this.scriptId}/exec`;
   }
 
   preload() {
@@ -10,30 +12,22 @@ export default class Login extends Phaser.Scene {
   }
 
   create() {
-    this.playerData = {}
-
-    this.fetchPlayerData().then(fetchedData  => {
-      this.playerData = fetchedData
-      console.log(this.playerData); // Log the player data for debugging
-
-    });
     
     // Left side: Image and dynamic text
-    //const leftImage = this.add.image(150, 300, 'story').setOrigin(0).setScale(0.25);
     const leftImage = this.add.image(0, 0, 'story').setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
-    this.dynamicText = this.add.text(150, 450, 'Dynamic text here', {
-      fontSize: '16px',
-      fill: '#fff',
-      fontFamily: 'Arial',
-      align: 'center',
-      wordWrap: { width: 250 },
-    }).setOrigin(0.5);
+    // this.dynamicText = this.add.text(150, 450, 'Dynamic text here', {
+    //   fontSize: '16px',
+    //   fill: '#fff',
+    //   fontFamily: 'Arial',
+    //   align: 'center',
+    //   wordWrap: { width: 250 },
+    // }).setOrigin(0.5);
 
-    this.updateDynamicText(); // Replace with dynamic logic when needed
+    // this.updateDynamicText(); // Replace with dynamic logic when needed
 
     // Right side: Input fields and button
-    this.add.text(200, 160, 'Alias', { fontSize: '16px', fill: '#fff', fontFamily: 'Arial' });
-    this.aliasInput = this.createInputBox(350, 220, false);
+    this.add.text(200, 160, 'Alias/Email', { fontSize: '16px', fill: '#fff', fontFamily: 'Arial' });
+    this.aliasOrEmailInput = this.createInputBox(350, 220, false);
 
     this.add.text(200, 260, 'Password', { fontSize: '16px', fill: '#fff', fontFamily: 'Arial' });
     this.passwordInput = this.createInputBox(350, 320, true);
@@ -47,15 +41,13 @@ export default class Login extends Phaser.Scene {
     })
       .setOrigin(0.5)
       .setInteractive()
-      .on('pointerdown', () => this.handleSubmit());
+      .on('pointerdown', () => this.handleLogin(this.aliasOrEmailInput.text, this.passwordInput.text));
 
-
-    this.isNewAccount = false; // Default state for the button
-    this.updateButtonState();  // Ensure the initial button text reflects this
+    this.additionalInput = this.createInputBox(350, 550, false).setVisible(false);
 
     // Initially set emailInput as active
-    this.activeInput = this.aliasInput;
-    this.setActiveInput(this.aliasInput);
+    this.activeInput = this.aliasOrEmailInput;
+    this.setActiveInput(this.aliasOrEmailInput);
 
 
     // Keyboard input listener
@@ -96,132 +88,103 @@ export default class Login extends Phaser.Scene {
     return inputBox;
   }
 
-  update() {
-    this.validateAlias()
-  }
 
-  // Function to fetch player data (for login validation)
-  async fetchPlayerData() {
-  const sheetId = '14nypZw51wjrP9cboBZEOTT8GdI3XeP29opyj0dZHEsY'; // Replace with your actual Google Sheet ID
-  const range = 'Players!A2:E'; // Adjust to the range in your Google Sheet (Player ID, Username, Password)
-  const apiKey = 'AIzaSyCSVF9-wWYsLxby4RcZ_DRS8spw5l0KrdM'
+  async handleLogin(aliasOrEmail, password) {
+        
+    const inputAliasOrEmail = aliasOrEmail.trim();
+    const inputPassword = password.trim();
 
-  const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;  // Replace YOUR_API_KEY with your Google API key
-
-  try {
-    // Wait for the fetch call to complete
-    const response = await fetch(sheetUrl);
-    
-    // Check if the response is OK (status code 200)
-    if (!response.ok) {
-      throw new Error(`API request failed with status: ${response.status}`);
+    if (!inputAliasOrEmail || !inputPassword) {
+      console.error("Alias/Email and Password are required.");
+      return;
     }
-    
-    // Parse the response as JSON
-    const data = await response.json();
 
-    // Log the parsed data for debugging
-    console.log('Parsed API data:', data);
+    try {
+      const response = await fetch(
+        `${this.sheetUrl}?request=playerLogin&aliasOrEmail=${inputAliasOrEmail}&password=${inputPassword}`,{
+          method: "POST",
+        }
+      );
 
-    const playerData = {};
-    
-    // Process the data to create player objects
-    data.values.forEach(row => {
-      const playerId = row[0];   // Player ID (e.g., '1')
-      const alias = row[1];      // Alias (e.g., 'alice')
-      const password = row[2];   // Password (e.g., 'hashed1')
+      const result = await response.json();
 
-      // Populate playerData with a structure compatible with your game
-      playerData[playerId] = {
-        alias: alias,
-        password: password
-      };
-    });
+      console.log(result)
 
-    return playerData; // Return the formatted player data
-
-  } catch (error) {
-    console.error('Error fetching player data:', error);
-    throw error; // Propagate the error to be handled by the caller (handleSubmit)
-  }
-  }
-
-  // Function to submit player data to Google Form
-  async submitPlayerData(id, alias, password, email) {
-  const formID = 'AKfycbw1zakrf0zclJNWzBSXjIKTfudd6Q9-YHNq6EvP7JGQ4OrtPIs0SwrgJCsAyoB4Y5eu'
-  const formUrl = `https://script.google.com/macros/s/${formID}/exec`; // Replace with your form's URL
-
-
-  const formData = new FormData();
-  // Only append the value if it's not null or empty
-
-  //if (id && id.trim()) {
-    formData.append('id', id);  // Entry ID for Alias
-  //}
-
-  if (alias && alias.trim()) {
-    formData.append('alias', alias);  // Entry ID for Alias
-  }
-
-  if (password && password.trim()) {
-    formData.append('password', password);  // Entry ID for Password
-  }
-
-  if (email && email.trim()) {
-    formData.append('email', email);  // Entry ID for Email
-  }
-
-  // Submit the form data using POST
-  try {
-    const response = await fetch(formUrl, {
-      method: 'POST',
-      body: formData,
-      //mode: 'no-cors'
-    });
-
-    const data = await response.json();
-    if (data.status === 'success') {
-      console.log('Player added successfully:', data.message);
-      //return data; // Return the success message or any relevant data
-    } else {
-      console.error('Error:', data.message);
-     // throw new Error(data.message); // Throw error if submission fails
+      if (result.status === "success") {
+        // Player found and authenticated
+        const { id, alias } = result.player;
+        console.log(`Login successful! Player ID: ${id}, Alias: ${alias}`);
+        console.log(result.player);
+        this.scene.start("Base", { dataPacket: result.player});
+      } else if (result.status === "error" && result.message === "Player not found") {
+        // Player doesn't exist, prompt for account creation
+        console.log(result.message)
+        this.promptAccountCreation(inputAliasOrEmail, inputPassword);
+      } else {
+        console.error(result.message);
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
     }
-  } catch (error) {
-    console.error('Error submitting data:', error);
-    //throw error; // Propagate the error to be handled in handleSubmit
-  }
 }
 
-  findPlayerByAlias(input) {
-    for (const playerId in this.playerData) {
-      const player = this.playerData[playerId];
-      if (player.alias === input) {
-        return player; // Return the matched player object
-      }
-    }
-    return null; // No match found
+  promptAccountCreation(aliasOrEmail, password) {
+    console.log('Prompting player to create an account')
+    const isEmail = aliasOrEmail.includes("@");
+    console.log('Email entered: ' + isEmail)
+
+    this.add.text(200, 450, `Account not found. Create one?`).setInteractive()
+      .on('pointerdown', () => this.collectAdditionalInfo(aliasOrEmail, password, isEmail));
   }
 
-  validateAlias() {
-    const currentAlias = this.aliasInput.text.trim();
-    const matchingPlayer = this.findPlayerByAlias(currentAlias);
+  collectAdditionalInfo(aliasOrEmail, password, isEmail) {
+    this.additionalInput.setVisible(true)
 
-    if (matchingPlayer) {
-      // Existing account: Set button to Login
-      if (this.isNewAccount) {
-        this.isNewAccount = false;
-        this.updateButtonState();
+    const promptText = isEmail ? "Enter Alias:" : "Enter Email:";
+    this.add.text(200, 500, promptText);
+    const submitButton = this.add.text(350, 600, "Submit",{
+      fontSize: '20px',
+      fill: '#fff',
+      backgroundColor: '#007bff',
+      padding: { x: 20, y: 10 },
+      fontFamily: 'Arial',
+    }).setOrigin(0.5)
+      .setInteractive()
+
+    submitButton.on('pointerdown', async () => {
+      const alias = isEmail ? this.additionalInput.text.trim() : aliasOrEmail;
+      const email = isEmail ? aliasOrEmail : this.additionalInput.text.trim();
+
+
+      if (!alias || !email) {
+        console.error("Alias and Email are required for account creation.");
+        return;
       }
-    } else {
-      // New account: Set button to Create Account
-      if (!this.isNewAccount) {
-        this.isNewAccount = true;
-        this.updateButtonState();
+
+
+      try {
+        const response = await fetch(
+          `${this.sheetUrl}?request=addPlayer&alias=${alias}&email=${email}&password=${password}`,{
+            method: "POST",
+          }
+        );
+      
+        const result = await response.json();
+
+        if (result.status === "success") {
+          const { id, alias } = result.player;
+          console.log(`Account created successfully! Player ID: ${id}, Alias: ${alias}`);
+          this.scene.start("Base", { dataPacket: result.player} );
+        } else {
+          console.error(result.message);
+        }
+      } catch (error) {
+        console.error("Error creating account:", error);
       }
-    }
-  
+    });
   }
+
+
 
   setActiveInput(inputBox) {
     // Update the active input box
@@ -267,77 +230,26 @@ export default class Login extends Phaser.Scene {
   }
   
 
-  async handleSubmit() {
-    const alias = this.aliasInput.text.trim();
-    const password = this.passwordInput.text.trim();
-
-    if (!alias || !password) {
-      this.showError('Both fields are required!');
-      return;
-    }
-
-    // Hash the entered password before checking it
-    const hashedPassword = await this.hashPassword(password);
-
-    const matchingPlayer = this.findPlayerByAlias(alias);
-
-    if (matchingPlayer) {
-      // Existing account: Validate password
-      if (matchingPlayer.password === hashedPassword) {
-        this.showWelcomeMessage(matchingPlayer.alias);
-        //this.scene.start('PlayerDashboardScene', { playerData: matchingPlayer });
-        this.scene.start('Base', { playerData: matchingPlayer });
-      } else {
-        this.showError('Invalid password. Please try again.');
-      }
-    } else {
-      // New account: Create player data
-      //const newPlayerId = `player${Object.keys(this.playerData).length + 1}`;
-
-      this.showNewAccountMessage(alias);
-
-      const newPlayerId = Object.keys(this.playerData).length + 1;
-
-      try {
-        // Step 1: Submit the new player data
-        await this.submitPlayerData(newPlayerId, alias, hashedPassword);
-
-       await this.fetchPlayerData().then(fetchedData  => {
-          this.playerData = fetchedData
-          console.log(this.playerData); // Log the player data for debugging
-    
-        });
-
-  
-        // Step 4: Start the next scene or redirect to player dashboard
-        this.scene.start('Base', { playerData: this.playerData[newPlayerId] });
-  
-      } catch (error) {
-        console.error('Error during player account creation:', error);
-        // Optionally, show an error message to the user
-      }
-    }
-  }
 
   // Hash the password using SHA-256 and return the hashed result
-async hashPassword(password) {
-  // Convert password string to a Uint8Array
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
+// async hashPassword(password) {
+//   // Convert password string to a Uint8Array
+//   const encoder = new TextEncoder();
+//   const data = encoder.encode(password);
 
-  // Hash the password using SHA-256
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+//   // Hash the password using SHA-256
+//   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
 
-  // Convert the hash buffer into a hexadecimal string
-  const hashArray = Array.from(new Uint8Array(hashBuffer)); // Convert buffer to byte array
-  const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+//   // Convert the hash buffer into a hexadecimal string
+//   const hashArray = Array.from(new Uint8Array(hashBuffer)); // Convert buffer to byte array
+//   const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
-  return hashHex; // Return the hashed password as a hex string
-}
+//   return hashHex; // Return the hashed password as a hex string
+// }
 
-  updateButtonState() {
-    this.loginButton.setText(this.isNewAccount ? 'Create Account' : 'Login');
-  }
+  // updateButtonState() {
+  //   this.loginButton.setText(this.isNewAccount ? 'Create Account' : 'Login');
+  // }
 
   clearMessages() {
     if (this.errorText) {
@@ -413,9 +325,9 @@ async hashPassword(password) {
     this.newAccountText = newAccount
   }
 
-  updateDynamicText() {
-    // Placeholder for dynamic text logic
-    const randomTexts = ['Welcome to the Badlands!', 'Explore the unknown.', 'Ready for adventure?'];
-    this.dynamicText.setText(randomTexts[Math.floor(Math.random() * randomTexts.length)]);
-  }
+  // updateDynamicText() {
+  //   // Placeholder for dynamic text logic
+  //   const randomTexts = ['Welcome to the Badlands!', 'Explore the unknown.', 'Ready for adventure?'];
+  //   this.dynamicText.setText(randomTexts[Math.floor(Math.random() * randomTexts.length)]);
+  // }
 }

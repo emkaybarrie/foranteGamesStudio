@@ -34,7 +34,7 @@ export default class LootManager {
         // loot.stopEffect = options.stopEffect || false;
    
 
-        console.log("Loot Created: " + loot.id)
+        //console.log("Loot Created: " + loot.id)
 
         
     }
@@ -42,7 +42,7 @@ export default class LootManager {
     
 
     lootCollision(avatar, loot){
-        console.log('Avatar collected Loot')
+        //console.log('Avatar collected Loot')
 
        
         if(!loot.collected){
@@ -92,7 +92,7 @@ export default class LootManager {
 
                 if (loot.x < -loot.displayWidth){
                     loot.destroy();
-                    console.log(`Destroying ${loot.elevation} loot`);
+                    //console.log(`Destroying ${loot.elevation} loot`);
                 } else {
                     
                     // Update last platform position only if the platform is still visible

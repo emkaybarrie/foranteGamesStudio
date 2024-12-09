@@ -49,7 +49,7 @@ export default class EnemyManager {
         enemy.jumpPower = Phaser.Math.Between(500, 1250)
    
 
-        console.log("Enemy Created: " + enemy.id)
+        //console.log("Enemy Created: " + enemy.id)
 
         
     }
@@ -58,7 +58,7 @@ export default class EnemyManager {
 
     enemyCollision(avatar, enemy){
         avatar.takeHit(75)
-        console.log('Avatar collided with Enemy')
+        //console.log('Avatar collided with Enemy')
 
      
     }
@@ -79,7 +79,7 @@ export default class EnemyManager {
 
                 if (enemy.x < -enemy.displayWidth){
                     enemy.destroy();
-                    console.log(`Destroying ${enemy.elevation} enemy`);
+                    //console.log(`Destroying ${enemy.elevation} enemy`);
                 } else {
                     
                     if(enemy.body.touching.down && enemy.type == 'jumper'){

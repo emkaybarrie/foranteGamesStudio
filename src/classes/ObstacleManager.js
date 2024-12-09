@@ -35,7 +35,7 @@ export default class ObstacleManager {
         obstacle.slowDownEffect = options.slowDownEffect || false;
         obstacle.stopEffect = options.stopEffect || false;
 
-        console.log(obstacle)
+        //console.log(obstacle)
         
     }
 
@@ -55,7 +55,7 @@ export default class ObstacleManager {
 
                 if (obstacle.x < -obstacle.displayWidth){
                     obstacle.destroy();
-                    console.log(`Destroying ${obstacle.elevation} terrain`);
+                    //console.log(`Destroying ${obstacle.elevation} terrain`);
                 } else {
                     
                     // Update last platform position only if the platform is still visible
@@ -75,7 +75,7 @@ export default class ObstacleManager {
 
         // Call the avatar's takeHit function if a collision occurs
         avatar.takeHit();
-        console.log('Avatar collided with Obstacle')
+        //console.log('Avatar collided with Obstacle')
 
         // // Behavior based on obstacle's properties
         // if (obstacle.passThrough) {

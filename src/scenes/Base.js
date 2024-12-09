@@ -4,15 +4,15 @@ export default class Base extends Phaser.Scene {
     }
 
     init(data) {
-        this.playerData = data.playerData
-        this.playerAlias = this.playerData.alias;
-        this.playerEmail = this.playerData.email;
+        console.log(data)
+
+        this.playerData = data.dataPacket
+
+        console.log(this.playerData.alias)
     }
 
     create() {
-        this.add.text(400, 50, this.playerAlias, { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
-        this.add.text(400, 100, this.playerEmail, { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
-
+        this.add.text(400, 100, this.playerData.alias, { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
         this.add.text(400, 150, 'Select a Region', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
         
         const regions = ['Region 1', 'Region 2', 'Region 3', 'Region 4'];

@@ -6,14 +6,21 @@ import InputManager from '../classes/InputManager.js';
 export default class Badlands extends Phaser.Scene {
     constructor() {
         super('Badlands');
+        this.scriptId = 'AKfycbw1zakrf0zclJNWzBSXjIKTfudd6Q9-YHNq6EvP7JGQ4OrtPIs0SwrgJCsAyoB4Y5eu'
+        this.sheetUrl = `https://script.google.com/macros/s/${this.scriptId}/exec`;
         this.stage = null;
         this.avatar = null;
         this.level = 1
         this.score = 0
         // Load high score from localStorage
-        this.highScore = this.loadHighScore();
-
+       // this.highScore = this.loadHighScore();
         
+    }
+
+    init(data) {
+        console.log(data)
+        this.region = data.region;
+        this.playerData = data.playerData
     }
 
     // Method to load the high score from localStorage
@@ -28,18 +35,51 @@ export default class Badlands extends Phaser.Scene {
         localStorage.setItem('highScore', JSON.stringify(highScoreData));
     }
 
+    async saveScoreToDb(score, level){
+        try {
+            const response = await fetch(
+              `${this.sheetUrl}?request=updateScore&id=${this.playerData.id}&score=${Math.round(score)}&level=${this.level}`,{
+                method: "POST",
+              }
+            );
+      
+            const result = await response.json();
+      
+            console.log(result)
+      
+            if (result.status === "success") {
+              // Player score updated
+            } else if (result.status === "error") {
+              // Player doesn't exist, prompt for account creation
+              console.log(result.message)
+            } else {
+              console.error(result.message);
+            }
+          } catch (error) {
+            console.error("Error logging in:", error);
+          }
+    }
+
     decreaseScore(amount){
 
         this.score = Math.round(Math.max(this.score - amount, 0))
     }
 
     restartLevel(){
+        console.log('Restarting')
         // Save Score
         // Save the score and level only if the current score is higher than the saved one
-        if (this.score > this.highScore.score) {
-            this.saveHighScore(this.score, this.level);
-            this.highScore = { score: this.score, level: this.level }; // Update high score in the scene
+        if (this.score > this.highScore) {
+            this.saveScoreToDb(this.score, this.level);
+            console.log('Saving Score to DB')
+            this.highScore = this.score
+            this.highScoreLevel = this.level
+
         }
+
+        // Update the texts
+        this.recordText_Score.setText(`High Score: ${Math.round(this.highScore)}`);
+        this.recordText_Level.setText(`Furthest Level: ${this.highScoreLevel}`);
 
         this.level = 1
         this.score = 0
@@ -48,16 +88,10 @@ export default class Badlands extends Phaser.Scene {
         this.levelText.setText(`Level: ${this.level}`);
         this.scoreText.setText(`Score: ${this.score}`);
 
-        // Update the texts
-        this.recordText_Score.setText(`High Score: ${Math.round(this.highScore.score)}`);
-        this.recordText_Level.setText(`Furthest Level: ${this.highScore.level}`);
+        
     }
 
-    init(data) {
-        console.log(data)
-        this.region = data.region;
-        this.playerAlias = data.playerData.alias
-    }
+    
 
     preload(){
         // Load assets if needed
@@ -66,6 +100,10 @@ export default class Badlands extends Phaser.Scene {
     }
 
     create() {
+
+        //
+        this.highScore = this.playerData.score
+        this.highScoreLevel = this.playerData.level
 
         // Stubs
             // Set up a timed event to increase level every 30 seconds
@@ -98,12 +136,12 @@ export default class Badlands extends Phaser.Scene {
 
         this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
             //`${this.playerAlias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
-            `${this.playerAlias} - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
+            `${this.playerData.alias} - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
 
         var textAnchorPointX = 0.05
         var textAnchorPointY = 0.05
         this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
-            `${this.playerAlias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
+            `${this.playerData.alias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
 
         // Initialize the score display
         this.scoreText = this.add.text(this.scale.width * textAnchorPointX, this.titleText.y + (this.scale.height * textAnchorPointY), `Score: ${this.score}`, {
@@ -136,12 +174,12 @@ export default class Badlands extends Phaser.Scene {
         }).setDepth(9).setScrollFactor(0)
 
         // High Score And Level
-        this.recordText_Score = this.add.text(this.scale.width * (1 - textAnchorPointX), this.scoreText.y , `High Score: ${Math.round(this.highScore.score)}`, {
+        this.recordText_Score = this.add.text(this.scale.width * (1 - textAnchorPointX), this.scoreText.y , `High Score: ${Math.round(this.highScore)}`, {
             fontSize: '48px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
 
-        this.recordText_Level = this.add.text(this.scale.width * (1 - textAnchorPointX), this.levelText.y , `Furthest Level: ${this.highScore.level}`, {
+        this.recordText_Level = this.add.text(this.scale.width * (1 - textAnchorPointX), this.levelText.y , `Furthest Level: ${this.highestLevel}`, {
             fontSize: '24px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)

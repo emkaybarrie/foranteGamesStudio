@@ -161,7 +161,7 @@ export default class TerrainManager {
                 terrain.x -= this.stageManager.baseSpeed
 
                 if (terrain.isSequenceEnd && terrain.x < this.scene.scale.width && !terrain.triggeredNewSequence){
-                    console.log(`Generating new ${terrain.elevation} terrain sequence`);
+                    //console.log(`Generating new ${terrain.elevation} terrain sequence`);
                     terrain.triggeredNewSequence = true
 
                     this.generateTerrainSequence(terrain.x + terrain.displayWidth, elevation)
@@ -169,7 +169,7 @@ export default class TerrainManager {
 
                 if (terrain.x < -terrain.displayWidth){
                     terrain.destroy();
-                    console.log(`Destroying ${terrain.elevation} terrain`);
+                    //console.log(`Destroying ${terrain.elevation} terrain`);
                 } else {
                     
                     // Update last platform position only if the platform is still visible
