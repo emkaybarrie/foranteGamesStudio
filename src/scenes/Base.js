@@ -1,3 +1,5 @@
+import { config } from "../config.js";
+
 export default class Base extends Phaser.Scene {
     constructor() {
         super('Base');
@@ -13,14 +15,88 @@ export default class Base extends Phaser.Scene {
     }
 
     create() {
-        // Title at the top-left corner
-        this.add.text(400, 50, 'Spirit Information', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
-
+        this.bg = this.add.image(0, 0, 'city').setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
         
-        const centerX = 400, centerY = 200, radius = 100;
+        // Spirit Information
+        this.sAPointX = this.scale.width * 0.2
+        this.sAPointY = this.scale.height * 0.95
+        this.initialiseSpiritSegment()
+        
+
+ 
+    
+        
+
+        // The Badlands
+
+        // Create a container for the right side menu
+        const regionButtons = ['North', 'South', 'East', 'West'];
+        const regionPositions = {
+            North: { x: this.scale.width * 0.5, y: this.scale.height * 0.75 },
+            South: { x: this.scale.width * 0.5, y: this.scale.height * 0.95 },
+            East: { x: this.scale.width * 0.575, y: this.scale.height * 0.85 },
+            West: { x: this.scale.width * 0.425, y: this.scale.height * 0.85 },
+        };
+
+        // Create region buttons (N, S, E, W)
+        this.regionButtonMap = {};
+        regionButtons.forEach((region, index) => {
+            this.regionButtonMap[region] = this.add.text(regionPositions[region].x, regionPositions[region].y, region, {
+                fontSize: '24px',
+                fill: '#fff',
+                backgroundColor: '#444',
+                padding: { x: 10, y: 10 },
+            })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerdown', () => this.selectRegion(region));
+        });
+
+        // Center Start Button
+        this.startButton = this.add.text(this.scale.width * 0.5, this.scale.height * 0.85, 'Start', { fontSize: '32px', fill: '#fff', backgroundColor: '#007bff', padding: { x: 20, y: 10 } })
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerdown', () => this.startBadlands());
+
+        // Placeholder image for region
+        this.regionImage = this.add.image(this.scale.width * 0.5, this.scale.height * 0.55, 'prologue').setOrigin(0.5).setScale(0.1);
+
+        // Placeholder text below the image
+        this.regionText = this.add.text(this.scale.width * 0.5, this.scale.height * 0.695, 'Select a region to start', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+
+    }
+
+    initialiseSpiritSegment(){
+        
+        
+        this.add.text(this.sAPointX, this.sAPointY, 'Spirit Information', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
+
+        // Stats with buttons
+        const stats = ['Vitality', 'Focus', 'Adaptability'];
+        const statPositionsY = [this.sAPointY - this.scale.height * 0.15 , this.sAPointY - this.scale.height * 0.1, this.sAPointY - this.scale.height * 0.05];
+
+        this.statButtons = stats.map((stat, index) => {
+            const statText = this.add.text(this.sAPointX - this.scale.width * 0.075, statPositionsY[index], `${stat}: ${this.playerData[stat.toLowerCase()]}`, { fontSize: '28px', fill: '#fff' });
+            statText.setOrigin(0, 0.5)
+            
+            const button = this.add.text(this.sAPointX + this.scale.width * 0.075 , statPositionsY[index], '+', { fontSize: '30px', fill: '#0f0' })
+                .setInteractive()
+                .setOrigin(0.5)
+                .on('pointerdown', () => this.allocateSpiritPoint(stat));
+
+            button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5); // Button is disabled if no points available
+            // Store the stat name inside the button object
+            return { statText, button, stat: stat };  // Store the stat name here
+        });
+
+        // Spirit Points counter
+        this.spiritPointsText = this.add.text(this.sAPointX , this.sAPointY - this.scale.height * 0.2, `Spirit Points: ${this.playerData.spiritPoints}`, { fontStyle: 'bold', fontSize: '24px', fill: '#fff' });
+        this.spiritPointsText.setOrigin(0.5)
+
+        // Spirit Level and Power Bar
+        const centerX = this.sAPointX, centerY = this.sAPointY - this.scale.height * 0.35, radius = 75, thickness = 20;
 
         const power = this.playerData.power; // The current power value
-        this.currentPower = 0; // The current power value
         const powerToNextLevel = this.playerData.powerToNextLevel; // The total power required to reach the next level
         const spiritLevel = this.playerData.spiritLevel; // This is the spirit level you want to display in the center of the doughnut
 
@@ -34,11 +110,15 @@ export default class Base extends Phaser.Scene {
         this.doughnut.clear();
         this.doughnut.beginPath();
         this.doughnut.arc(centerX, centerY, radius, 0, Phaser.Math.PI2, false); // Outer ring (full circle)
-        this.doughnut.strokePath();
+        this.doughnut.arc(centerX, centerY, radius - thickness, 0, Phaser.Math.PI2, true); // Inner ring (hole)
+        this.doughnut.closePath();
+        this.doughnut.fillStyle(0x333333, 1); // Dark color to represent the empty area of the doughnut
+        this.doughnut.fillPath();
 
         // Draw the "filled" part of the doughnut based on the current power
-        //this.fillDoughnut(centerX, centerY, radius, power, powerToNextLevel);
+        //this.fillDoughnut(centerX, centerY, radius, thickness, powerToNextLevel - power, powerToNextLevel);
 
+        this.animateFillDoughnut(centerX, centerY, radius, thickness, power, powerToNextLevel, 2000)
 
         // Create the text element that shows the spiritLevel at the center
         this.spiritLevelText = this.add.text(centerX, centerY, `${this.playerData.spiritLevel}`, {
@@ -58,78 +138,46 @@ export default class Base extends Phaser.Scene {
             yoyo: true,
             repeat: -1, // Repeat indefinitely
         });
-
- 
-        // Spirit Points counter
-        this.spiritPointsText = this.add.text(275, 425, `Spirit Points: ${this.playerData.spiritPoints}`, { fontSize: '24px', fill: '#fff' });
-
-        // Stats with buttons
-        const stats = ['Vitality', 'Focus', 'Adaptability'];
-        const statPositions = [500, 550, 600];
-
-        this.statButtons = stats.map((stat, index) => {
-            const statText = this.add.text(250, statPositions[index], `${stat}: ${this.playerData[stat.toLowerCase()]}`, { fontSize: '30px', fill: '#fff' });
-            
-            const button = this.add.text(550, statPositions[index], '+', { fontSize: '30px', fill: '#0f0' })
-                .setInteractive()
-                .on('pointerdown', () => this.allocateSpiritPoint(stat));
-
-            button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5); // Button is disabled if no points available
-            // Store the stat name inside the button object
-            return { statText, button, stat: stat };  // Store the stat name here
-        });
-
-        // The Badlands
-
-        // Create a container for the right side menu
-        const regionButtons = ['North', 'South', 'East', 'West'];
-        const regionPositions = {
-            North: { x: 1500, y: 600 },
-            South: { x: 1500, y: 900 },
-            East: { x: 1700, y: 750 },
-            West: { x: 1300, y: 750 },
-        };
-
-        // Create region buttons (N, S, E, W)
-        this.regionButtonMap = {};
-        regionButtons.forEach((region, index) => {
-            this.regionButtonMap[region] = this.add.text(regionPositions[region].x, regionPositions[region].y, region, {
-                fontSize: '24px',
-                fill: '#fff',
-                backgroundColor: '#444',
-                padding: { x: 10, y: 5 },
-            })
-            .setOrigin(0.5)
-            .setInteractive()
-            .on('pointerdown', () => this.selectRegion(region));
-        });
-
-        // Center Start Button
-        this.startButton = this.add.text(1500, 750, 'Start', { fontSize: '32px', fill: '#fff', backgroundColor: '#007bff', padding: { x: 20, y: 10 } })
-            .setOrigin(0.5)
-            .setInteractive()
-            .on('pointerdown', () => this.startBadlands());
-
-        // Placeholder image for region
-        this.regionImage = this.add.image(1500, 180, 'prologue').setOrigin(0.5).setScale(0.2);
-
-        // Placeholder text below the image
-        this.regionText = this.add.text(1500, 450, 'Select a region to start', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-
     }
 
-    fillDoughnut(centerX, centerY, radius, power, powerToNextLevel) {
-        // Calculate the angle for the filled portion of the doughnut
-        const angle = (power / powerToNextLevel) * Phaser.Math.PI2;  // Ratio of power to powerToNextLevel
+    // Function to animate the filling of the doughnut
+    animateFillDoughnut(centerX, centerY, radius, thickness, targetValue, totalValue, duration) {
+        // Start from 0 and tween to the target value (currentValue)
+        this.currentValue = 0;
+
+        // Create the tween to animate the filling process
+        this.tweens.add({
+            targets: this,
+            currentValue: -targetValue,  // Target the currentValue to fill to the desired value
+            duration: duration,         // Duration of the tween in milliseconds
+            ease: 'Linear',             // Ease type (Linear for consistent filling speed)
+            onUpdate: () => {
+                // Recalculate the fill percentage based on the current value
+                const startAngle = Phaser.Math.DegToRad(90);  // Start from the bottom (90 degrees in radians)
+                const fillPercentage = this.currentValue / totalValue; // Calculate the fill percentage
+                const endAngle = Phaser.Math.DegToRad(90 - (fillPercentage * 360)); // End angle based on percentage (clockwise)
+
+                // Clear previous drawing
+                //this.doughnut.clear();
+
+                // Draw the outer arc (clockwise)
+                this.doughnut.beginPath();
+                this.doughnut.arc(centerX, centerY, radius, startAngle, endAngle, false); // Outer arc (clockwise)
+
+                // Draw the inner arc (counter-clockwise) to create the hole in the middle
+                this.doughnut.arc(centerX, centerY, radius - thickness, endAngle, startAngle, true); // Inner arc (counter-clockwise)
+
+                // Close the path and fill with color
+                this.doughnut.closePath();
+                this.doughnut.fillStyle(0x800080, 1); // Purple color fill for the "filled" part
+                this.doughnut.fillPath();
+
     
-        // Draw the filled portion of the doughnut
-        this.doughnut.beginPath();
-        this.doughnut.arc(centerX, centerY, radius, Phaser.Math.PI2 - angle, Phaser.Math.PI2, false); // Inner fill
-        this.doughnut.lineTo(centerX, centerY);  // Close the path
-        this.doughnut.fillStyle(0x800080, 1); // Purple color for the filled portion
-        this.doughnut.fillPath();
+            }
+        });
     }
-    
+
+
     updateSpiritLevelText(spiritLevel) {
         // Update the spirit level text at the center of the doughnut
         this.spiritLevelText.setText(`${Math.floor(spiritLevel)}`);  // Show the current power as text
@@ -190,35 +238,5 @@ export default class Base extends Phaser.Scene {
         this.scene.start('Badlands', { region: this.selectedRegion, playerData: this.playerData });
     }
 
-    update() {
-        const centerX = 400;
-        const centerY = 250;
-        const radius = 100;
-        
-        const targetPower = this.playerData.power
-        const powerToNextLevel = this.playerData.powerToNextLevel; // The total power required to reach the next level
-        const spiritLevel = this.playerData.spiritLevel; // This is the spirit level
-    
-        // Redraw the doughnut with the updated power
-        this.doughnut.clear();
-        this.doughnut.lineStyle(10, 0x800080, 1);  // Outer doughnut
-        this.doughnut.beginPath();
-        this.doughnut.arc(centerX, centerY, radius, 0, Phaser.Math.PI2, false); // Outer ring
-        this.doughnut.strokePath();
-    
-        // Fill the doughnut based on the updated power
-        this.fillDoughnut(centerX, centerY, radius, this.currentPower, powerToNextLevel);
-        
-        // Update the spirit level text (this text remains constant in the center)
-        this.updateSpiritLevelText(spiritLevel);
-    
-        // Optional: You could animate the filling of the doughnut
-        if (this.currentPower < targetPower) {
-            this.currentPower += 0.1;  // Gradually increase the power for demo
-            if (this.currentPower > targetPower) {
-                this.currentPower = targetPower;  // Cap it to the maximum powerToNextLevel
-            }
-        }
-    }
     
 }

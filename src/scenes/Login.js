@@ -23,7 +23,8 @@ export default class Login extends Phaser.Scene {
 
   }
 
-  
+ 
+
 
   create() {
     
@@ -41,7 +42,7 @@ export default class Login extends Phaser.Scene {
     this.loginButton = this.add.text(350, 400, 'Login', {
       fontSize: '20px',
       fill: '#fff',
-      backgroundColor: '#007bff',
+      backgroundColor: '#171423',
       padding: { x: 20, y: 10 },
       fontFamily: 'Arial',
     })
@@ -101,7 +102,7 @@ export default class Login extends Phaser.Scene {
     if (highlight) {
       button.setStyle({ fill: '#ffcc00', backgroundColor: '#0056b3' });
     } else {
-      button.setStyle({ fill: '#fff', backgroundColor: '#007bff' });
+      button.setStyle({ fill: '#fff', backgroundColor: '#171423' });
     }
   }
 
@@ -205,7 +206,7 @@ export default class Login extends Phaser.Scene {
     this.submitButton = this.add.text(350, 625, "Submit",{
       fontSize: '20px',
       fill: '#fff',
-      backgroundColor: '#007bff',
+      backgroundColor: '#171423',
       padding: { x: 20, y: 10 },
       fontFamily: 'Arial',
     }).setOrigin(0.5)

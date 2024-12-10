@@ -101,11 +101,6 @@ export default class MainMenu extends Phaser.Scene {
           this.executeMenuAction(selectedIndex);
       });
   
-      // Old Code to plunder
-      //
-      // Display control tips dynamically
-      //this.controlsText = this.add.text(this.scale.width * 0.5, this.scale.height * 0.05, '', { fontSize: '16px', fill: '#fff', fontFamily: 'Arial' }).setOrigin(0.5);
-      //this.updateControlsTips('keyboard'); // Default to keyboard
   
       
     }
@@ -157,17 +152,17 @@ export default class MainMenu extends Phaser.Scene {
       // You can add more UI components here as needed (e.g., buttons, sliders for options)
 
       // Add a "Close" button to remove the overlay
-      this.closeButton = this.add.text(this.scale.width * 0.5, this.scale.height * 0.85, 'Cancel', {
+      this.closeButton = this.add.text(this.scale.width * 0.5, this.scale.height * 0.85, 'Back', {
           fontFamily: 'Arial',
-          fontSize: '28px',
+          fontSize: '24px',
           fontStyle: 'bold',
           color: '#ffffff',
           align: 'center'
       }).setOrigin(0.5).setInteractive().setDepth(9);
 
       // Create the background box for the close button
-      this.buttonBox = this.add.graphics();
-      this.buttonBox.fillStyle('#D3D3D3', 0.6);  // Purple background with 20% opacity
+      this.buttonBox = this.add.graphics().setInteractive();
+      this.buttonBox.fillStyle(0x171423, 0.65);  // Purple background with 20% opacity
       this.buttonBox.lineStyle(4, 0x800080, 0.8); // Purple border (solid)
       this.buttonBox.strokeRect(this.closeButton.x - this.closeButton.width / 2 - 10, this.closeButton.y - this.closeButton.height / 2 - 10, this.closeButton.width + 20, this.closeButton.height + 20); // Adjust for padding around button
       this.buttonBox.fillRect(this.closeButton.x - this.closeButton.width / 2 - 10, this.closeButton.y - this.closeButton.height / 2 - 10, this.closeButton.width + 20, this.closeButton.height + 20); // Background fill
@@ -175,7 +170,7 @@ export default class MainMenu extends Phaser.Scene {
 
       // Add mouse hover effect (highlighting the text when the mouse hovers)
       this.closeButton.on('pointerover', () => {
-        this.closeButton.setStyle({ color: '#ffcc00' });  // Highlight color
+       // this.closeButton.setStyle({ color: '#ffcc00' });  // Highlight color
 
         this.tweens.add({
           targets: this.closeButton,
@@ -183,6 +178,13 @@ export default class MainMenu extends Phaser.Scene {
           scaleY: 1.05,
           duration: 200,
           ease: 'Cubic.easeInOut'
+        });
+
+        this.tweens.add({
+          targets: [this.buttonBox,this.closeButton],
+          alpha: 1,
+          duration: 300,
+          ease: 'Power1',
         });
 
       });
@@ -197,6 +199,13 @@ export default class MainMenu extends Phaser.Scene {
                 scaleY: 1,
                 duration: 200,
                 ease: 'Cubic.easeInOut'
+              });
+
+              this.tweens.add({
+                targets: [this.buttonBox,this.closeButton],
+                alpha: 0.65,
+                duration: 300,
+                ease: 'Power1',
               });
           }
       });
@@ -422,7 +431,7 @@ export default class MainMenu extends Phaser.Scene {
                   level: 1,
                   score: 0,
                   spiritLevel: 1,
-                  power: 0,
+                  power: 20,
                   powerToNextLevel: 20,
                   spiritPoints: 5,
                   vitality: 1,
@@ -463,27 +472,6 @@ export default class MainMenu extends Phaser.Scene {
     }
 
 
-    ////
-  
-
-
-  
-    // changeSelection(delta) {
-    //   this.selectedOptionIndex = Phaser.Math.Wrap(this.selectedOptionIndex + delta, 0, this.options.length);
-    //   this.updateText();
-    //   this.updateHighlight();
-    // }
-  
-    
-  
-    updateControlsTips(mode) {
-      if (mode === 'keyboard') {
-        this.controlsText.setText('Navigate: Arrow Keys | Select: Space');
-      } else if (mode === 'gamepad') {
-        this.controlsText.setText('Navigate: Left Stick | Select: A');
-      }
-    }
-  
     isGamepadButtonPressed() {
       const gamepads = this.input.gamepad.gamepads;
       return gamepads.some((pad) => pad && pad.buttons[0].pressed); // Check A button

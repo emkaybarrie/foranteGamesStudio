@@ -33,6 +33,7 @@ const preload = (scene) => {
     scene.load.image('story14', 'assets/images/MainMenu/story_14.png');
     scene.load.image('explore_1', 'assets/images/MainMenu/explore_01.png');
 
+    scene.load.image('city', 'assets/images/Base/city.png');
     scene.load.image('regionNorth', 'assets/images/Base/regionNorth.png');
     scene.load.image('regionSouth', 'assets/images/Base/regionSouth.png');
     scene.load.image('regionEast', 'assets/images/Base/regionEast.png');
