@@ -109,10 +109,10 @@ export default class InputManager {
         const actionY = height * 0.7;
 
         // Create directional buttons
-        this.touchControls.up = this.createCircleButton(dPadX, dPadY - dPadRadius * 2, dPadRadius, 'up');
-        this.touchControls.down = this.createCircleButton(dPadX, dPadY + dPadRadius * 2, dPadRadius, 'down');
-        this.touchControls.left = this.createCircleButton(dPadX - dPadRadius * 2, dPadY, dPadRadius, 'left');
-        this.touchControls.right = this.createCircleButton(dPadX + dPadRadius * 2, dPadY, dPadRadius, 'right');
+        this.touchControls.up = this.createCircleButton(dPadX, dPadY - dPadRadius * 1.5, dPadRadius, 'up');
+        this.touchControls.down = this.createCircleButton(dPadX, dPadY + dPadRadius * 1.5, dPadRadius, 'down');
+        this.touchControls.left = this.createCircleButton(dPadX - dPadRadius * 1.5, dPadY, dPadRadius, 'left');
+        this.touchControls.right = this.createCircleButton(dPadX + dPadRadius * 1.5, dPadY, dPadRadius, 'right');
 
         // Create action buttons
         this.touchControls.action1 = this.createCircleButton(actionX + actionButtonRadius * 1.5, actionY, actionButtonRadius, 'A');
