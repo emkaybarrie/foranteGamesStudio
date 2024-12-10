@@ -28,8 +28,8 @@ export default class Login extends Phaser.Scene {
 
   create() {
     
-    // Left side: Image and dynamic text
-    const leftImage = this.add.image(0, 0, this.imageKey).setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
+    // Image and dynamic text
+    const bg = this.add.image(0, 0, this.imageKey).setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
     
 
     // Right side: Input fields and button
@@ -95,6 +95,23 @@ export default class Login extends Phaser.Scene {
   
     inputBox.textObject = text; // Link the text object to the input box
 
+    // Create and store the input field for triggering the virtual keyboard
+    inputBox.inputField = document.createElement('input');
+    inputBox.inputField.type = 'text';
+    inputBox.inputField.style.position = 'absolute';
+    inputBox.inputField.style.left = '-9999px'; // Hide offscreen
+    document.body.appendChild(inputBox.inputField); // Add to the document
+
+    // Focus input field when this input box is selected
+    inputBox.setFocus = () => {
+        inputBox.inputField.focus();
+    };
+
+    // Blur the input field to close the virtual keyboard
+    inputBox.blur = () => {
+        inputBox.inputField.blur();
+    };
+
     return inputBox;
   }
 
@@ -116,7 +133,14 @@ export default class Login extends Phaser.Scene {
 
 
   async handleLogin(aliasOrEmail, password) {
+
     if (this.isProcessing) return; // Prevent double submissions
+
+    // Close the keyboard by blurring the active input field
+    if (this.activeInput && this.activeInput.blur) {
+      this.activeInput.blur();
+    }
+
     this.clearMessages();
     this.isProcessing = true;    
 
@@ -325,9 +349,15 @@ export default class Login extends Phaser.Scene {
     // If there was a previously active input box, reset its style
   if (this.activeInput && this.activeInput !== inputBox) {
     this.activeInput.setStrokeStyle(2, 0xffffff); // Reset previous input box style
+    // Deactivate the previous active input
+    if (this.activeInput.blur) {
+      this.activeInput.blur();
+    }
   }
 
+  // Set the new active input and focus it
   this.activeInput = inputBox;
+  this.activeInput.setFocus();
 
   // Set the stroke style to highlight the active input box
   this.activeInput.setStrokeStyle(4, 0x00ff00); // Highlight the active box
