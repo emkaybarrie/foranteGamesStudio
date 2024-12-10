@@ -107,6 +107,11 @@ export default class Login extends Phaser.Scene {
         inputBox.inputField.focus();
     };
 
+    // Sync the value of the HTML input field with the active input box's text
+    inputBox.inputField.addEventListener('input', (event) => {
+      inputBox.text = inputBox.inputField.value;
+    });
+
     // Blur the input field to close the virtual keyboard
     inputBox.blur = () => {
         inputBox.inputField.blur();
