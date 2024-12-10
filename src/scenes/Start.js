@@ -14,6 +14,8 @@ export default class Start extends Phaser.Scene {
 
     create() {
 
+        
+
         this.cameras.main.fadeIn(1500, 0, 0, 0);
 
         // Debug

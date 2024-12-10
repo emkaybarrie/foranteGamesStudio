@@ -101,6 +101,8 @@ export default class Badlands extends Phaser.Scene {
 
     create() {
 
+        this.input.mouse.disableContextMenu();
+
         //
         this.highScore = this.playerData.score
         this.highScoreLevel = this.playerData.level

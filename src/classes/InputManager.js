@@ -2,9 +2,26 @@ export default class InputManager {
     constructor(scene) {
         this.scene = scene
         this.cursors = null;
-        this.attackKey = null;
-        this.defendKey = null;
+        this.actionKey1 = null;
+        this.actionKey2 = null;
+        this.specialKey1 = null;
+        this.specialKey2 = null;
+        this.modeKey = null;
         this.gamepad = null;
+
+        // Flags for mouse/touch
+        this.isLeftMouseDown = false;
+        this.isRightMouseDown = false;
+        this.isSingleTap = false;
+        this.isDoubleTap = false;
+
+        this.lastTapTime = 0; // For detecting double-tap
+
+        // Swipe properties
+        this.swipeStart = null;
+        this.swipeEnd = null;
+        this.swipeDirection = null;
+        this.swipeThreshold = 50; // Minimum distance for a swipe
     }
 
     setupControls() {
@@ -22,6 +39,70 @@ export default class InputManager {
         this.scene.input.gamepad.once('connected', (pad) => {
             this.gamepad = pad;
         });
+
+        // Mouse click listeners
+        this.scene.input.on('pointerdown', (pointer) => {
+            if (pointer.leftButtonDown()) {
+                this.isLeftMouseDown = true;
+            }
+            if (pointer.rightButtonDown()) {
+                this.isRightMouseDown = true;
+            }
+
+            // Start tracking swipe
+            this.swipeStart = { x: pointer.x, y: pointer.y };
+
+            // Check for double-tap
+            const currentTime = this.scene.time.now;
+            if (currentTime - this.lastTapTime < 500) { // 300ms threshold for double-tap
+                this.isDoubleTap = true;
+            } else {
+                this.isSingleTap = true;
+            }
+            this.lastTapTime = currentTime;
+        });
+
+        this.scene.input.on('pointerup', (pointer) => {
+            if (pointer.leftButtonReleased()) {
+                this.isLeftMouseDown = false;
+            }
+            if (pointer.rightButtonReleased()) {
+                this.isRightMouseDown = false;
+            }
+
+            // Detect swipe direction
+            if (this.swipeStart) {
+                this.swipeEnd = { x: pointer.x, y: pointer.y };
+                this.detectSwipe();
+            }
+
+            // Reset single-tap/double-tap flags after releasing
+            this.isSingleTap = false;
+            this.isDoubleTap = false;
+
+            // Reset swipe data
+            this.swipeStart = null;
+            this.swipeEnd = null;
+        });
+    }
+
+    detectSwipe() {
+        if (!this.swipeStart || !this.swipeEnd) return;
+
+        const deltaX = this.swipeEnd.x - this.swipeStart.x;
+        const deltaY = this.swipeEnd.y - this.swipeStart.y;
+
+        if (Math.abs(deltaX) > this.swipeThreshold || Math.abs(deltaY) > this.swipeThreshold) {
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // Horizontal swipe
+                this.swipeDirection = deltaX > 0 ? 'right' : 'left';
+            } else {
+                // Vertical swipe
+                this.swipeDirection = deltaY > 0 ? 'down' : 'up';
+            }
+        } else {
+            this.swipeDirection = null; // Not a valid swipe
+        }
     }
 
     update() {
@@ -36,10 +117,18 @@ export default class InputManager {
             action2: this.actionKey2 && this.actionKey2.isDown, // Check for A key attack
             special1: this.specialKey1 && this.specialKey1.isDown, // Check for A key attack
             special2: this.specialKey2 && this.specialKey2.isDown, // Check for W key attack
-            mode: this.modeKey && Phaser.Input.Keyboard.JustDown(this.modeKey)
+            mode: this.modeKey && Phaser.Input.Keyboard.JustDown(this.modeKey),
+
+            // Swipe-based actions
+            swipeUp: this.swipeDirection === 'up',
+            swipeDown: this.swipeDirection === 'down',
+            swipeLeft: this.swipeDirection === 'left',
+            swipeRight: this.swipeDirection === 'right'
         };
 
-        
+        // Mouse/Touch controls
+        controls.jump = controls.jump || this.isSingleTap || this.isLeftMouseDown
+        controls.action2 = controls.action2 || this.isDoubleTap || this.isRightMouseDown
 
 
         // Handle gamepad controls if connected
@@ -62,6 +151,9 @@ export default class InputManager {
 
             
         }
+
+        // Reset swipe direction after processing
+        this.swipeDirection = null;
 
         return controls;
     }

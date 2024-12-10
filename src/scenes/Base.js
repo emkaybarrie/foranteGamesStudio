@@ -4,7 +4,7 @@ export default class Base extends Phaser.Scene {
     constructor() {
         super('Base');
 
-        this.selectedRegion = Phaser.Math.Between(1,4)
+        this.selectedRegion = Phaser.Math.Between(1,1)
     }
 
     init(data) {

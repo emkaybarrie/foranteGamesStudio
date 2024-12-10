@@ -796,7 +796,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                 this.scene.restartLevel()
 
                 
-
+                this.sprite.x = this.scene.scale.width * 0.2
                 this.sprite.y = 0
                 this.sprite.setVelocity(0)
                 this.stageManager.cameraManager.mainCamera.flash(400, 255, 255, 255)

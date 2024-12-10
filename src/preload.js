@@ -1,4 +1,6 @@
 const preload = (scene) => {
+
+    scene.input.mouse.disableContextMenu();
     // Load images
     scene.load.image('titleScreenText1', 'assets/images/titleScreens/titleText_01.png');
     scene.load.image('titleScreenText2', 'assets/images/titleScreens/titleText_02.png');
