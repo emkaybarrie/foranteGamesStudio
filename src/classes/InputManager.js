@@ -24,7 +24,8 @@ export default class InputManager {
         this.swipeThreshold = 50; // Minimum distance for a swipe
 
         this.touchControls = {}; // Store touch control buttons here
-        this.isMobile = true//Phaser.Input.Touch && this.scene.sys.game.device.input.touch;
+        this.isMobile = Phaser.Input.Touch && this.scene.sys.game.device.input.touch;
+        this.input.addPointer(10);  // Allow up to 10 pointers
 
     }
 
@@ -215,10 +216,11 @@ export default class InputManager {
         };
 
         // Mouse/Touch controls
-        // controls.jump = controls.jump || this.isSingleTap || this.isLeftMouseDown 
-        // controls.action2 = controls.action2 || this.isDoubleTap || this.isRightMouseDown
-
-
+        if(!this.isMobile){
+            controls.jump = controls.jump || this.isSingleTap || this.isLeftMouseDown 
+            controls.action2 = controls.action2 || this.isDoubleTap || this.isRightMouseDown
+        }
+         
         // Handle gamepad controls if connected
         if (this.gamepad) {
             // Joystick for movement

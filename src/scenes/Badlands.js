@@ -216,15 +216,12 @@ export default class Badlands extends Phaser.Scene {
          // Input Manager
         this.inputManager = new InputManager(this)
         this.inputManager.setupControls()
+        this.input.addPointer(10);  // Allow up to 10 pointers
         
         // Stage Manager
         this.stageManager = new StageManager (this, this.inputManager, stageConfig)
 
-        // Touch
 
-        // Add touch controls if on mobile
-        // this.touchControls = new TouchControls(this, this.inputManager);
-        // this.touchControls.create();
   
         
     }
