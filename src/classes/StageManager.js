@@ -130,6 +130,7 @@ export default class StageManager {
     }
 
         manageStage(time, delta){
+
             // Sub Managers
             this.cameraManager.update()
             this.avatarManager.update(time, delta); // Call avatar update to manage state

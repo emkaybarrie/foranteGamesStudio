@@ -1,6 +1,7 @@
 import preload from '../preload.js';
 import StageManager from '../classes/StageManager.js';
 import InputManager from '../classes/InputManager.js';
+import TouchControls from '../classes/TouchControls.js';
 
 
 export default class Badlands extends Phaser.Scene {
@@ -12,8 +13,7 @@ export default class Badlands extends Phaser.Scene {
         this.avatar = null;
         this.level = 1
         this.score = 0
-        // Load high score from localStorage
-       // this.highScore = this.loadHighScore();
+        this.touchControls = null;
         
     }
 
@@ -102,6 +102,8 @@ export default class Badlands extends Phaser.Scene {
     create() {
 
         this.input.mouse.disableContextMenu();
+
+        
 
         //
         this.highScore = this.playerData.score
@@ -217,6 +219,12 @@ export default class Badlands extends Phaser.Scene {
         
         // Stage Manager
         this.stageManager = new StageManager (this, this.inputManager, stageConfig)
+
+        // Touch
+
+        // Add touch controls if on mobile
+        // this.touchControls = new TouchControls(this, this.inputManager);
+        // this.touchControls.create();
   
         
     }
@@ -288,6 +296,8 @@ export default class Badlands extends Phaser.Scene {
         console.log(this.stageManager.avatarManager.adaptability)
 
         this.stageManager.update(time, delta)
+
+        this.inputManager.update();
 
         this.scoreText.setText(`Score: ${Math.round(this.score)}`);
         this.avatarHealthText.setText(`Health:         ${Math.round(this.stageManager.avatarManager.currentHealth)}`)

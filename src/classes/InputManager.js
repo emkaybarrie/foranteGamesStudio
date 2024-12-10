@@ -22,6 +22,10 @@ export default class InputManager {
         this.swipeEnd = null;
         this.swipeDirection = null;
         this.swipeThreshold = 50; // Minimum distance for a swipe
+
+        this.touchControls = {}; // Store touch control buttons here
+        this.isMobile = true//Phaser.Input.Touch && this.scene.sys.game.device.input.touch;
+
     }
 
     setupControls() {
@@ -84,6 +88,88 @@ export default class InputManager {
             this.swipeStart = null;
             this.swipeEnd = null;
         });
+
+        // Set up touch controls if on mobile
+        if (this.isMobile) {
+            this.setupTouchControls();
+        }
+    }
+
+    setupTouchControls() {
+        const width = this.scene.scale.width;
+        const height = this.scene.scale.height;
+
+        const dPadRadius = Math.min(width, height) * 0.05; // Relative size
+        const actionButtonRadius = Math.min(width, height) * 0.05;
+
+        const dPadX = width * 0.15;
+        const dPadY = height * 0.75;
+
+        const actionX = width * 0.85;
+        const actionY = height * 0.7;
+
+        // Create directional buttons
+        this.touchControls.up = this.createCircleButton(dPadX, dPadY - dPadRadius * 2, dPadRadius, 'up');
+        this.touchControls.down = this.createCircleButton(dPadX, dPadY + dPadRadius * 2, dPadRadius, 'down');
+        this.touchControls.left = this.createCircleButton(dPadX - dPadRadius * 2, dPadY, dPadRadius, 'left');
+        this.touchControls.right = this.createCircleButton(dPadX + dPadRadius * 2, dPadY, dPadRadius, 'right');
+
+        // Create action buttons
+        this.touchControls.action1 = this.createCircleButton(actionX + actionButtonRadius * 1.5, actionY, actionButtonRadius, 'A');
+        this.touchControls.action2 = this.createCircleButton(actionX - actionButtonRadius * 1.5, actionY, actionButtonRadius, 'B');
+        this.touchControls.special1 = this.createCircleButton(actionX, actionY - actionButtonRadius * 1.5, actionButtonRadius, 'X');
+        this.touchControls.special2 = this.createCircleButton(actionX, actionY + actionButtonRadius * 1.5, actionButtonRadius, 'Y');
+    }
+
+    createCircleButton(x, y, radius, label) {
+        const button = this.scene.add.circle(x, y, radius, 0x000000, 0.5).setInteractive().setDepth(9);
+        const text = this.scene.add.text(x, y, label, {
+            fontSize: `${radius}px`,
+            color: '#ffffff',
+        }).setOrigin(0.5).setDepth(9);
+
+        // Highlight effect
+        button.on('pointerdown', () => {
+            this.updateControls(label, true);
+            button.setFillStyle(0xffffff, 1);
+            text.setColor('#000000');
+        });
+
+        button.on('pointerup', () => {
+            this.updateControls(label, false);
+            button.setFillStyle(0x000000, 0.5);
+            text.setColor('#ffffff');
+        });
+
+        button.on('pointerout', () => {
+            this.updateControls(label, false);
+            button.setFillStyle(0x000000, 0.5);
+            text.setColor('#ffffff');
+        });
+
+        return { button, text }; // Group button and text
+    }
+
+    updateControls(label, isActive) {
+        switch (label) {
+            case 'up': this.cursors.up = { isDown: isActive }; break;
+            case 'down': this.cursors.down = { isDown: isActive }; break;
+            case 'left': this.cursors.left = { isDown: isActive }; break;
+            case 'right': this.cursors.right = { isDown: isActive }; break;
+            case 'A': this.actionKey1 = { isDown: isActive }; break;
+            case 'B': this.actionKey2 = { isDown: isActive }; break;
+            case 'X': this.specialKey1 = { isDown: isActive }; break;
+            case 'Y': this.specialKey2 = { isDown: isActive }; break;
+        }
+    }
+
+    hideTouchControls() {
+        if (this.isMobile) {
+            Object.values(this.touchControls).forEach(({ button, text }) => {
+                button.setVisible(false);
+                text.setVisible(false);
+            });
+        }
     }
 
     detectSwipe() {
@@ -107,6 +193,8 @@ export default class InputManager {
 
     update() {
 
+
+
         const controls = {
             left: this.cursors && this.cursors.left.isDown,
             right: this.cursors && this.cursors.right.isDown,
@@ -127,8 +215,8 @@ export default class InputManager {
         };
 
         // Mouse/Touch controls
-        controls.jump = controls.jump || this.isSingleTap || this.isLeftMouseDown
-        controls.action2 = controls.action2 || this.isDoubleTap || this.isRightMouseDown
+        // controls.jump = controls.jump || this.isSingleTap || this.isLeftMouseDown 
+        // controls.action2 = controls.action2 || this.isDoubleTap || this.isRightMouseDown
 
 
         // Handle gamepad controls if connected

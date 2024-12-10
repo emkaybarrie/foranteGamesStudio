@@ -858,6 +858,8 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         // Update input manager to check for controls
         const controls = this.input.update();
 
+        
+
 
         if(controls.mode){
             this.switchMode()
