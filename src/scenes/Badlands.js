@@ -102,7 +102,8 @@ export default class Badlands extends Phaser.Scene {
 
         this.input.mouse.disableContextMenu();
 
-        this.isMobile = this.input.activePointer.touch;
+        this.isTouch = this.input.activePointer.touch;
+        this.isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
 
         //
@@ -119,7 +120,7 @@ export default class Badlands extends Phaser.Scene {
             });
             // Controls
             // Show controls text on screen
-            if (!this.isMobile){
+            if (!this.isMobile || !this.isTouch){
                 this.createControlsText(this);
             }
             
