@@ -25,7 +25,7 @@ export default class InputManager {
 
         this.touchControls = {}; // Store touch control buttons here
         this.isMobile = Phaser.Input.Touch && this.scene.sys.game.device.input.touch;
-        this.input.addPointer(10);  // Allow up to 10 pointers
+        
 
     }
 

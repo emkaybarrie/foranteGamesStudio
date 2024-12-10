@@ -13,7 +13,6 @@ export default class Badlands extends Phaser.Scene {
         this.level = 1
         this.score = 0
         this.touchControls = null;
-        this.isMobile = Phaser.Input.Touch && this.scene.sys.game.device.input.touch;
         
     }
 
@@ -103,7 +102,8 @@ export default class Badlands extends Phaser.Scene {
 
         this.input.mouse.disableContextMenu();
 
-        
+        this.isMobile = this.input.activePointer.touch;
+
 
         //
         this.highScore = this.playerData.score
