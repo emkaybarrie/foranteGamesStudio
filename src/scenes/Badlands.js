@@ -1,7 +1,6 @@
 import preload from '../preload.js';
 import StageManager from '../classes/StageManager.js';
 import InputManager from '../classes/InputManager.js';
-import TouchControls from '../classes/TouchControls.js';
 
 
 export default class Badlands extends Phaser.Scene {
@@ -14,6 +13,7 @@ export default class Badlands extends Phaser.Scene {
         this.level = 1
         this.score = 0
         this.touchControls = null;
+        this.isMobile = Phaser.Input.Touch && this.scene.sys.game.device.input.touch;
         
     }
 
@@ -119,7 +119,10 @@ export default class Badlands extends Phaser.Scene {
             });
             // Controls
             // Show controls text on screen
-            this.createControlsText(this);
+            if (!this.isMobile){
+                this.createControlsText(this);
+            }
+            
 
             const musicList = {
                 1:'142',
