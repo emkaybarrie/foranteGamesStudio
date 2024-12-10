@@ -13,7 +13,33 @@ export default class Start extends Phaser.Scene {
     }
 
     create() {
-        const titleScreen = this.add.image(0,0,'titleScreen').setOrigin(0).setInteractive();
+
+        this.cameras.main.fadeIn(1500, 0, 0, 0);
+
+        // Debug
+        // Variables to hold textures and the current index
+        let titleImageKeys = ['titleScreen1', 'titleScreen2a', 'titleScreen2b', 'titleScreen2c'];
+        let currentImageIndex = Phaser.Math.Between(3,3);
+        let titleTextKeys = ['titleScreenText1', 'titleScreenText2', 'titleScreenText3', 'titleScreenText4', 'titleScreenText5', 'titleScreenText6'];
+        let currentTextIndex = Phaser.Math.Between(3,3);
+
+        this.input.keyboard.on('keydown-Z', () => {
+            // Increment the index and wrap around if necessary
+            currentImageIndex = (currentImageIndex + 1) % titleImageKeys.length;
+            // Set the sprite's texture to the new one
+            titleScreen.setTexture(titleImageKeys[currentImageIndex]);
+            // Scale the image to fit the screen
+            scaleImageToFitCanvas(titleScreen);
+        });
+
+        this.input.keyboard.on('keydown-X', () => {
+            // Increment the index and wrap around if necessary
+            currentTextIndex = (currentTextIndex + 1) % titleTextKeys.length;
+            // Set the sprite's texture to the new one
+            titleText.setTexture(titleTextKeys[currentTextIndex]);
+        });
+
+        const titleScreen = this.add.image(0,0, titleImageKeys[currentImageIndex]).setOrigin(0).setInteractive()
 
         // Scale the image to fit the screen
         scaleImageToFitCanvas(titleScreen);
@@ -27,42 +53,71 @@ export default class Start extends Phaser.Scene {
         });
 
         // Add Start screen text
-        const startText = this.add.text(this.scale.width * 0.65, this.scale.height * 0.4, 'The Badlands', {
-            fontSize: '38px',
-            fill: '#fff',
-        }).setOrigin(0.5);
+     
+
+        const titleText = this.add.image(this.scale.width * 0.5, this.scale.height * 0.35,titleTextKeys[currentTextIndex]).setOrigin(0.5).setInteractive()
         
-        const instructionText = this.add.text(this.scale.width * 0.65, this.scale.height * 0.5, 'Press Space to start', {
+        const instructionText = this.add.text(this.scale.width * 0.5, this.scale.height * 0.5, 'Press Space to start', {
             fontSize: '26px',
             fill: '#fff',
+            fontStyle: 'bold'
         }).setOrigin(0.5);
+
+        // Create a fade-in and fade-out effect using a tween
+        this.tweens.add({
+            targets: instructionText,
+            alpha: 0,      // Start fully transparent
+            duration: 0,   // Instant transparency
+            yoyo: true,    // Makes the animation play back and forth
+            repeat: -1,    // Repeat indefinitely
+            ease: 'Linear', // Linear easing for a smooth fade
+            duration: 2000 // Duration of each fade in and out (1 second)
+        });
         
-        this.add.text(this.scale.width * 0.65, this.scale.height * 0.6, 'Current Supported: Keyboard, Gamepad', {
+        this.add.text(this.scale.width * 0.975, this.scale.height * 0.975, 'Current Supported: Keyboard, Gamepad', {
             fontSize: '16px',
             fill: '#fff',
-        }).setOrigin(0.5);
+            fontStyle: 'bold'
+        }).setOrigin(1, 0.5);
+
+        // Update instruction text dynamically based on input
         
         // Track input mode (default to keyboard)
         let inputMode = 'keyboard';
+        let isMouseMoving = false;
+
+        // Detect mouse movement
+        this.input.on('pointermove', () => {
+            if (!isMouseMoving) {
+                isMouseMoving = true;
+                instructionText.setText('Click to start');
+            }
+
+        });
+
+        // Detect when the mouse stops moving (after a short delay)
+        this.input.on('pointerout', () => {
+            // Mouse has left the canvas, reset text
+            isMouseMoving = false;
+            // Reset the text after a short delay if the mouse is not moving
+            this.time.delayedCall(500, () => {
+                if (!this.input.activePointer.isPointerOut  && inputMode == 'keyboard') {
+                    instructionText.setText('Press Space to start');
+                }
+            });
+        });
         
-        // Update instruction text dynamically based on input
         this.input.keyboard.on('keydown', () => {
             inputMode = 'keyboard';
             instructionText.setText('Press Space to start');
         });
-        
+
         this.input.gamepad.on('connected', () => {
             inputMode = 'gamepad';
             instructionText.setText('Press A to start');
         });
         
         // Handle "start" based on input mode
-        this.input.keyboard.on('keydown-SPACE', () => {
-            if (inputMode === 'keyboard') {
-            this.startMenuScene();
-            }
-        });
-
         this.input.keyboard.on('keydown-SPACE', () => {
             if (inputMode === 'keyboard') {
             this.startMenuScene();
@@ -79,10 +134,12 @@ export default class Start extends Phaser.Scene {
         
         // Method to start the MenuScene and enter fullscreen
         this.startMenuScene = () => {
-            this.scene.start('MainMenu');
-            this.scale.startFullscreen();
+                this.scene.start('MainMenu');
+                this.scale.startFullscreen();
         };
     }
+
+
 
     
 }

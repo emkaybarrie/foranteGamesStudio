@@ -1,6 +1,19 @@
 const preload = (scene) => {
     // Load images
-    scene.load.image('titleScreen', 'assets/images/titleScreens/titleScreen_01.png');
+    scene.load.image('titleScreenText1', 'assets/images/titleScreens/titleText_01.png');
+    scene.load.image('titleScreenText2', 'assets/images/titleScreens/titleText_02.png');
+    scene.load.image('titleScreenText3', 'assets/images/titleScreens/titleText_03.png');
+    scene.load.image('titleScreenText4', 'assets/images/titleScreens/titleText_04.png');
+    scene.load.image('titleScreenText5', 'assets/images/titleScreens/titleText_05.png');
+    scene.load.image('titleScreenText6', 'assets/images/titleScreens/titleText_06.png');
+
+    scene.load.image('titleScreen1', 'assets/images/titleScreens/titleScreen_01.png');
+    scene.load.image('titleScreen2a', 'assets/images/titleScreens/titleScreen_02aFixed1.png');
+    scene.load.image('titleScreen2b', 'assets/images/titleScreens/titleScreen_02aFixed2.png');
+    scene.load.image('titleScreen2c', 'assets/images/titleScreens/titleScreen_02bFixed.png');
+
+
+    
 
     scene.load.image('prologue', 'assets/images/MainMenu/prologue.png');
     scene.load.image('story', 'assets/images/MainMenu/story.png');
