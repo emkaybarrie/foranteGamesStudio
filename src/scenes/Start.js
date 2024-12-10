@@ -135,7 +135,7 @@ export default class Start extends Phaser.Scene {
         // Method to start the MenuScene and enter fullscreen
         this.startMenuScene = () => {
                 this.scene.start('MainMenu');
-                this.scale.startFullscreen();
+                //this.scale.startFullscreen();
         };
     }
 

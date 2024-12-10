@@ -14,23 +14,21 @@ export default class Login extends Phaser.Scene {
     this.submitButton = null
   }
 
-  preload() {
-    // Preload assets
-    // this.dynamicText = this.add.text(150, 450, 'Dynamic text here', {
-    //   fontSize: '16px',
-    //   fill: '#fff',
-    //   fontFamily: 'Arial',
-    //   align: 'center',
-    //   wordWrap: { width: 250 },
-    // }).setOrigin(0.5);
-
-    // this.updateDynamicText(); // Replace with dynamic logic when needed
+  init(data){
+    this.imageKey = data.imageKey
+    console.log(this.imageKey)
   }
+
+  preload() {
+
+  }
+
+  
 
   create() {
     
     // Left side: Image and dynamic text
-    const leftImage = this.add.image(0, 0, 'story').setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
+    const leftImage = this.add.image(0, 0, this.imageKey).setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
     
 
     // Right side: Input fields and button

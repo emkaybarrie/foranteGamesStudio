@@ -104,8 +104,8 @@ export default class MainMenu extends Phaser.Scene {
       // Old Code to plunder
       //
       // Display control tips dynamically
-      this.controlsText = this.add.text(this.scale.width * 0.5, this.scale.height * 0.05, '', { fontSize: '16px', fill: '#fff', fontFamily: 'Arial' });
-      this.updateControlsTips('keyboard'); // Default to keyboard
+      //this.controlsText = this.add.text(this.scale.width * 0.5, this.scale.height * 0.05, '', { fontSize: '16px', fill: '#fff', fontFamily: 'Arial' }).setOrigin(0.5);
+      //this.updateControlsTips('keyboard'); // Default to keyboard
   
       
     }
@@ -159,11 +159,19 @@ export default class MainMenu extends Phaser.Scene {
       // Add a "Close" button to remove the overlay
       this.closeButton = this.add.text(this.scale.width * 0.5, this.scale.height * 0.85, 'Cancel', {
           fontFamily: 'Arial',
-          fontSize: '32px',
+          fontSize: '28px',
           fontStyle: 'bold',
           color: '#ffffff',
           align: 'center'
-      }).setOrigin(0.5).setInteractive();
+      }).setOrigin(0.5).setInteractive().setDepth(9);
+
+      // Create the background box for the close button
+      this.buttonBox = this.add.graphics();
+      this.buttonBox.fillStyle('#D3D3D3', 0.6);  // Purple background with 20% opacity
+      this.buttonBox.lineStyle(4, 0x800080, 0.8); // Purple border (solid)
+      this.buttonBox.strokeRect(this.closeButton.x - this.closeButton.width / 2 - 10, this.closeButton.y - this.closeButton.height / 2 - 10, this.closeButton.width + 20, this.closeButton.height + 20); // Adjust for padding around button
+      this.buttonBox.fillRect(this.closeButton.x - this.closeButton.width / 2 - 10, this.closeButton.y - this.closeButton.height / 2 - 10, this.closeButton.width + 20, this.closeButton.height + 20); // Background fill
+
 
       // Add mouse hover effect (highlighting the text when the mouse hovers)
       this.closeButton.on('pointerover', () => {
@@ -171,8 +179,8 @@ export default class MainMenu extends Phaser.Scene {
 
         this.tweens.add({
           targets: this.closeButton,
-          scaleX: 1.2,
-          scaleY: 1.2,
+          scaleX: 1.05,
+          scaleY: 1.05,
           duration: 200,
           ease: 'Cubic.easeInOut'
         });
@@ -231,6 +239,7 @@ export default class MainMenu extends Phaser.Scene {
         this.overlay.clear();  // Clear the graphics
         this.overlayText.destroy()
         this.closeButton.destroy()
+        this.buttonBox.destroy()
       }
 
       // Re-enable interactivity for the main menu items
@@ -251,33 +260,185 @@ export default class MainMenu extends Phaser.Scene {
       });
     }
 
-    
-    openModeSelectMenu(){
-      //this.bg.setTint(0x444444); // Slightly darken background
+    openModeSelectMenu() {
+      // Define menu options
+      this.options = [
+          { imageKey: 'prologue', title: 'Prologue', description: 'Welcome to the Badlands' },
+          { imageKey: 'story' + Phaser.Math.Between(0,14), title: 'Story', description: 'Empower your avatar, and defend their home from the forces ravaging the land' },
+          { imageKey: 'explore_1', title: 'Explore', description: 'Experience the Badlands through the eyes of an avatar' },
+      ];
 
-            // Create menu options
-            this.options = [
-              { imageKey: 'prologue', title: 'Prologue', description: 'Description for option 1' },
-              { imageKey: 'story', title: 'Story', description: 'Description for option 2' },
-              { imageKey: 'explore_1', title: 'Explore', description: 'Description for option 3' },
-            ];
-            this.selectedOptionIndex = 0;
-        
-            this.menuImages = this.options.map((option, index) => {
-              const x = 450 + index * 500;
-              const img = this.add.image(x, this.scale.height * 0.45, option.imageKey).setOrigin(0.5).setInteractive();
-              img.setScale(0.15);
-              img.on('pointerover', () => this.setHighlight(index));
-              img.on('pointerdown', () => this.selectOption(index));
-              return img;
-            });
-        
-            // Title and description text
-            this.titleText = this.add.text(this.scale.width * 0.5, this.scale.height * 0.7, '', { fontSize: '24px', fill: '#fff', fontFamily: 'Arial' }).setOrigin(0.5);
-            this.descriptionText = this.add.text(this.scale.width * 0.5, this.scale.height * 0.75, '', { fontSize: '16px', fill: '#ccc', fontFamily: 'Arial' }).setOrigin(0.5);
-        
-            this.updateText();
-    }
+      this.storyImageKey = this.options[1].imageKey
+
+      console.log(this.storyImageKey)
+  
+      this.selectedOptionIndex = 0;
+  
+      // Create menu items
+      this.menuItems = this.options.map((option, index) => {
+          const x = (this.scale.width * 0.25) + (index * (this.scale.width * 0.25));
+          const y = this.scale.height * 0.5;
+          const initialAlpha = 0.65;  // Initial opacity
+  
+          // Image
+          const img = this.add.image(0, -73, option.imageKey);
+          img.displayWidth = 300;
+          img.displayHeight = 285;
+
+          const totalHeight = img.displayHeight + 150; // Includes space for text
+          const totalWidth = img.displayWidth + 4; // Slight padding
+  
+          // Title text
+          const title = this.add.text(0, img.displayHeight / 2 - 40, option.title, {
+              fontSize: '24px',
+              fill: '#fff',
+              fontFamily: 'Arial',
+              //fontStyle: 'bold',
+              wordWrap: { width: totalWidth * 0.9 }
+          }).setOrigin(0.5);
+  
+          // Description text
+          const description = this.add.text(0, img.displayHeight / 2 + 15, option.description, {
+              fontSize: '16px',
+              fill: '#ccc',
+              fontFamily: 'Arial',
+              wordWrap: { width: totalWidth * 0.9 }
+          }).setOrigin(0.5);
+  
+          // Border (rectangle graphics)
+          // Define colors
+          const borderColor = 0x6A0DAD;  // Dark Purple color
+          const boxFillColour = 0x171423
+          const border = this.add.graphics();
+          border.lineStyle(4, 0xffffff, 1);
+          border.strokeRect(-totalWidth / 2, -totalHeight / 2, totalWidth, totalHeight);
+          
+
+          // Step 1: Create the light grey fill using Graphics
+          const fillGraphics = this.add.graphics();
+          fillGraphics.fillStyle(boxFillColour, 1); // Light grey color (Hex: 0xD3D3D3)
+          fillGraphics.fillRect(-totalWidth / 2, -totalHeight / 2, totalWidth, totalHeight); // Adjust size to fit the container
+  
+          // Create a container to group the image, text, and border
+          const container = this.add.container(x, y, [border, fillGraphics, img, title, description]);
+          container.setSize(totalWidth, totalHeight);
+          container.setAlpha(initialAlpha);  // Set initial opacity for border
+  
+          // Use container's size for interactivity
+          container.setInteractive();
+  
+          // Interactive scaling on hover
+          container.on('pointerover', () => this.highlightOption(container, 1.2,1));
+          container.on('pointerout', () => this.unHighlightOption(container, 1, 0.65));
+          container.on('pointerdown', () => this.selectOption(container,index));
+
+  
+          return container;
+      });
+  }
+
+  highlightOption(container,scaleFactor, alphaTarget){
+    this.tweens.add({
+      targets: container,
+      scaleX: scaleFactor,
+      scaleY: scaleFactor,
+      duration: 300,
+      ease: 'Power1',
+    });
+
+    this.tweens.add({
+      targets: container,
+      alpha: alphaTarget,
+      duration: 300,
+      ease: 'Power1',
+    });
+
+    // Tween for glimmer effect (pulsing alpha)
+    this.glimmerTween = this.tweens.add({
+      targets: container.getAt(0),
+      alpha: { from: 0.5, to: 1 },
+      duration: 800,
+      yoyo: true,  // Makes it go back to its initial alpha
+      repeat: -1,  // Infinite loop of the glimmer effect
+      ease: 'Sine.easeInOut',  // Smooth ease-in/out
+    });
+  }
+  
+  // Tween the scale of the container
+  unHighlightOption(container, scaleFactor, alphaTarget) {
+      this.tweens.add({
+          targets: container,
+          scaleX: scaleFactor,
+          scaleY: scaleFactor,
+          duration: 300,
+          ease: 'Power1',
+      });
+
+      this.tweens.add({
+        targets: container,
+        alpha: alphaTarget,
+        duration: 300,
+        ease: 'Power1',
+    });
+
+    this.glimmerTween.stop()
+
+  }
+
+  // Handle option selection
+  selectOption(container,index) {
+    console.log(`Option ${index} selected!`);
+
+    this.glimmerTween.stop()
+
+    // Flash effect on selection
+    this.tweens.add({
+      targets: container.getAt(0),
+      alpha: 0.5,  // Dim the border briefly to indicate selection
+      duration: 100,
+      yoyo: true,  // Revert back to original state
+      repeat: 2,  // Repeat once
+      ease: 'Bounce.easeOut',
+    });
+
+    // Squish effect
+    this.tweens.add({
+      targets: container,
+      scaleX: 0.9,
+      scaleY: 0.9,
+      duration: 100,
+      yoyo: true,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        this.time.delayedCall(500, () => {
+              // Proceed to the next scene based on the selected option
+              if (index + 1 == 2){
+                this.scene.start(`Login`, {imageKey: this.storyImageKey});
+              } else {
+                // Freeplay
+                this.playerData = {
+                  id: 0,
+                  alias: 'Guest',
+                  level: 1,
+                  score: 0,
+                  spiritLevel: 1,
+                  power: 0,
+                  powerToNextLevel: 20,
+                  spiritPoints: 5,
+                  vitality: 1,
+                  focus: 1,
+                  adaptability: 1
+                }
+    
+                console.log(this.playerData)
+                this.scene.start(`Base`, { dataPacket: this.playerData});
+              }
+        });
+              
+      },
+    });
+  }
+
 
     // Function to destroy all created items
     closeModeSelectMenu() {
@@ -304,72 +465,16 @@ export default class MainMenu extends Phaser.Scene {
 
     ////
   
-    setHighlight(index) {
-      this.selectedOptionIndex = index;
-      this.updateText();
-      this.updateHighlight();
-    }
-  
-    updateHighlight() {
-      this.menuImages.forEach((img, i) => {
-        if (i === this.selectedOptionIndex) {
-          img.setScale(0.175); // Enlarge selected image
-        } else {
-          img.setScale(0.15); // Slightly shrink unselected images
-        }
-      });
-    }
-  
-    updateText() {
-      const selected = this.options[this.selectedOptionIndex];
-      this.titleText.setText(selected.title);
-      this.descriptionText.setText(selected.description);
-    }
-  
-    changeSelection(delta) {
-      this.selectedOptionIndex = Phaser.Math.Wrap(this.selectedOptionIndex + delta, 0, this.options.length);
-      this.updateText();
-      this.updateHighlight();
-    }
-  
-    selectOption(index) {
-      const selectedImage = this.menuImages[index];
-  
-      // Flash effect
-      this.tweens.add({
-        targets: selectedImage,
-        alpha: 0,
-        yoyo: true,
-        repeat: 1,
-        duration: 200,
-        onComplete: () => {
-          // Proceed to the next scene based on the selected option
-          //this.scene.start(`NextScene${index + 1}`);
-          if (index + 1 == 2){
-            this.scene.start(`Login`);
-          } else {
-            // Freeplay
-            this.playerData = {
-              id: 0,
-              alias: 'Guest',
-              level: 1,
-              score: 0,
-              spiritLevel: 1,
-              power: 0,
-              powerToNextLevel: 20,
-              spiritPoints: 5,
-              vitality: 1,
-              focus: 1,
-              adaptability: 1
-            }
 
-            console.log(this.playerData)
-            this.scene.start(`Base`, { dataPacket: this.playerData});
-          }
-          
-        },
-      });
-    }
+
+  
+    // changeSelection(delta) {
+    //   this.selectedOptionIndex = Phaser.Math.Wrap(this.selectedOptionIndex + delta, 0, this.options.length);
+    //   this.updateText();
+    //   this.updateHighlight();
+    // }
+  
+    
   
     updateControlsTips(mode) {
       if (mode === 'keyboard') {

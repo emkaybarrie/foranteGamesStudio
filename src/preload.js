@@ -16,8 +16,22 @@ const preload = (scene) => {
     
 
     scene.load.image('prologue', 'assets/images/MainMenu/prologue.png');
-    scene.load.image('story', 'assets/images/MainMenu/story.png');
-    scene.load.image('explore_1', 'assets/images/MainMenu/explore_1.png');
+    scene.load.image('story0', 'assets/images/MainMenu/story.png');
+    scene.load.image('story1', 'assets/images/MainMenu/story_01.png');
+    scene.load.image('story2', 'assets/images/MainMenu/story_02.png');
+    scene.load.image('story3', 'assets/images/MainMenu/story_03.png');
+    scene.load.image('story4', 'assets/images/MainMenu/story_04.png');
+    scene.load.image('story5', 'assets/images/MainMenu/story_05.png');
+    scene.load.image('story6', 'assets/images/MainMenu/story_06.png');
+    scene.load.image('story7', 'assets/images/MainMenu/story_07.png');
+    scene.load.image('story8', 'assets/images/MainMenu/story_08.png');
+    scene.load.image('story9', 'assets/images/MainMenu/story_09.png');
+    scene.load.image('story10', 'assets/images/MainMenu/story_10.png');
+    scene.load.image('story11', 'assets/images/MainMenu/story_11.png');
+    scene.load.image('story12', 'assets/images/MainMenu/story_12.png');
+    scene.load.image('story13', 'assets/images/MainMenu/story_13.png');
+    scene.load.image('story14', 'assets/images/MainMenu/story_14.png');
+    scene.load.image('explore_1', 'assets/images/MainMenu/explore_01.png');
 
     scene.load.image('regionNorth', 'assets/images/Base/regionNorth.png');
     scene.load.image('regionSouth', 'assets/images/Base/regionSouth.png');
