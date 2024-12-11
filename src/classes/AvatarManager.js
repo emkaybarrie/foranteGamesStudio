@@ -12,7 +12,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         this.sprite.setOrigin(0.5, 1); // Set origin to center horizontally and bottom vertically
         this.sprite.setDepth(6)
-        this.sprite.setScale(1,1)
+        this.sprite.setScale(1.5,1.5)
 
         // Physics properties
         this.sprite.setBounce(0.1); // Bounce effect

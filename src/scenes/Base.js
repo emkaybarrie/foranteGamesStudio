@@ -235,7 +235,17 @@ export default class Base extends Phaser.Scene {
 
         }
         // Assuming region data is passed into 'Badlands' scene
-        this.scene.start('Badlands', { region: this.selectedRegion, playerData: this.playerData });
+        //this.scene.start('Badlands', { region: this.selectedRegion, playerData: this.playerData });
+        this.scene.start('LoadingScreen', {
+            targetScene: 'Badlands',
+            category: 'badlands',
+            assets: [
+                //{ type: 'image', key: 'terrain', path: 'assets/terrain.png' },
+                //{ type: 'spritesheet', key: 'enemy', path: 'assets/enemy_spritesheet.png', frameConfig: { frameWidth: 64, frameHeight: 64 } }
+            ],
+            region: this.selectedRegion,
+            playerData: this.playerData
+        });
     }
 
     
