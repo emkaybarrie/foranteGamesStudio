@@ -136,6 +136,11 @@ export default class LoadingScreen extends Phaser.Scene {
         const barX = (this.scale.width - barWidth) / 2;
         const barY = this.scale.height * 0.9;
 
+        const barBackground = this.add.graphics();
+        barBackground.fillStyle(0x444444, 1); // Set the color and opacity of the background
+        barBackground.fillRect(barX, barY, barWidth, barHeight); // Draw the background rectangle
+        barBackground.setDepth(7); // Ensure it stays behind the loading bar
+
         const loadingBar = this.add.graphics();
         const fluidEffect = this.add.graphics();
 
