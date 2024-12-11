@@ -26,10 +26,10 @@ export default class StageManager {
 
         // Define groups for each platform type
         this.terrainGroups = {
-            ground: this.scene.physics.add.group(),
-            low: this.scene.physics.add.group(),
-            medium: this.scene.physics.add.group(),
-            high: this.scene.physics.add.group()
+            ground: this.scene.physics.add.staticGroup(),
+            low: this.scene.physics.add.staticGroup(),
+            medium: this.scene.physics.add.staticGroup(),
+            high: this.scene.physics.add.staticGroup()
         };
 
         this.obstacleGroups = {
@@ -78,6 +78,8 @@ export default class StageManager {
         this.addColliders()
 
         const startTerrain = this.terrainManager.generateTerrain(0, 'ground', 'max')
+
+        //this.terrainManager.generateTerrain(this.scene.scale.width, 'ground', 'max')
 
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth, 'ground', 4)
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-500, 2000), 'low', 4)

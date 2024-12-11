@@ -4,12 +4,26 @@ export default class LootManager {
         this.stageManager = stageManager
         this.lootGroups = this.stageManager.lootGroups
 
+        this.scene.anims.create({
+            key: 'coinAnim',  // The key that will be used to refer to this animation
+            frames: this.scene.anims.generateFrameNumbers('coin', { start: 0, end: 11 }),  // Frame range (adjust according to your spritesheet)
+            frameRate: 10,  // Animation speed (frames per second)
+            repeat: -1  // Repeat the animation indefinitely
+        });
+
 
     }
 
+    // create(){
 
-    addLoot(x, y, elevation = 'ground', texture = 'gold', options = {}) {
+    // }
+
+
+    addLoot(x, y, elevation = 'ground', texture = 'coin', options = {}) {
         const loot = this.scene.physics.add.sprite(x, y, texture).setOrigin(0, 1);
+
+        // Play the coin animation immediately after creating the loot sprite
+        loot.anims.play('coinAnim');  // Start the animation created earlier
 
         // Add Terrain to Terrain group in Stage Manager
         this.lootGroups[elevation].add(loot);
@@ -21,7 +35,7 @@ export default class LootManager {
         loot.elevation = elevation; // Store platform type on the platform object for easy identification
 
         loot.setDepth(5)
-                .setScale(0.5)
+                .setScale(3)
                 .setSize(loot.width, loot.height * 0.8)
                 .setTint();
 

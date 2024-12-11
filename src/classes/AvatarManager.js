@@ -782,7 +782,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             setTimeout(() => {
                 this.isTakingHit = false;
                 this.canRegen = true
-                console.log("Switch is now off");
+               // console.log("Switch is now off");
             }, 250);
 
         } else if (this.currentHealth <= 0) {

@@ -41,6 +41,19 @@ const preload = (scene) => {
     scene.load.image('regionEast', 'assets/images/Base/regionEast.png');
     scene.load.image('regionWest', 'assets/images/Base/regionWest.png');
 
+    // Terrain
+
+    // In your preload method
+    scene.load.spritesheet('terrainTileset', 'assets/images/world_tileset.png', {
+        frameWidth: 16,  // Width of each tile (in pixels)
+        frameHeight: 16, // Height of each tile (in pixels)
+    });
+
+
+    // Loot
+
+    scene.load.spritesheet('coin', 'assets/images/coin.png', { frameWidth: 16, frameHeight: 16 });
+
     scene.load.image('gold', 'assets/images/gold.png');
     scene.load.image('enemy', 'assets/images/enemy.png');
     scene.load.image('enemy2', 'assets/images/enemy2.png');

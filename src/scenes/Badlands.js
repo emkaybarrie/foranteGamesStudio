@@ -294,7 +294,7 @@ export default class Badlands extends Phaser.Scene {
 
     update(time, delta) {
 
-        console.log(this.stageManager.avatarManager.adaptability)
+        //console.log(this.stageManager.avatarManager.adaptability)
 
         this.stageManager.update(time, delta)
 

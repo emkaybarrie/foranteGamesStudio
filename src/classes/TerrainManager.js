@@ -88,98 +88,214 @@ export default class TerrainManager {
 
     }
 
-    generateTerrain(x, elevation = 'ground', distance = 'standard', textureMatchStage = true, textureOverride = null){
 
-        const chaosLowerBound = this.chaosFactorSettings[elevation].chaosLowerBound
-        const chaosUpperBound = this.chaosFactorSettings[elevation].chaosUpperBound
+    generateTerrain(x, elevation = 'ground', distance = 'standard', useTopRow = true, textureMatchStage = true, textureOverride = null) {
 
+        // Define which tile index corresponds to which terrain type
+        const terrainTiles = {
+            ground: 16,  // Main body tile index
+            low: 18,
+            medium: 20,
+            high: 22
+        };
+
+        // Define which tile index corresponds to the top section of the terrain
+        const topRowTiles = {
+            ground: 0,  // Top row tile index for ground (could be different from main body)
+            low: 2,
+            medium: 4,
+            high: 6
+        };
+
+        // Get the correct tile based on terrain type
+        const tileIndex = terrainTiles[elevation] || 0; // Default to 'ground' if not found
+        //const topTileIndex = topRowTiles[elevation] || tileIndex; // Default to main body tile if no separate top tile
+        // Fetch the top row tile index (falling back to tileIndex if not found)
+        const topTileIndex = topRowTiles.hasOwnProperty(elevation) && topRowTiles[elevation] !== undefined ? topRowTiles[elevation] : tileIndex;
+
+
+        const chaosLowerBound = this.chaosFactorSettings[elevation].chaosLowerBound;
+        const chaosUpperBound = this.chaosFactorSettings[elevation].chaosUpperBound;
+    
+        // Determine texture
         var texture = null
+        // Define the desired pixel size for each tile (e.g., 64x64)
+        const desiredTileSize = 64;
+        var scaleFactorX = 1
+        var scaleFactorY = 1
 
         if(textureMatchStage){
-            texture = `${elevation}_common`
+            // Access the texture (spritesheet) using the texture key
+            texture = this.scene.textures.get('terrainTileSet'); // 'tileset' is the key used to load the spritesheet
+            // Get the frame for the selected tile index (you can use frames array)
+            const frame = texture.get('frame' + tileIndex);  // Get the frame by the index or name
+
+            // If frame is undefined, something went wrong (e.g., invalid index)
+            if (!frame) {
+                console.error("Tile index is out of bounds or the texture was not correctly loaded.");
+                return;
+            }
+
+            // Now you can get the width and height of the tile
+            const tileWidth = frame.width;
+            const tileHeight = frame.height;
+
+            // Calculate the scale factor for each axis (x and y)
+            scaleFactorX = desiredTileSize / tileWidth;  // Scale factor for width
+            scaleFactorY = desiredTileSize / tileHeight;  // Scale factor for height
+
+            if(desiredTileSize < tileWidth){
+                scaleFactorX = 1;
+                scaleFactorY = 1;
+            }
+
+        } else {
+            texture = textureOverride || `${elevation}_default` 
+            // Get the texture size (e.g., 16x16 for each tile in your tileset)
+            const textureImage = this.scene.textures.get(texture);
+            const textureWidth = textureImage.getSourceImage().width;  // Actual width of the texture
+            const textureHeight = textureImage.getSourceImage().height;  // Actual height of the texture
+
+            // Calculate the scale factor for each axis (x and y)
+            scaleFactorX = desiredTileSize / textureWidth;  // Scale factor for width
+            scaleFactorY = desiredTileSize / textureHeight;  // Scale factor for height
+
+            if(desiredTileSize < textureWidth){
+                scaleFactorX = 1;
+                scaleFactorY = 1;
+            }
         }
- 
-        const terrain = this.scene.physics.add.sprite(x, this.scene.scale.height, texture).setOrigin(0, 1);
+             
+    
+        // Calculate dimensions
+        const terrainElevation = this.elevationSettings[elevation].baseHeight;
+        const terrainDistance = this.distanceSettings[distance].baseWidth;
+        const terrainHeight = terrainElevation * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound);
+        const terrainWidth = terrainDistance * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound);
+    
+        // Create the TileSprite for the main body (visuals)
+        const tileSprite = this.scene.add.tileSprite(x, this.scene.scale.height, terrainWidth, terrainHeight, 'terrainTileset', tileIndex).setOrigin(0, 1);
 
-        // Add Terrain to Terrain group in Stage Manager
-        this.terrainGroups[elevation].add(terrain);
+        // Set the scale factor for the tiles (scaling the texture tiles directly)
+        tileSprite.setTileScale(scaleFactorX, scaleFactorY);  // This scales each 16x16 tile to 64x64 (4x larger)
+        tileSprite.setDisplaySize(terrainWidth, terrainHeight);
 
-        // 
-        if(elevation == 'ground'){
-            terrain.setDepth(5)
-        } else if(elevation == 'low') {
-            terrain.setDepth(4)
-        } else if(elevation == 'medium') {
-            terrain.setDepth(3)
-        } else if(elevation == 'high') {
-            terrain.setDepth(2)
-        } 
-
-        terrain.body.setImmovable(true);
-        terrain.body.allowGravity = false;
-        terrain.elevation = elevation; // Store platform type on the platform object for easy identification
-        terrain.body.checkCollision.down = false
-        terrain.body.checkCollision.left = false
-        terrain.body.checkCollision.right = false
-
-
-        const terrainElevation = this.elevationSettings[elevation].baseHeight
-        const terrainDistance = this.distanceSettings[distance].baseWidth
+        // Create the TileSprite for the top row (visuals)
+        const topTileSprite = this.scene.add.tileSprite(x, this.scene.scale.height - terrainHeight + (desiredTileSize / 2), terrainWidth, desiredTileSize / 2, 'terrainTileset', topTileIndex).setOrigin(0, 1);
+        topTileSprite.setTileScale(scaleFactorX, scaleFactorY);
+        topTileSprite.setDisplaySize(terrainWidth, desiredTileSize / 2);
         
-        terrain.displayHeight = terrainElevation * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound) 
-        terrain.displayWidth = terrainDistance * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound) ;
+    
+    
+        // Create the physics body
+        const physicsBody = this.scene.physics.add.staticImage(x, this.scene.scale.height).setOrigin(0, 1)
+        physicsBody.displayWidth = terrainWidth;
+        physicsBody.displayHeight = terrainHeight;
+        physicsBody.body.setSize(terrainWidth, terrainHeight);
 
-        terrain.isSequenceEnd = false
-        terrain.triggeredNewSequence = false
-
-        terrain.setPipeline('GlowPipeline')
-
-        // Populate Terrain
-        const terrainBounds = terrain.getBounds()
-        // Obstacles
-        if(Phaser.Math.FloatBetween(0,100) < 75){
-        this.stageManager.obstacleManager.addObstacle(terrainBounds.x + (Phaser.Math.FloatBetween(0.1,0.9) * terrainBounds.width), terrainBounds.top, elevation)
+    
+        // Link TileSprite and physics body
+        physicsBody.setData('tileSprite', tileSprite);
+        physicsBody.setData('topTileSprite', topTileSprite);
+        tileSprite.setData('physicsBody', physicsBody);
+        topTileSprite.setData('physicsBody', physicsBody)
+    
+        // Add physics body to the group
+        if (!this.terrainGroups[elevation]) {
+            console.error(`Group for elevation '${elevation}' not initialized.`);
+        } else {
+            this.terrainGroups[elevation].add(physicsBody);
         }
-        // Loot 
-        this.stageManager.lootManager.addLoot(terrainBounds.x + (Phaser.Math.FloatBetween(0.1,0.9) * terrainBounds.width), terrainBounds.top, elevation)
-        // Enemies
-        if(Phaser.Math.FloatBetween(0,100) < 50){
-            this.stageManager.enemyManager.addEnemy(terrainBounds.x + (Phaser.Math.FloatBetween(0.1,0.9) * terrainBounds.width), terrainBounds.top, elevation)
+    
+        // Set depth for visual layering
+        const depthMap = { ground: 5, low: 4, medium: 3, high: 2 };
+        physicsBody.setDepth(depthMap[elevation] || 1);
+        tileSprite.setDepth(depthMap[elevation] || 1);
+        topTileSprite.setDepth(depthMap[elevation] || 1)
+    
+        // Physics settings
+
+        //physicsBody.body.setImmovable(true);
+        physicsBody.body.allowGravity = false;
+        physicsBody.body.checkCollision.down = false;
+        physicsBody.body.checkCollision.left = false;
+        physicsBody.body.checkCollision.right = false;
+    
+        // Additional properties
+        physicsBody.elevation = elevation; // Store elevation type
+        physicsBody.isSequenceEnd = false;
+        physicsBody.triggeredNewSequence = false;
+    
+        // Apply visual pipeline
+        tileSprite.setPipeline('GlowPipeline');
+    
+        // Populate terrain
+        const terrainBounds = physicsBody.getBounds();
+        if (Phaser.Math.FloatBetween(0, 100) < 75) {
+            this.stageManager.obstacleManager.addObstacle(
+                terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
+                terrainBounds.top,
+                elevation
+            );
         }
-        
-        return terrain
+        this.stageManager.lootManager.addLoot(
+            terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
+            terrainBounds.top,
+            elevation
+        );
+        if (Phaser.Math.FloatBetween(0, 100) < 50) {
+            this.stageManager.enemyManager.addEnemy(
+                terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
+                terrainBounds.top,
+                elevation
+            );
+        }
 
-
+    
+        return physicsBody; // Return the physics object for external references
     }
-
+    
+    
     update(time, delta){
 
         Object.keys(this.terrainGroups).forEach(elevation => {
             const group = this.terrainGroups[elevation];
 
             group.getChildren().forEach(terrain => {
-                terrain.x -= this.stageManager.baseSpeed
+                // Move the physics body
+                terrain.x -= this.stageManager.baseSpeed;
+    
 
-                if (terrain.isSequenceEnd && terrain.x < this.scene.scale.width && !terrain.triggeredNewSequence){
-                    //console.log(`Generating new ${terrain.elevation} terrain sequence`);
-                    terrain.triggeredNewSequence = true
+                // Reposition and refresh the static body
+                terrain.setPosition(terrain.x, terrain.y); 
+                terrain.body.updateFromGameObject();
+            
+                    // Update the linked tileSprite
+                    const tileSprite = terrain.getData('tileSprite');
+                    const topTileSprite = terrain.getData('topTileSprite');
+                    if (tileSprite) {
+                        tileSprite.x = terrain.x
+                        topTileSprite.x = terrain.x
+                    }
 
-                    this.generateTerrainSequence(terrain.x + terrain.displayWidth, elevation)
-                }
 
-                if (terrain.x < -terrain.displayWidth){
-                    terrain.destroy();
-                    //console.log(`Destroying ${terrain.elevation} terrain`);
-                } else {
-                    
-                    // Update last platform position only if the platform is still visible
-                    // this.lastPlatformPosition[type] = { 
-                    //     x: platform.x, 
-                    //     y: platform.y, 
-                    //     width: platform.displayWidth, 
-                    //     height: platform.displayHeight  
-                    // };
-                }
+                    // Handle sequence generation
+                    if (terrain.isSequenceEnd && terrain.x < this.scene.scale.width && !terrain.triggeredNewSequence) {
+                        console.log('New Sequence being generated at: ' + terrain.x )
+                        terrain.triggeredNewSequence = true;
+                
+                        this.generateTerrainSequence(terrain.x + terrain.displayWidth, elevation);
+                    }
+            
+                    // Cleanup off-screen terrain
+                    if (terrain.x < -terrain.displayWidth) {
+                        console.log('Terrain destroyed at: '+ terrain.x )
+                        terrain.destroy(); // Destroy physics body
+                        if (tileSprite) {
+                            tileSprite.destroy(); // Destroy visual sprite
+                            topTileSprite.destroy()
+                        }
+                    }
             });
         });
     }

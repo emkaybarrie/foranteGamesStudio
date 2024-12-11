@@ -95,7 +95,7 @@ export default class MainMenu extends Phaser.Scene {
       });
 
       // Handle enter/space to select an option
-      this.input.keyboard.on('keydown-ENTER', () => {
+      this.input.keyboard.on('keydown-SPACE', () => {
           console.log(`${menuItems[selectedIndex]} selected!`);
           // Add the logic for the selected item (e.g., start game, show options, etc.)
           this.executeMenuAction(selectedIndex);
