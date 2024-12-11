@@ -4,20 +4,22 @@ export default class UIManager {
         this.stageManager = stageManager;
         this.avatar = this.stageManager.avatarManager;
 
+        const devicePixelRatio = window.devicePixelRatio; // Get the DPI scale factor
+
         // Scale factors relative to screen size
-        const baseScreenIncrementX = this.scene.scale.width * 0.01;
-        const baseScreenIncrementY = this.scene.scale.height * 0.01;
+        const baseScreenIncrementX = this.scaleForDPI(this.scene.scale.width * 0.01) ;
+        const baseScreenIncrementY = this.scaleForDPI(this.scene.scale.height * 0.01);
 
         // Avatar icon size and vitals icon size
-        const avatarIconDesiredSize = 300; // Desired size of avatar icon in pixels
+        const avatarIconDesiredSize = this.scaleForDPI(300); // Desired size of avatar icon in pixels
         const vitalsIconScaleFactor = 0.275; // Proportional size of vitals icons relative to avatar icon
         const vitalsSpacingFactor = 0.15; // Spacing between vitals icons relative to avatar icon size
 
         // Calculate avatar icon size and vitals icon size dynamically
         const avatarIconSize = Math.min(this.scene.scale.width, this.scene.scale.height) * (avatarIconDesiredSize / Math.max(this.scene.scale.width, this.scene.scale.height));
         const vitalsSpacingFromAvatarIcon = baseScreenIncrementX * 1;
-        const vitalsIconSize = avatarIconSize * vitalsIconScaleFactor;
-        const vitalsIconsSpacing = avatarIconSize * vitalsSpacingFactor;
+        const vitalsIconSize = avatarIconSize * vitalsIconScaleFactor ;
+        const vitalsIconsSpacing = avatarIconSize * vitalsSpacingFactor ;
 
         // Avatar Icon
         this.avatarIcon = this.scene.add.image(baseScreenIncrementX * 5, baseScreenIncrementY * 5, 'avatarIcon')
@@ -82,15 +84,21 @@ export default class UIManager {
         });
     }
 
+    scaleForDPI(baseValue) {
+        const devicePixelRatio = window.devicePixelRatio || 1;
+        return baseValue * devicePixelRatio;
+    }
+
     // Create a bar for health, mana, or stamina
     createBar(x, y, color, initialWidthFactor = 0.4) {
-        const initialWidth = this.scene.scale.width * 0.3 * initialWidthFactor; // 30% of screen width
+        const initialWidth = this.scaleForDPI(this.scene.scale.width * 0.3 * initialWidthFactor); // 30% of screen width
         const bg = this.scene.add.rectangle(x, y, initialWidth, 20, 0x555555).setOrigin(0, 0.5).setDepth(8);
         const bar = this.scene.add.rectangle(x, y, 0, 20, color).setOrigin(0, 0.5).setDepth(8);
         const overlay = this.scene.add.rectangle(x, y, 0, 20, 0xff8800).setOrigin(0, 0.5).setAlpha(0).setDepth(8);
 
         return { bg, bar, overlay };
     }
+
 
     // Update the bar dynamically with damage or instant changes
     // updateBar(type, previousValue, isDelayed = false) {
