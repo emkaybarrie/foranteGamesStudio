@@ -125,7 +125,7 @@ export default class Badlands extends Phaser.Scene {
             });
             // Controls
             // Show controls text on screen
-            if (!this.isMobile || !this.isTouch){
+            if ((!this.isMobile || !this.isTouch) & this.sys.game.device.os.desktop){
                 this.createControlsText(this);
             }
             
@@ -150,67 +150,6 @@ export default class Badlands extends Phaser.Scene {
             // // Scale factors relative to screen size
             const baseScreenIncrementX = this.scale.width * 0.01;
             const baseScreenIncrementY = this.scale.height * 0.01;
-
-            // // Title Text
-            // this.titleText = this.add.text(baseScreenIncrementX * 50, baseScreenIncrementY * 5,
-            //     `${this.playerData.alias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, 
-            //     { fontSize: '32px', fill: '#fff' })
-            //     .setDepth(9).setOrigin(0.5);
-
-            // // Desired size of the avatar icon in pixels
-            // const avatarIconDesiredSize = 300; // Change this value to tweak the avatar icon size
-            // const vitalsIconScaleFactor = 0.275; // Proportional size of vitals icons relative to avatar icon
-            // const vitalsSpacingFactor = 0.15; // Proportional spacing between vitals icons relative to avatar icon size
-
-            
-
-            // // Calculate avatar icon size and vitals icon size dynamically
-            // const avatarIconSize = Math.min(this.scale.width, this.scale.height) * (avatarIconDesiredSize / Math.max(this.scale.width, this.scale.height));
-            // const vitalsSpacingFromAvatarIcon = baseScreenIncrementX * 1
-            // const vitalsIconSize = avatarIconSize * vitalsIconScaleFactor;
-            // const vitalsIconsSpacing = avatarIconSize * vitalsSpacingFactor;
-
-            // // Avatar Icon
-            // this.avatarIcon = this.add.image(baseScreenIncrementX * 5, baseScreenIncrementY * 5, 'avatarIcon')
-            //     .setOrigin(0)
-            //     .setDisplaySize(avatarIconSize, avatarIconSize)
-            //     .setDepth(9);
-
-            // // Vitals Icons
-            // const avatarIconRightX = this.avatarIcon.x + this.avatarIcon.displayWidth + vitalsSpacingFromAvatarIcon;
-            // const avatarIconCenterY = this.avatarIcon.y + this.avatarIcon.displayHeight / 2;
-
-            // // First vitals icon (health)
-            // this.avatarHealthIcon = this.add.image(
-            //     avatarIconRightX + baseScreenIncrementX, 
-            //     avatarIconCenterY - vitalsIconSize - vitalsIconsSpacing / 2, 
-            //     'healthIcon'
-            // )
-            //     .setOrigin(0.5)
-            //     .setDisplaySize(vitalsIconSize, vitalsIconSize)
-            //     .setDepth(9);
-
-            // // Second vitals icon (mana)
-            // this.avatarManaIcon = this.add.image(
-            //     avatarIconRightX + baseScreenIncrementX, 
-            //     avatarIconCenterY, 
-            //     'manaIcon'
-            // )
-            //     .setOrigin(0.5)
-            //     .setDisplaySize(vitalsIconSize, vitalsIconSize)
-            //     .setDepth(9);
-
-            // // Third vitals icon (stamina)
-            // this.avatarStaminaIcon = this.add.image(
-            //     avatarIconRightX + baseScreenIncrementX, 
-            //     avatarIconCenterY + vitalsIconSize + vitalsIconsSpacing / 2, 
-            //     'staminaIcon'
-            // )
-            //     .setOrigin(0.5)
-            //     .setDisplaySize(vitalsIconSize, vitalsIconSize)
-            //     .setDepth(9);
-
-
 
         
 
