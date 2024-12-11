@@ -139,6 +139,13 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.currentHealth = this.maxHealth
         this.currentMana = 25 //this.maxMana
         this.currentStamina = 25 //this.maxStamina
+
+        // this.emit('currentHealthChanged', this.currentHealth, false);
+        // this.emit('currentManaChanged', this.currentMana, false);
+        // this.emit('currentStaminaChanged', this.currentStamina, false);
+
+
+        
         // Start the regeneration timer
         this.startRegen();
         
@@ -311,6 +318,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             this.regenStat('currentHealth', this.healthRegen, this.maxHealth);
             this.regenStat('currentMana', this.manaRegen, this.maxMana);
             this.regenStat('currentStamina', this.staminaRegen, this.maxStamina);
+        
         }
     }
 
@@ -329,6 +337,9 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             if (maxLimit !== null && this[stat] > maxLimit) {
                 this[stat] = maxLimit;
             }
+
+            this.emit(`${stat}Changed`, this[stat]);
+
             
             //console.log(`${stat} increased to: ${this[stat]}`);
         } else {
@@ -437,8 +448,9 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
                     const previousStamina = this.currentStamina;
                 this.currentStamina -= 35
+                this.canRegen = false
                 // Emit event when health changes
-                this.emit('staminaChanged', previousStamina, this.currentStamina);
+                this.emit('currentStaminaChanged', previousStamina, true);
 
                  // Create the tween
                     this.scene.tweens.add({
@@ -455,6 +467,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                                  this.isDoingAction = false
                                  this.sprite.clearTint();
                                  this.canBeHurt = true
+                                 this.canRegen = true
           
                             });
                             if(!this.isOnGround){
@@ -771,11 +784,10 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             
 
             // Emit event when health changes
-            this.emit('healthChanged', previousHealth, this.currentHealth);
+            this.emit('currentHealthChanged', previousHealth, true);
 
             this.sprite.anims.play('take_hit', true); // Play the 'run' animation when moving
 
-           // this.scene.decreaseScore(Math.floor(Math.random() * this.scene.level) + 1) 
             this.scene.decreaseScore(Phaser.Math.Between(5,10)) 
             this.scene.cameras.main.flash(250, 255, 100, 0)
 

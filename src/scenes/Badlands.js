@@ -95,6 +95,11 @@ export default class Badlands extends Phaser.Scene {
     preload(){
         // Load assets if needed
         preload(this);
+
+        this.load.image('avatarIcon', `assets/avatars/${this.region}/icons/Badlands/default.png`)
+        this.load.image('healthIcon', 'assets/images/healthIcon.png')
+        this.load.image('manaIcon', 'assets/images/manaIcon.png')
+        this.load.image('staminaIcon', 'assets/images/staminaIcon.png')
          
     }
 
@@ -142,52 +147,94 @@ export default class Badlands extends Phaser.Scene {
                 volume: 0.5  // Adjust the volume (optional, between 0 and 1)
             });
 
-        this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
-            //`${this.playerAlias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
-            `${this.playerData.alias} - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
+            // // Scale factors relative to screen size
+            const baseScreenIncrementX = this.scale.width * 0.01;
+            const baseScreenIncrementY = this.scale.height * 0.01;
 
-        var textAnchorPointX = 0.05
-        var textAnchorPointY = 0.05
-        this.titleText = this.add.text(this.scale.width * textAnchorPointX, this.scale.height * textAnchorPointY, 
-            `${this.playerData.alias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, { fontSize: '32px', fill: '#fff' }).setDepth(9);
+            // // Title Text
+            // this.titleText = this.add.text(baseScreenIncrementX * 50, baseScreenIncrementY * 5,
+            //     `${this.playerData.alias} - Welcome to the Badlands - Region ${this.region} - vPOC_0.1`, 
+            //     { fontSize: '32px', fill: '#fff' })
+            //     .setDepth(9).setOrigin(0.5);
+
+            // // Desired size of the avatar icon in pixels
+            // const avatarIconDesiredSize = 300; // Change this value to tweak the avatar icon size
+            // const vitalsIconScaleFactor = 0.275; // Proportional size of vitals icons relative to avatar icon
+            // const vitalsSpacingFactor = 0.15; // Proportional spacing between vitals icons relative to avatar icon size
+
+            
+
+            // // Calculate avatar icon size and vitals icon size dynamically
+            // const avatarIconSize = Math.min(this.scale.width, this.scale.height) * (avatarIconDesiredSize / Math.max(this.scale.width, this.scale.height));
+            // const vitalsSpacingFromAvatarIcon = baseScreenIncrementX * 1
+            // const vitalsIconSize = avatarIconSize * vitalsIconScaleFactor;
+            // const vitalsIconsSpacing = avatarIconSize * vitalsSpacingFactor;
+
+            // // Avatar Icon
+            // this.avatarIcon = this.add.image(baseScreenIncrementX * 5, baseScreenIncrementY * 5, 'avatarIcon')
+            //     .setOrigin(0)
+            //     .setDisplaySize(avatarIconSize, avatarIconSize)
+            //     .setDepth(9);
+
+            // // Vitals Icons
+            // const avatarIconRightX = this.avatarIcon.x + this.avatarIcon.displayWidth + vitalsSpacingFromAvatarIcon;
+            // const avatarIconCenterY = this.avatarIcon.y + this.avatarIcon.displayHeight / 2;
+
+            // // First vitals icon (health)
+            // this.avatarHealthIcon = this.add.image(
+            //     avatarIconRightX + baseScreenIncrementX, 
+            //     avatarIconCenterY - vitalsIconSize - vitalsIconsSpacing / 2, 
+            //     'healthIcon'
+            // )
+            //     .setOrigin(0.5)
+            //     .setDisplaySize(vitalsIconSize, vitalsIconSize)
+            //     .setDepth(9);
+
+            // // Second vitals icon (mana)
+            // this.avatarManaIcon = this.add.image(
+            //     avatarIconRightX + baseScreenIncrementX, 
+            //     avatarIconCenterY, 
+            //     'manaIcon'
+            // )
+            //     .setOrigin(0.5)
+            //     .setDisplaySize(vitalsIconSize, vitalsIconSize)
+            //     .setDepth(9);
+
+            // // Third vitals icon (stamina)
+            // this.avatarStaminaIcon = this.add.image(
+            //     avatarIconRightX + baseScreenIncrementX, 
+            //     avatarIconCenterY + vitalsIconSize + vitalsIconsSpacing / 2, 
+            //     'staminaIcon'
+            // )
+            //     .setOrigin(0.5)
+            //     .setDisplaySize(vitalsIconSize, vitalsIconSize)
+            //     .setDepth(9);
+
+
+
+        
 
         // Initialize the score display
-        this.scoreText = this.add.text(this.scale.width * textAnchorPointX, this.titleText.y + (this.scale.height * textAnchorPointY), `Score: ${this.score}`, {
-            fontSize: '48px',
-            fill: '#fff'
-        }).setDepth(9).setScrollFactor(0)
-
-        // Display the level text in the top-right corner
-        this.levelText = this.add.text(this.scale.width * textAnchorPointX, this.scoreText.y + (this.scale.height * textAnchorPointY), `Level: ${this.level}`, {
-            fontSize: '24px',
-            fill: '#fff',
-            align: 'left'
-        }).setDepth(9).setScrollFactor(0); // Align text to the top-right corner
-
-
-        // Avatar Stats Text
-        this.avatarHealthText = this.add.text(this.scale.width * textAnchorPointX, this.levelText.y + (this.scale.height * textAnchorPointY), `Health: `, {
-            fontSize: '48px',
-            fill: '#fff'
-        }).setDepth(9).setScrollFactor(0)
-
-        this.avatarManaText = this.add.text(this.scale.width * textAnchorPointX, this.avatarHealthText.y + (this.scale.height * textAnchorPointY), `Mana: `, {
-            fontSize: '48px',
-            fill: '#fff'
-        }).setDepth(9).setScrollFactor(0)
-
-        this.avatarStaminaText = this.add.text(this.scale.width * textAnchorPointX, this.avatarManaText.y + (this.scale.height * textAnchorPointY), `Stamina: `, {
-            fontSize: '48px',
-            fill: '#fff'
-        }).setDepth(9).setScrollFactor(0)
-
-        // High Score And Level
-        this.recordText_Score = this.add.text(this.scale.width * (1 - textAnchorPointX), this.scoreText.y , `High Score: ${Math.round(this.highScore)}`, {
+        this.scoreText = this.add.text(baseScreenIncrementX * 95, baseScreenIncrementY * 5, `Score: ${this.score}`, {
             fontSize: '48px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
 
-        this.recordText_Level = this.add.text(this.scale.width * (1 - textAnchorPointX), this.levelText.y , `Furthest Level: ${this.highScoreLevel}`, {
+        // Display the level text in the top-right corner
+        this.levelText = this.add.text(baseScreenIncrementX * 95, this.scoreText.y + baseScreenIncrementY * 5, `Level: ${this.level}`, {
+            fontSize: '24px',
+            fill: '#fff',
+            align: 'left'
+        }).setDepth(9).setScrollFactor(0).setOrigin(1,0); // Align text to the top-right corner
+
+
+        // High Score And Level
+        this.recordText_Score = this.add.text(baseScreenIncrementX * 95, this.levelText.y + baseScreenIncrementY * 5, `High Score: ${Math.round(this.highScore)}`, {
+            fontSize: '48px',
+            fill: '#fff'
+        }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
+
+        this.recordText_Level = this.add.text(baseScreenIncrementX * 95, this.recordText_Score.y + baseScreenIncrementY * 5 , `Furthest Level: ${this.highScoreLevel}`, {
             fontSize: '24px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
@@ -234,25 +281,25 @@ export default class Badlands extends Phaser.Scene {
     createControlsText(scene) {
         // Text content for controls, each action on its own line
         const controlsText = `
-        Move: [LEFT ARROW] / [RIGHT ARROW]
-        Jump: [UP] or [SPACE]
-        Duck/Descend: [DOWN ARROW]
+        Move: [ARROWS]
+        Jump: [SPACE] or [TAP/CLICK]
 
-        Dodge: [Q] - Uses STAMINA
-        Attack: [E] - Uses STAMINA
-        Sprint: [D] - Uses MANA
-        Slow/Heal: [A] - Uses MANA
+        Dodge: [Q] or [RIGHT/DOUBLE CLICK]
+        Attack: [E]
+        Sprint: [D]
+        Slow/Heal: [A] 
 
         Main Menu: [F5]
 
-        Avatar get's stronger the further you get 
+        Survive and beat your high score
+        Get stronger the further you get 
         
         All feedback welcome! :D
          - Emkay
         `;
 
         // Create the text object on the screen
-        const textObject = scene.add.text(scene.scale.width * (1 - 0.05), scene.scale.height * 0.15, controlsText, {
+        const textObject = scene.add.text(scene.scale.width * (1 - 0.05), scene.scale.height * 0.25, controlsText, {
             font: '24px Arial',  // Font style
             fill: '#ffffff',     // Text color
             align: 'right'        // Align text to the left
@@ -294,16 +341,15 @@ export default class Badlands extends Phaser.Scene {
 
     update(time, delta) {
 
-        //console.log(this.stageManager.avatarManager.adaptability)
+       // console.log(this.stageManager.avatarManager.currentStamina)
 
         this.stageManager.update(time, delta)
 
         this.inputManager.update();
 
         this.scoreText.setText(`Score: ${Math.round(this.score)}`);
-        this.avatarHealthText.setText(`Health:         ${Math.round(this.stageManager.avatarManager.currentHealth)}`)
-        this.avatarManaText.setText(`Mana:           ${Math.round(this.stageManager.avatarManager.currentMana)}`)
-        this.avatarStaminaText.setText(`Stamina:        ${Math.round(this.stageManager.avatarManager.currentStamina)}`)
+        //this.avatarHealthText.setText(`Health:         ${Math.round(this.stageManager.avatarManager.currentHealth)}`)
+
 
 
 

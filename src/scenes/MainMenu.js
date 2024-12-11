@@ -22,7 +22,7 @@ export default class MainMenu extends Phaser.Scene {
       const titleText = this.add.image(this.scale.width * 0.5, this.scale.height * 0.35,'titleScreenText4').setOrigin(0.5).setScale(0.75)
 
       // Menu items (these can be dynamically added or retrieved)
-      const menuItems = ['Start Game', 'Wiki', 'MyFi', 'Options', 'Credits', 'Exit'];
+      const menuItems = ['Start Game', 'Test', 'Wiki', 'MyFi', 'Options', 'Credits', 'Exit'];
       this.menuText = [];
 
       // Create menu text objects
@@ -113,9 +113,35 @@ export default class MainMenu extends Phaser.Scene {
               // Add logic for starting the game here (e.g., transition to gameplay scene)
               this.showOverlay(index)
               break;
-          case 1:  // Options
-              console.log('Opening options...');
+          case 1:  // Quick play
+              console.log('Starting quick play session...');
               // Add logic for showing options menu here (e.g., transition to options scene)
+              // Freeplay
+              this.playerData = {
+                id: 0,
+                alias: 'Guest',
+                level: 1,
+                score: 0,
+                spiritLevel: 1,
+                power: 20,
+                powerToNextLevel: 20,
+                spiritPoints: 5,
+                vitality: 1,
+                focus: 1,
+                adaptability: 1
+              }
+
+
+              this.scene.start('LoadingScreen', {
+                targetScene: 'Badlands',
+                category: 'badlands',
+                assets: [
+                    //{ type: 'image', key: 'terrain', path: 'assets/terrain.png' },
+                    //{ type: 'spritesheet', key: 'enemy', path: 'assets/enemy_spritesheet.png', frameConfig: { frameWidth: 64, frameHeight: 64 } }
+                ],
+                region: 1,
+                playerData: this.playerData
+              });
               break;
           case 5:  // Exit
               console.log('Exiting game...');
