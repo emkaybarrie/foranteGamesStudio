@@ -41,6 +41,8 @@ const preload = (scene) => {
     scene.load.image('regionEast', 'assets/images/Base/regionEast.png');
     scene.load.image('regionWest', 'assets/images/Base/regionWest.png');
 
+    scene.load.image('avatarIcon1', 'assets/avatars/1/icons/avatarIcon_01.png')
+
 
 };
 

@@ -6,6 +6,17 @@ export default class UIManager {
 
         const devicePixelRatio = window.devicePixelRatio; // Get the DPI scale factor
 
+        // Example: Create the progress bar
+        const progressBarX = this.scene.scale.width * 0.65; // Positioned on the right side
+        const progressBarY = this.scene.scale.height * 0.125; // Near the top
+        const progressBarWidth = this.scene.scale.width * 0.3; // 30% of screen width
+        const progressBarHeight = 30;
+
+        this.progressBar = this.createProgressBar(progressBarX, progressBarY, progressBarWidth, progressBarHeight, 0, 100);
+
+        // Initial update
+        this.updateProgressBar(this.progressBar, 0, 100);
+
         // Scale factors relative to screen size
         const baseScreenIncrementX = this.scaleForDPI(this.scene.scale.width * 0.01) ;
         const baseScreenIncrementY = this.scaleForDPI(this.scene.scale.height * 0.01);
@@ -78,7 +89,7 @@ export default class UIManager {
         // Listen for stat changes
         Object.keys(this.propertyMappings).forEach(type => {
             this.avatar.on(`${this.propertyMappings[type]}Changed`, (previousValue, isDelayed) => {
-                console.log(`Stat change: ${type}, Previous Value: ${previousValue}, Is Delayed: ${isDelayed}`);
+                //console.log(`Stat change: ${type}, Previous Value: ${previousValue}, Is Delayed: ${isDelayed}`);
                 this.updateBar(type, previousValue, isDelayed);
             });
         });
@@ -96,73 +107,21 @@ export default class UIManager {
         const bar = this.scene.add.rectangle(x, y, 0, 20, color).setOrigin(0, 0.5).setDepth(8);
         const overlay = this.scene.add.rectangle(x, y, 0, 20, 0xff8800).setOrigin(0, 0.5).setAlpha(0).setDepth(8);
 
-        return { bg, bar, overlay };
+        // Add text anchored to the right edge of the bg
+        const text = this.scene.add.text(x + bg.width - 5, y, '0/0', {
+            fontSize: '16px',
+            color: '#ffffff',
+            align: 'right',
+        })
+            .setOrigin(1, 0.5) // Align to right edge, vertically centered
+            .setDepth(9);
+
+        return { bg, bar, overlay, text };
     }
 
 
     // Update the bar dynamically with damage or instant changes
-    // updateBar(type, previousValue, isDelayed = false) {
-    //     const statKey = this.propertyMappings[type]; 
-    //     const maxStatKey = `max${type.charAt(0).toUpperCase() + type.slice(1)}`; 
-    //     const maxStat = this.avatar[maxStatKey];
-    
-    //     if (maxStat <= 0) return;
-    
-    //     const currentStat = this.avatar[statKey];
-    
-    //     // Calculate the new width based on the current value
-    //     const newWidth = Math.max((currentStat / maxStat) * this.bars[type].bg.width, 0);
-    
-    //     // Handle the damage or delayed change (using overlay)
-    //     if (isDelayed) {
-    //         console.log('Overlay Triggered');
-    
-    //         // Calculate the width of the overlay based on the damage taken (previousValue - currentStat)
-    //         const damageWidth = Math.max(((previousValue - currentStat) / maxStat) * this.bars[type].bg.width, 0);
-    
-    //         if (this.bars[type].overlay.alpha > 0) {
-    //             // If the overlay is already active, extend its width to include new damage
-    //             const currentOverlayEnd = this.bars[type].overlay.x + this.bars[type].overlay.width;
-    //             const newOverlayEnd = this.bars[type].bar.x + this.bars[type].bar.width - damageWidth;
-    
-    //             // Update overlay width dynamically to reflect cumulative damage
-    //             this.bars[type].overlay.width = currentOverlayEnd - newOverlayEnd;
-    //             this.bars[type].overlay.x = newOverlayEnd;
-    //         } else {
-    //             // Initialize the overlay for a new damage event
-    //             this.bars[type].overlay.width = damageWidth;
-    //             this.bars[type].overlay.x = this.bars[type].bar.x + this.bars[type].bar.width - damageWidth;
-    //             this.bars[type].overlay.setAlpha(1);
-    //         }
-    
-    //         // Reset and update tweens for the overlay
-    //         this.scene.tweens.killTweensOf(this.bars[type].overlay); // Stop any ongoing overlay animations
-    //         this.scene.tweens.add({
-    //             targets: this.bars[type].overlay,
-    //             alpha: 0,
-    //             duration: 500,
-    //             delay: 300,
-    //             onComplete: () => {
-    //                 // Shrink the bar to the new value after the overlay fades out
-    //                 this.scene.tweens.add({
-    //                     targets: this.bars[type].bar,
-    //                     width: newWidth,
-    //                     duration: 500,
-    //                     ease: 'Linear',
-    //                 });
-    //             }
-    //         });
-    //     } else {
-    //         // For Instant regen or buffs, smoothly update the bar without affecting the overlay
-    //         this.scene.tweens.add({
-    //             targets: this.bars[type].bar,
-    //             width: newWidth,
-    //             duration: 500,
-    //             ease: 'Linear',
-    //         });
-    
-    //     }
-    // }
+
 
     updateBar(type, previousValue, isDelayed = false) {
         const statKey = this.propertyMappings[type]; 
@@ -178,7 +137,7 @@ export default class UIManager {
     
         // Handle delayed damage changes
         if (isDelayed) {
-            console.log('Overlay Triggered');
+            //console.log('Overlay Triggered');
     
             // Calculate the width of the overlay based on the new damage
             const damageWidth = Math.max(((previousValue - currentStat) / maxStat) * this.bars[type].bg.width, 0);
@@ -227,11 +186,72 @@ export default class UIManager {
             // Ensure the overlay resets (in case of concurrent regen/damage)
             this.bars[type].overlay.setAlpha(0); // Hide overlay immediately if not delayed
         }
+
+        // Update the text to reflect the current and max values
+        this.bars[type].text.setText(`${Math.round(currentStat)}/${maxStat}`);
+
+        // Reposition the text to remain anchored to the right edge of the bg
+        this.bars[type].text.setX(this.bars[type].bg.x + this.bars[type].bg.width - 5);
     }
+
+    createProgressBar(x, y, width, height, stageProgress, stageLength) {
+        // Create the background
+        const bg = this.scene.add.rectangle(x, y, width, height, 0x555555).setOrigin(0, 0.5).setDepth(8);
+        const bar = this.scene.add.rectangle(x, y, 0, height, 0xc14192).setOrigin(0, 0.5).setDepth(8);
+    
+        // Add markers at 25%, 50%, 75%, and 100%
+        const markers = [];
+        const markerPositions = [0, 0.25, 0.5, 0.75, 1];
+        markerPositions.forEach((fraction) => {
+            const markerX = x + (width * fraction) ; // Center-based positioning
+            const circle = this.scene.add.circle(markerX, y, height / 2, 0xffffff).setDepth(10); // White fill
+            const border = this.scene.add.circle(markerX, y, height / 2, 0x000000)
+                .setStrokeStyle(2, 0x000000) // Black border
+                .setDepth(9); // Border above the fill
+            markers.push({ circle, border });
+        });
+
+        markers.forEach((marker, index) => {
+            var icon = null
+            if(index > 0){
+                icon = this.scene.add.image(marker.circle.x, marker.circle.y, 'landmark_encounter').setScale(0.5).setDepth(11);
+            } else {
+                icon = this.scene.add.text(marker.circle.x, marker.circle.y, 1, {
+                    fontSize: '18px',
+                    color: '#000000',
+                    align: 'center',
+                    fontStyle: 'bold'
+                })
+                    .setOrigin(0.5) // Align to right edge, vertically centered
+                    .setDepth(11);
+            }
+            
+            marker.icon = icon; // Store reference for updates if needed
+        });
+    
+        // Return the progress bar and markers
+        return { bg, bar, markers };
+    }
+
+    updateProgressBar(progressBar, stageProgress, stageLength) {
+        const progressFraction = Math.min(stageProgress / stageLength, 1);
+        const newWidth = progressFraction * progressBar.bg.width;
+    
+        // Update the progress bar width
+        this.scene.tweens.add({
+            targets: progressBar.bar,
+            width: newWidth,
+            duration: 500,
+            ease: 'Linear',
+        });
+    }
+    
     
     
 
     update() {
         // If you want any synchronization to occur, you can handle it here
+
+        this.progressBar.markers[0].icon.setText(this.scene.stageManager.stage)
     }
 }

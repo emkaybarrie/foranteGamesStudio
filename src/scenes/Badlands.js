@@ -34,10 +34,10 @@ export default class Badlands extends Phaser.Scene {
         localStorage.setItem('highScore', JSON.stringify(highScoreData));
     }
 
-    async saveScoreToDb(score, level){
+    async saveScoreToDb(score, stage){
         try {
             const response = await fetch(
-              `${this.sheetUrl}?request=updateScore&id=${this.playerData.id}&score=${Math.round(score)}&level=${this.level}`,{
+              `${this.sheetUrl}?request=updateScore&id=${this.playerData.id}&score=${Math.round(score)}&level=${stage}`,{
                 method: "POST",
               }
             );
@@ -69,10 +69,10 @@ export default class Badlands extends Phaser.Scene {
         // Save Score
         // Save the score and level only if the current score is higher than the saved one
         if (this.score > this.highScore) {
-            this.saveScoreToDb(this.score, this.level);
+            this.saveScoreToDb(this.score, this.stageManager.stage);
             console.log('Saving Score to DB')
             this.highScore = this.score
-            this.highScoreLevel = this.level
+            this.highScoreLevel = this.stageManager.stage
 
         }
 
@@ -80,11 +80,12 @@ export default class Badlands extends Phaser.Scene {
         this.recordText_Score.setText(`High Score: ${Math.round(this.highScore)}`);
         this.recordText_Level.setText(`Furthest Level: ${this.highScoreLevel}`);
 
-        this.level = 1
         this.score = 0
+        this.stageManager.stageProgress = 0
+        this.stageManager.stage = 1
+        this.stageManager.addedSpeed = 0
 
         // Update the texts
-        this.levelText.setText(`Level: ${this.level}`);
         this.scoreText.setText(`Score: ${this.score}`);
 
         
@@ -116,13 +117,7 @@ export default class Badlands extends Phaser.Scene {
         this.highScoreLevel = this.playerData.level
 
         // Stubs
-            // Set up a timed event to increase level every 30 seconds
-            this.time.addEvent({
-                delay: 10000, // 10 seconds in milliseconds
-                callback: this.incrementLevel,
-                callbackScope: this,
-                loop: true // Repeat this event every 30 seconds
-            });
+
             // Controls
             // Show controls text on screen
             if ((!this.isMobile || !this.isTouch) & this.sys.game.device.os.desktop){
@@ -159,16 +154,8 @@ export default class Badlands extends Phaser.Scene {
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
 
-        // Display the level text in the top-right corner
-        this.levelText = this.add.text(baseScreenIncrementX * 95, this.scoreText.y + baseScreenIncrementY * 5, `Level: ${this.level}`, {
-            fontSize: '24px',
-            fill: '#fff',
-            align: 'left'
-        }).setDepth(9).setScrollFactor(0).setOrigin(1,0); // Align text to the top-right corner
-
-
         // High Score And Level
-        this.recordText_Score = this.add.text(baseScreenIncrementX * 95, this.levelText.y + baseScreenIncrementY * 5, `High Score: ${Math.round(this.highScore)}`, {
+        this.recordText_Score = this.add.text(baseScreenIncrementX * 95, this.scoreText.y + baseScreenIncrementY * 10, `High Score: ${Math.round(this.highScore)}`, {
             fontSize: '48px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
@@ -249,27 +236,22 @@ export default class Badlands extends Phaser.Scene {
     }
 
     incrementLevel() {
-        // Increment the level
-        this.level += 1;
-        // Update the level text
-        this.levelText.setText(`Level: ${this.level}`);
 
-        
 
         //this.avatar.switchMode()
 
-        if(this.level < 12){
+        if(this.stageManager.stage < 12){
         this.stageManager.addedSpeed += 0.25
-        this.stageManager.avatarManager.vitality += 5
-        this.stageManager.avatarManager.focus += 5
-        this.stageManager.avatarManager.adaptability += 5
+        this.stageManager.avatarManager.vitality += 1
+        this.stageManager.avatarManager.focus += 2
+        this.stageManager.avatarManager.adaptability += 4
 
         
         
         //this.avatar.showLevelUpMenu()
          } else {
-            this.stageManager.avatarManager.vitality += 0.5
-            this.stageManager.avatarManager.focus += 1
+            this.stageManager.avatarManager.vitality += 3
+            this.stageManager.avatarManager.focus += 3
             this.stageManager.avatarManager.adaptability += 2
             this.stageManager.addedSpeed += 0.5
            // this.avatar.showLevelUpMenu()

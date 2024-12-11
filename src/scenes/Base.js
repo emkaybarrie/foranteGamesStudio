@@ -21,10 +21,8 @@ export default class Base extends Phaser.Scene {
         this.sAPointX = this.scale.width * 0.2
         this.sAPointY = this.scale.height * 0.95
         this.initialiseSpiritSegment()
-        
 
- 
-    
+        this.initialiseAvatarSegment()
         
 
         // The Badlands
@@ -59,7 +57,16 @@ export default class Base extends Phaser.Scene {
             .on('pointerdown', () => this.startBadlands());
 
         // Placeholder image for region
-        this.regionImage = this.add.image(this.scale.width * 0.5, this.scale.height * 0.55, 'prologue').setOrigin(0.5).setScale(0.1);
+        this.regionImage = this.add.image(this.scale.width * 0.5, this.scale.height * 0.25, 'regionNorth').setOrigin(0.5).setScale(0.125);
+
+        // Add glowing effect to the text (you can modify the effect as needed)
+        this.tweens.add({
+            targets: this.regionImage,
+            alpha: { from: 1, to: 0.65 }, // Pulse effect
+            duration: 1000,
+            yoyo: true,
+            repeat: -1, // Repeat indefinitely
+        });
 
         // Placeholder text below the image
         this.regionText = this.add.text(this.scale.width * 0.5, this.scale.height * 0.695, 'Select a region to start', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
@@ -140,66 +147,97 @@ export default class Base extends Phaser.Scene {
         });
     }
 
-    // Function to animate the filling of the doughnut
-    animateFillDoughnut(centerX, centerY, radius, thickness, targetValue, totalValue, duration) {
-        // Start from 0 and tween to the target value (currentValue)
-        this.currentValue = 0;
+        // Function to animate the filling of the doughnut
+        animateFillDoughnut(centerX, centerY, radius, thickness, targetValue, totalValue, duration) {
+            // Start from 0 and tween to the target value (currentValue)
+            this.currentValue = 0;
 
-        // Create the tween to animate the filling process
-        this.tweens.add({
-            targets: this,
-            currentValue: -targetValue,  // Target the currentValue to fill to the desired value
-            duration: duration,         // Duration of the tween in milliseconds
-            ease: 'Linear',             // Ease type (Linear for consistent filling speed)
-            onUpdate: () => {
-                // Recalculate the fill percentage based on the current value
-                const startAngle = Phaser.Math.DegToRad(90);  // Start from the bottom (90 degrees in radians)
-                const fillPercentage = this.currentValue / totalValue; // Calculate the fill percentage
-                const endAngle = Phaser.Math.DegToRad(90 - (fillPercentage * 360)); // End angle based on percentage (clockwise)
+            // Create the tween to animate the filling process
+            this.tweens.add({
+                targets: this,
+                currentValue: -targetValue,  // Target the currentValue to fill to the desired value
+                duration: duration,         // Duration of the tween in milliseconds
+                ease: 'Linear',             // Ease type (Linear for consistent filling speed)
+                onUpdate: () => {
+                    // Recalculate the fill percentage based on the current value
+                    const startAngle = Phaser.Math.DegToRad(90);  // Start from the bottom (90 degrees in radians)
+                    const fillPercentage = this.currentValue / totalValue; // Calculate the fill percentage
+                    const endAngle = Phaser.Math.DegToRad(90 - (fillPercentage * 360)); // End angle based on percentage (clockwise)
 
-                // Clear previous drawing
-                //this.doughnut.clear();
+                    // Clear previous drawing
+                    //this.doughnut.clear();
 
-                // Draw the outer arc (clockwise)
-                this.doughnut.beginPath();
-                this.doughnut.arc(centerX, centerY, radius, startAngle, endAngle, false); // Outer arc (clockwise)
+                    // Draw the outer arc (clockwise)
+                    this.doughnut.beginPath();
+                    this.doughnut.arc(centerX, centerY, radius, startAngle, endAngle, false); // Outer arc (clockwise)
 
-                // Draw the inner arc (counter-clockwise) to create the hole in the middle
-                this.doughnut.arc(centerX, centerY, radius - thickness, endAngle, startAngle, true); // Inner arc (counter-clockwise)
+                    // Draw the inner arc (counter-clockwise) to create the hole in the middle
+                    this.doughnut.arc(centerX, centerY, radius - thickness, endAngle, startAngle, true); // Inner arc (counter-clockwise)
 
-                // Close the path and fill with color
-                this.doughnut.closePath();
-                this.doughnut.fillStyle(0x800080, 1); // Purple color fill for the "filled" part
-                this.doughnut.fillPath();
+                    // Close the path and fill with color
+                    this.doughnut.closePath();
+                    this.doughnut.fillStyle(0x800080, 1); // Purple color fill for the "filled" part
+                    this.doughnut.fillPath();
 
-    
-            }
-        });
-    }
-
-
-    updateSpiritLevelText(spiritLevel) {
-        // Update the spirit level text at the center of the doughnut
-        this.spiritLevelText.setText(`${Math.floor(spiritLevel)}`);  // Show the current power as text
-    }
-
-    allocateSpiritPoint(stat) {
-        console.log(stat)
-        if (this.playerData.spiritPoints > 0) {
-            this.playerData[stat.toLowerCase()] += 1;  // Allocate 1 point to the stat
-            this.playerData.spiritPoints -= 1; // Deduct 1 point
-            this.updateSpiritInfo();
+        
+                }
+            });
         }
-    }
+
+        updateSpiritLevelText(spiritLevel) {
+            // Update the spirit level text at the center of the doughnut
+            this.spiritLevelText.setText(`${Math.floor(spiritLevel)}`);  // Show the current power as text
+        }
+
+        allocateSpiritPoint(stat) {
+            console.log(stat)
+            if (this.playerData.spiritPoints > 0) {
+                this.playerData[stat.toLowerCase()] += 1;  // Allocate 1 point to the stat
+                this.playerData.spiritPoints -= 1; // Deduct 1 point
+                this.updateSpiritInfo();
+            }
+        }
+        
+        updateSpiritInfo() {
+            // Update the text and button visibility
+            this.spiritPointsText.setText(`Spirit Points: ${this.playerData.spiritPoints}`);
+            this.statButtons.forEach((button) => {
+                // Update the stat text (using the stat property stored inside button)
+                button.statText.setText(`${button.stat}: ${this.playerData[button.stat.toLowerCase()]}`);
+                button.button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5);  // Disable button when no points left
+            });
+        }
+
+    initialiseAvatarSegment(){
     
-    updateSpiritInfo() {
-        // Update the text and button visibility
-        this.spiritPointsText.setText(`Spirit Points: ${this.playerData.spiritPoints}`);
-        this.statButtons.forEach((button) => {
-            // Update the stat text (using the stat property stored inside button)
-            button.statText.setText(`${button.stat}: ${this.playerData[button.stat.toLowerCase()]}`);
-            button.button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5);  // Disable button when no points left
+    
+        this.add.text(this.sAPointX * 4, this.sAPointY, 'Avatar Information', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
+
+        // Stats with buttons
+        const stats = ['Stat 1', 'Stat 2', 'Stat 3'];
+        const statPositionsY = [this.sAPointY - this.scale.height * 0.15 , this.sAPointY - this.scale.height * 0.1, this.sAPointY - this.scale.height * 0.05];
+
+        this.statButtons = stats.map((stat, index) => {
+            const statText = this.add.text((this.sAPointX * 4) - this.scale.width * 0.075, statPositionsY[index], `${stat}: TBC`, { fontSize: '28px', fill: '#fff' });
+            statText.setOrigin(0, 0.5)
+            
+            const button = this.add.text((this.sAPointX * 4) + this.scale.width * 0.075 , statPositionsY[index], '+', { fontSize: '30px', fill: '#0f0' })
+                .setInteractive()
+                .setOrigin(0.5)
+                .on('pointerdown', () => this.allocateSpiritPoint(stat));
+
+            button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5); // Button is disabled if no points available
+            // Store the stat name inside the button object
+            return { statText, button, stat: stat };  // Store the stat name here
         });
+
+        // Spirit Points counter
+        this.avatarName = this.add.text(this.sAPointX * 4 , this.sAPointY - this.scale.height * 0.2, 'Eros', { fontStyle: 'bold', fontSize: '24px', fill: '#fff' });
+        this.avatarName.setOrigin(0.5)
+
+        this.avatarIcon = this.add.image(this.sAPointX * 4 , this.sAPointY - this.scale.height * 0.35, 'avatarIcon1').setOrigin(0.5).setScale(0.25)
+
+
     }
 
     // When a region is selected

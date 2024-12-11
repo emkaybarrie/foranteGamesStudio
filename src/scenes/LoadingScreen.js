@@ -14,22 +14,14 @@ export default class LoadingScreen extends Phaser.Scene {
 
     preload() {
         // Preload assets for the loading screen itself
-        this.load.audio('backgroundMusic1', 'assets/music/placeholder_142.mp3');
-        this.load.audio('backgroundMusic2', 'assets/music/placeholder_BlameBrett.mp3');
-        this.load.audio('backgroundMusic3', 'assets/music/placeholder_Francesca.mp3');
-        this.load.audio('backgroundMusic4', 'assets/music/placeholder_FromEden.mp3');
-        this.load.audio('backgroundMusic5', 'assets/music/placeholder_KingsSeason.mp3');
-        this.load.audio('backgroundMusic6', 'assets/music/placeholder_Spartacus.mp3');
-        this.load.audio('backgroundMusic7', 'assets/music/placeholder_StayCrunchy.mp3');
-        this.load.audio('backgroundMusic8', 'assets/music/placeholder_XylemUp.mp3');
 
             // Terrain
 
             // In your preload method
-            this.load.spritesheet('terrainTileset', 'assets/images/world_tileset.png', {
-                frameWidth: 16,  // Width of each tile (in pixels)
-                frameHeight: 16, // Height of each tile (in pixels)
-            });
+            // this.load.spritesheet('terrainTileset', 'assets/images/world_tileset.png', {
+            //     frameWidth: 16,  // Width of each tile (in pixels)
+            //     frameHeight: 16, // Height of each tile (in pixels)
+            // });
 
 
             // Loot
@@ -54,8 +46,16 @@ export default class LoadingScreen extends Phaser.Scene {
         const assetLibrary = {
             badlands: {
                 default: [
-                    { type: 'image', key: 'badlandsTerrain', path: 'assets/images/badlands/terrain.png' },
-                    { type: 'image', key: 'badlandsRock', path: 'assets/images/badlands/rock.png' },
+                    { type: 'image', key: 'landmark_encounter', path: 'assets/images/badlands/landmark_encounter.png' },
+                    { type: 'sound', key: 'backgroundMusic1', path: 'assets/music/placeholder_142.mp3' },
+                    { type: 'sound', key: 'backgroundMusic2', path: 'assets/music/placeholder_BlameBrett.mp3' },
+                    { type: 'sound', key: 'backgroundMusic3', path: 'assets/music/placeholder_Francesca.mp3' },
+                    { type: 'sound', key: 'backgroundMusic4', path: 'assets/music/placeholder_FromEden.mp3' },
+                    { type: 'sound', key: 'backgroundMusic5', path: 'assets/music/placeholder_KingsSeason.mp3' },
+                    { type: 'sound', key: 'backgroundMusic6', path: 'assets/music/placeholder_Spartacus.mp3' },
+                    { type: 'sound', key: 'backgroundMusic7', path: 'assets/music/placeholder_StayCrunchy.mp3' },
+                    { type: 'sound', key: 'backgroundMusic8', path: 'assets/music/placeholder_XylemUp.mp3' },
+                    { type: 'spritesheet', key: 'terrainTileset', path: 'assets/images/world_tileset.png', frameConfig: {frameWidth: 16,frameHeight: 16} },
                 ],
                 region1: [
                     { type: 'image', key: 'badlandsCactus', path: 'assets/images/badlands/cactus.png' },
@@ -84,7 +84,7 @@ export default class LoadingScreen extends Phaser.Scene {
 
         // Define libraries for different categories
         const imageLibrary = {
-            badlands: ['titleScreen2b', 'titleScreen2b', 'titleScreen2b'],
+            badlands: ['titleScreen2b'],
             forest: ['forest1', 'forest2', 'forest3'],
             default: ['default1', 'default2', 'default3'],
         };
@@ -176,6 +176,8 @@ export default class LoadingScreen extends Phaser.Scene {
                 this.load.image(asset.key, asset.path);
             } else if (asset.type === 'spritesheet') {
                 this.load.spritesheet(asset.key, asset.path, asset.frameConfig);
+            } else if (asset.type === 'sound'){
+                this.load.audio(asset.key, asset.path);
             }
         });
 

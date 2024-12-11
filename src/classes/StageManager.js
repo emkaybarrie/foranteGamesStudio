@@ -22,6 +22,10 @@ export default class StageManager {
         this.baseSpeed = config.baseSpeed;
         this.addedSpeed = config.addedSpeed
 
+        this.stageProgress = 8000
+        this.stageLength = 10000
+        this.stage = 1
+
         this.layers = [];   // Array to hold generated layers
 
         // Define groups for each platform type
@@ -156,6 +160,14 @@ export default class StageManager {
             }
 
             this.baseSpeed = (this.avatarManager.traversalSpeed * (this.avatarManager.traversalSpeedModifier / 100)) + this.addedSpeed
+
+            this.stageProgress += this.baseSpeed
+            this.uiManager.updateProgressBar(this.uiManager.progressBar, this.stageProgress,this.stageLength)
+            if(this.stageProgress > this.stageLength ){
+                this.stage += 1
+                this.stageProgress = 0
+                this.scene.incrementLevel()
+            }
 
         }
 
