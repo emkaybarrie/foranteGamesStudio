@@ -92,7 +92,7 @@ export default class InputManager {
 
         // Set up touch controls if on mobile
         if (this.isMobile) {
-            this.setupTouchControls();
+            //this.setupTouchControls();
         }
     }
 

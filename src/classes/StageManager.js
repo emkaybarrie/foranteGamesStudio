@@ -71,7 +71,7 @@ export default class StageManager {
         this.enemyManager = new EnemyManager(this.scene, this)
         // Avatar Manager
         console.log('Getting Avatar: ' + this.region)
-        this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.2, this.scene.scale.height * 0.85, this.input);
+        this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.35, this.scene.scale.height * 0.85, this.input);
         // Camera Manager
         this.cameraManager = new CameraManager(this.scene, this)
         
@@ -154,6 +154,7 @@ export default class StageManager {
                 if(this.avatarManager.currentHealth > 0){
                     
                     this.avatarManager.sprite.y = 0
+                    this.avatarManager.sprite.x += this.scene.scale.width * 0.05
                     // Flash the camera red
                     this.cameraManager.mainCamera.flash(150, 255, 0, 0); // duration: 200ms, RGB: full red
                 }          
