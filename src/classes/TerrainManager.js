@@ -89,7 +89,7 @@ export default class TerrainManager {
     }
 
 
-    generateTerrain(x, elevation = 'ground', distance = 'standard', useTopRow = true, textureMatchStage = true, textureOverride = null) {
+    generateTerrain(x, elevation = 'ground', distance = 'standard', useTopRow = true, textureMatchStage = true, textureOverride = null, populateTerrain = true) {
 
         // Define which tile index corresponds to which terrain type
         const terrainTiles = {
@@ -229,6 +229,7 @@ export default class TerrainManager {
         // Apply visual pipeline
         tileSprite.setPipeline('GlowPipeline');
     
+        if (populateTerrain){
         // Populate terrain
         const terrainBounds = physicsBody.getBounds();
         if (Phaser.Math.FloatBetween(0, 100) < 75) {
@@ -273,6 +274,7 @@ export default class TerrainManager {
                 'stage1',
                 this.rarity
             );
+        }
         }
 
     

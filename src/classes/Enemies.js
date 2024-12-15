@@ -122,7 +122,11 @@ export default class EnemyManager {
         // Custom behavior based on type
         enemy.name = monsterData.name
         enemy.flipReversed = monsterData.flipReversed
-        enemy.type = monsterData.type || 'default';
+        enemy.type = monsterData.type || 'default'
+        enemy.attackType = monsterData.attackType || 'melee';
+        enemy.attackRange = enemy.attackType === 'melee' 
+        ? this.scene.scale.width * 0.1 
+        : this.scene.scale.width * 0.5;
         enemy.attackPower = monsterData.attackPower || 25
         enemy.jumpPower = Phaser.Math.Between(500, 1250);
 
@@ -164,8 +168,12 @@ export default class EnemyManager {
     }
 
     enemyCollision(avatar, enemy) {
-        avatar.takeHit(enemy.attackPower);
-        console.log(`Avatar collided with Enemy: ${enemy.id}`);
+
+        // Check if the enemy is attacking
+        const damage = enemy.isAttacking ? enemy.attackPower : 10; // Use attackPower if attacking, else default to 10
+        
+        avatar.takeHit(damage);
+        console.log(`Avatar collided with Enemy: ${enemy.id}, Damage: ${damage}`);
     }
 
     update() {
@@ -180,36 +188,68 @@ export default class EnemyManager {
                     console.log(`Destroying ${enemy.elevation} enemy`);
                 } else {
                     // Handle specific behaviors
-                    if (enemy.body.touching.down && enemy.type === 'jumper') {
-                        enemy.setVelocityY(-enemy.jumpPower);
+                    const avatarX = this.stageManager.avatarManager.sprite.x;
+                    const avatarY = this.stageManager.avatarManager.sprite.y;
+                    const enemyX = enemy.x;
+                    const enemyY = enemy.y;
+
+                    const aggroRange = this.scene.scale.width * 0.75; // Aggro range on the x-axis
+                    const yAggroRange = this.scene.scale.height * 0.35 // Vertical proximity to trigger aggro
+                    const attackRange = enemy.attackRange || this.scene.scale.width * 0.1; // Attack range
+
+                    // Prioritize the "takeHit" animation if the enemy is hit
+                    if (enemy.isHit) {
+                        enemy.play(`${enemy.name}_takeHit`, true);
+                        enemy.setVelocityX(0); // Stop movement during takeHit
+                        return;
                     }
 
-                    if (enemy.type === 'chaser') {
-                        const avatarX = this.stageManager.avatarManager.sprite.x;
-                        if (enemy.x < avatarX - 250) {
-                            if(enemy.flipReversed){
-                                enemy.flipX = false;
-                            } else {
-                                enemy.flipX = true;
-                            }
-                            
-                            enemy.setVelocityX(550 + (this.stageManager.addedSpeed * 1.5));
-                        } else if (enemy.x > avatarX + 150 && enemy.x < avatarX + 500) {
-                            enemy.setVelocityX(-550 - (this.stageManager.addedSpeed * 0.5));
-                            if(enemy.flipReversed){
-                                enemy.flipX = true;
-                            } else {
-                                enemy.flipX = false;
-                            }
-                        }
+                    // Check if the player is within aggro range
+                    const isInAggroX = Math.abs(enemyX - avatarX) < aggroRange;
+                    const isInAggroY = Math.abs(enemyY - avatarY) <= yAggroRange;
+                    const isAggressive = isInAggroX && isInAggroY;
 
-                        if (enemy.body.velocity.x != 0){
-                            enemy.play(`${enemy.name}_run`, true);
+                    // Handle specific behaviors
+                    if (isAggressive) {
+                        enemy.isAggressive = true;
+
+                        // Flip enemy to face the player
+                        if (enemyX > avatarX) {
+                            enemy.flipX = enemy.flipReversed ? true : false;
                         } else {
-                            enemy.play(`${enemy.name}_idle`, true);
+                            enemy.flipX = enemy.flipReversed ? false : true;
                         }
 
-                    
+                        // Determine if the enemy is in attack range
+                        const isInAttackRange = Math.abs(enemyX - avatarX) <= attackRange;
+
+                        if (isInAttackRange) {
+                            // Stop moving and attack
+                            if (!enemy.isAttacking) {
+                                enemy.isAttacking = true;
+                                enemy.setVelocityX(0); // Stop movement
+                                enemy.play(`${enemy.name}_attack`, true).once('animationcomplete', () => {
+                                    enemy.isAttacking = false; // Allow movement again after attack animation
+                                });
+                            }
+                        } else {
+                            // Move toward the player if not in attack range
+                            if (!enemy.isAttacking) {
+                                const moveSpeed = enemy.type === 'chaser' ? 350 : 150;
+                                if (enemyX > avatarX) {
+                                    enemy.setVelocityX(-moveSpeed - this.stageManager.addedSpeed);
+                                } else {
+                                    enemy.setVelocityX(moveSpeed + this.stageManager.addedSpeed);
+                                }
+                                enemy.play(`${enemy.name}_run`, true);
+                            }
+                        }
+                    } else {
+                        // Return to idle if the player is out of aggro range
+                        enemy.isAggressive = false;
+                        enemy.isAttacking = false;
+                        enemy.setVelocityX(0); // Stop movement
+                        enemy.play(`${enemy.name}_idle`, true);
                     }
                 }
             });

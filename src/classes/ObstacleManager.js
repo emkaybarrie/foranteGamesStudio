@@ -23,7 +23,7 @@ export default class ObstacleManager {
         obstacle.elevation = elevation; // Store platform type on the platform object for easy identification
 
 
-        obstacle.setScale(Phaser.Math.Between(2,3))
+        obstacle.setScale(Phaser.Math.FloatBetween(1.5,2))
 
         // Scale and adjust physics 
         obstacle.setSize(obstacle.width, obstacle.height * 0.8);

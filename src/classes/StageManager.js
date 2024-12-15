@@ -81,7 +81,7 @@ export default class StageManager {
         // Add Colliders
         this.addColliders()
 
-        const startTerrain = this.terrainManager.generateTerrain(0, 'ground', 'max')
+        const startTerrain = this.terrainManager.generateTerrain(0, 'ground', 'max', true, true, null, false)
 
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth, 'ground', 4)
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-500, 2000), 'low', 4)

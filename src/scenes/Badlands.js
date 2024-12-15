@@ -120,10 +120,13 @@ export default class Badlands extends Phaser.Scene {
                                 { type: 'takeHit', start: 8, end: 9, frameRate: 4, repeat: 0 },
                                 { type: 'death', start: 8, end: 15, frameRate: 6, repeat: 0 }
                             ],
-                            type: 'default',
+                            flipReversed: true,
                             scale: 1.5,
-                            tint: 0xFFFFFF,//0x00FF00,
                             physicsBox: { width: 32, height: 32, offsetX: 16, offsetY: 16 }, // Optional
+                            tint: 0xFFFFFF,//0x00FF00,
+                            type: 'default',
+                            attackType: 'ranged',
+                            attackRange: this.scale.width * 0.5,        
                             attackPower: 10
                         },
                         {
@@ -137,10 +140,15 @@ export default class Badlands extends Phaser.Scene {
                                 { type: 'takeHit', start: 26, end: 28, frameRate: 8, repeat: 0 },
                                 { type: 'death', start: 29, end: 38, frameRate: 6, repeat: 0 }
                             ],
-                            type: 'default',
+                            flipReversed: false,
                             scale: 1.25,
-                            tint: 0xFFFFFF,//0x00FF00,
                             physicsBox: { width: 20, height: 50, offsetX: 100, offsetY: 35 }, // Optional
+                            tint: 0xFFFFFF,//0x00FF00,
+                            type: 'default',
+                            attackType: 'melee',
+                            attackRange: this.scale.width * 0.1,        
+                            attackPower: 20
+
                         },
                         // Other common monsters...
                     ],
@@ -156,11 +164,14 @@ export default class Badlands extends Phaser.Scene {
                                 { type: 'takeHit', start: 14, end: 17, frameRate: 8, repeat: 0 },
                                 { type: 'death', start: 21, end: 27, frameRate: 6, repeat: 0 }
                             ],
-                            type: 'chaser',
+                            flipReversed: false,
                             scale: 1.25,
-                            tint: 0xFFFFFF,//0x00FF00,
                             physicsBox: { width: 64, height: 32, offsetX: 0, offsetY: 32 }, // Optional
-                            attackPower: 10
+                            tint: 0xFFFFFF,//0x00FF00,
+                            type: 'chaser',
+                            attackType: 'melee',
+                            attackRange: this.scale.width * 0.01,   
+                            attackPower: 15
                         },
                         // Other uncommon monsters...
                     ],
@@ -170,20 +181,22 @@ export default class Badlands extends Phaser.Scene {
                             spriteSheetPath: 'assets/enemies/region1/nightborne_elite.png',
                             dimensions: { frameWidth: 80, frameHeight: 80 },
                             animations: [
-                                { type: 'idle', start: 0, end: 9, frameRate: 6, repeat: -1 },
+                                { type: 'idle', start: 0, end: 8, frameRate: 6, repeat: -1 },
                                 { type: 'run', start: 23, end: 28, frameRate: 12, repeat: -1 },
                                 { type: 'attack', start: 46, end: 57, frameRate: 8, repeat: 0 },
                                 { type: 'takeHit', start: 69, end: 73, frameRate: 8, repeat: 0 },
                                 { type: 'death', start: 92, end: 114, frameRate: 6, repeat: 0 }
                             ],
                             flipReversed: true,
-                            type: 'chaser',
-                            scale: 2.5,
+                            scale: 3,
+                            physicsBox: { width: 20, height: 32, offsetX: 25, offsetY: 32 }, // Optional        
                             tint: 0xFFFFFF,//0x00FF00,
-                            physicsBox: { width: 20, height: 32, offsetX: 25, offsetY: 32 }, // Optional
+                            type: 'chaser',
+                            attackType: 'melee',
+                            attackRange: this.scale.width * 0.1, 
                             attackPower: 35
                         },
-                        // Other uncommon monsters...
+                        // Other rare monsters...
                     ],
                     // Other rarities...
                 },

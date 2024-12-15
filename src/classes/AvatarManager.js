@@ -224,7 +224,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.movementSpeed = Math.min(500 + (150  * ((this.adaptability - 100)/ 100)),750)
         this.repositionSpeed = Math.min(200 + (200  * ((this.adaptability - 100)/ 100)),450)
         this.repositionSpeedAir = Math.min(150 + (200  * ((this.adaptability - 100)/ 100)), 350)
-        this.traversalSpeed = Math.min(((this.movementSpeed * 0.015) + (5  * ((this.adaptability - 100)/ 100))), 20) 
+        this.traversalSpeed = Math.min(((this.movementSpeed * 0.01) + (5  * ((this.adaptability - 100)/ 100))), 20)
         this.jumpSpeed = Math.min(500 + (100 * ((this.adaptability - 100) / 100)),750)
         this.hangTimeSpeed =  Math.min(25 + (20 * ((this.adaptability - 100)/ 100)),50)
         this.hangTime = Math.min(150 + (150 * ((this.adaptability - 100) / 100)), 2000)
