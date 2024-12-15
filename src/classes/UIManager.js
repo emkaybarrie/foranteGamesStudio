@@ -22,7 +22,7 @@ export default class UIManager {
         const baseScreenIncrementY = this.scaleForDPI(this.scene.scale.height * 0.01);
 
         // Avatar icon size and vitals icon size
-        const avatarIconDesiredSize = this.scaleForDPI(300); // Desired size of avatar icon in pixels
+        const avatarIconDesiredSize = this.scaleForDPI(this.scene.scale.width * 0.1); // Desired size of avatar icon in pixels
         const vitalsIconScaleFactor = 0.275; // Proportional size of vitals icons relative to avatar icon
         const vitalsSpacingFactor = 0.15; // Spacing between vitals icons relative to avatar icon size
 
@@ -74,9 +74,9 @@ export default class UIManager {
 
         // Create the vital bars and position them relative to the icon
         this.bars = {
-            health: this.createBar(avatarIconRightX, avatarIconCenterY - vitalsIconSize - vitalsIconsSpacing / 2, 0xff0000, 0.4), // 20% width initially
-            mana: this.createBar(avatarIconRightX, avatarIconCenterY, 0x0000ff, 0.4), // 20% width initially
-            stamina: this.createBar(avatarIconRightX, avatarIconCenterY + vitalsIconSize + vitalsIconsSpacing / 2, 0x00ff00, 0.4), // 20% width initially
+            health: this.createBar(avatarIconRightX, avatarIconCenterY - vitalsIconSize - vitalsIconsSpacing / 2, 0xff0000, 0.25), // 20% width initially
+            mana: this.createBar(avatarIconRightX, avatarIconCenterY, 0x0000ff, 0.25), // 20% width initially
+            stamina: this.createBar(avatarIconRightX, avatarIconCenterY + vitalsIconSize + vitalsIconsSpacing / 2, 0x00ff00, 0.25), // 20% width initially
         };
 
         // Property mappings for health, mana, and stamina

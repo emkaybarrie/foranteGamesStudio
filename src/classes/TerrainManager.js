@@ -22,7 +22,7 @@ export default class TerrainManager {
             ground: { baseHeight: this.scene.scale.height * 0.1 },
             low: { baseHeight: this.scene.scale.height * 0.3  },
             medium: { baseHeight: this.scene.scale.height * 0.6 },
-            high: { baseHeight: this.scene.scale.height * 0.9 }
+            high: { baseHeight: this.scene.scale.height * 0.8 }
         };
 
         // Distance Settings
@@ -36,9 +36,9 @@ export default class TerrainManager {
 
         // Transition Gap Settings
         this.transitionGapSettings = {
-            ground: { baseWidth: this.scene.scale.height * 0.15},
-            low: { baseWidth: this.scene.scale.height * 0.25  },
-            medium: { baseWidth: this.scene.scale.height * 0.4 },
+            ground: { baseWidth: this.scene.scale.height * 0.25},
+            low: { baseWidth: this.scene.scale.height * 0.35  },
+            medium: { baseWidth: this.scene.scale.height * 0.45 },
             high: { baseWidth: this.scene.scale.height * 0.55 }
         };
 
@@ -243,11 +243,35 @@ export default class TerrainManager {
             terrainBounds.top,
             elevation
         );
+
+        // Enemy 
+        // Rarity stub
+        // Predefined rarity chances
+        const rarityChances = {
+            rare: 5,     // 5% chance for 'rare'
+            uncommon: 15, // 15% chance for 'uncommon'
+            common: 80    // 70% chance for 'common' (default)
+        };
+        const rand = Phaser.Math.FloatBetween(0, 100);  // Get a random number between 0 and 100
+
+        // Check for rare, uncommon, or common based on the predefined chance ranges
+        if (rand < rarityChances.rare) {
+            this.rarity = 'rare';
+        } else if (rand < rarityChances.rare + rarityChances.uncommon) {
+            this.rarity =  'uncommon';
+        } else {
+            this.rarity =  'common'; // Default if no other rarity is picked
+        }
+
+
         if (Phaser.Math.FloatBetween(0, 100) < 50) {
             this.stageManager.enemyManager.addEnemy(
                 terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
                 terrainBounds.top,
-                elevation
+                elevation,
+                'region1',
+                'stage1',
+                this.rarity
             );
         }
 
