@@ -12,7 +12,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         this.sprite.setOrigin(0.5, 1); // Set origin to center horizontally and bottom vertically
         this.sprite.setDepth(6)
-        this.sprite.setScale(1.5,1.5)
+        this.sprite.setScale(1,1)
 
         // Physics properties
         this.sprite.setBounce(0.1); // Bounce effect
@@ -224,7 +224,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.movementSpeed = Math.min(500 + (150  * ((this.adaptability - 100)/ 100)),750)
         this.repositionSpeed = Math.min(200 + (200  * ((this.adaptability - 100)/ 100)),450)
         this.repositionSpeedAir = Math.min(150 + (200  * ((this.adaptability - 100)/ 100)), 350)
-        this.traversalSpeed = Math.min(((this.movementSpeed * 0.015) + (5  * ((this.adaptability - 100)/ 100))), 20) 
+        this.traversalSpeed = Math.min(((this.movementSpeed * 0.01) + (5  * ((this.adaptability - 100)/ 100))), 20)
         this.jumpSpeed = Math.min(500 + (100 * ((this.adaptability - 100) / 100)),750)
         this.hangTimeSpeed =  Math.min(25 + (20 * ((this.adaptability - 100)/ 100)),50)
         this.hangTime = Math.min(150 + (150 * ((this.adaptability - 100) / 100)), 2000)
@@ -808,7 +808,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                 this.scene.restartLevel()
 
                 
-                this.sprite.x = this.scene.scale.width * 0.2
+                this.sprite.x = this.scene.scale.width * 0.35
                 this.sprite.y = 0
                 this.sprite.setVelocity(0)
                 this.stageManager.cameraManager.mainCamera.flash(400, 255, 255, 255)
@@ -821,6 +821,20 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                 this.traversalSpeed = 5
                 this.traversalSpeedModifier = 100
                 this.sprite.anims.play('jump', true)
+
+                // Respawn invincibility
+                this.canBeHurt = false
+                this.scene.tweens.add({
+                    targets: this.sprite,
+                    alpha: { from: 1, to: 0.1 },
+                    duration: 100,
+                    yoyo: true,
+                    repeat: 10,
+                    onComplete: () => {
+                        this.sprite.setAlpha(1)
+                        this.canBeHurt = true
+                    }
+                });
             });
         }
     }

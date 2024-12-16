@@ -13,7 +13,7 @@ export default class Badlands extends Phaser.Scene {
         this.level = 1
         this.score = 0
         this.touchControls = null;
-        
+
     }
 
     init(data) {
@@ -101,10 +101,152 @@ export default class Badlands extends Phaser.Scene {
         this.load.image('healthIcon', 'assets/images/healthIcon.png')
         this.load.image('manaIcon', 'assets/images/manaIcon.png')
         this.load.image('staminaIcon', 'assets/images/staminaIcon.png')
+
+        // Stub Monsters
+        const currentRegion = 'region1'; // Replace with your dynamic logic
+        const currentStage = 'stage1';  // Replace with your dynamic logic
+        this.monsterList = {
+            region1: {
+                stage1: {
+                    common: [
+                        {
+                            name: 'nightborne_archer',
+                            spriteSheetPath: 'assets/enemies/region1/nightborne_archer.png',
+                            dimensions: { frameWidth: 64, frameHeight: 64 },
+                            animations: [
+                                { type: 'idle', start: 40, end: 43, frameRate: 6, repeat: -1 },
+                                { type: 'run', start: 0, end: 7, frameRate: 12, repeat: -1 },
+                                { type: 'attack', start: 24, end: 30, frameRate: 8, repeat: 0 },
+                                { type: 'takeHit', start: 8, end: 9, frameRate: 4, repeat: 0 },
+                                { type: 'death', start: 8, end: 15, frameRate: 6, repeat: 0 }
+                            ],
+                            flipReversed: true,
+                            scale: 1.5,
+                            physicsBox: { width: 32, height: 32, offsetX: 16, offsetY: 16 }, // Optional
+                            tint: 0xFFFFFF,//0x00FF00,
+                            type: 'default',
+                            attackType: 'ranged',
+                            attackRange: this.scale.width * 0.5,        
+                            attackPower: 10
+                        },
+                        {
+                            name: 'nightborne_warrior',
+                            spriteSheetPath: 'assets/enemies/region1/nightborne_warrior.png',
+                            dimensions: { frameWidth: 140, frameHeight: 93 },
+                            animations: [
+                                { type: 'idle', start: 0, end: 7, frameRate: 6, repeat: -1 },
+                                { type: 'run', start: 8, end: 15, frameRate: 12, repeat: -1 },
+                                { type: 'attack', start: 16, end: 25, frameRate: 8, repeat: 0 },
+                                { type: 'takeHit', start: 26, end: 28, frameRate: 8, repeat: 0 },
+                                { type: 'death', start: 29, end: 38, frameRate: 6, repeat: 0 }
+                            ],
+                            flipReversed: false,
+                            scale: 1.25,
+                            physicsBox: { width: 20, height: 50, offsetX: 100, offsetY: 35 }, // Optional
+                            tint: 0xFFFFFF,//0x00FF00,
+                            type: 'default',
+                            attackType: 'melee',
+                            attackRange: this.scale.width * 0.1,        
+                            attackPower: 20
+
+                        },
+                        // Other common monsters...
+                    ],
+                    uncommon: [
+                        {
+                            name: 'nightborne_hound',
+                            spriteSheetPath: 'assets/enemies/region1/nightborne_hound.png',
+                            dimensions: { frameWidth: 64, frameHeight: 64 },
+                            animations: [
+                                { type: 'idle', start: 0, end: 5, frameRate: 6, repeat: -1 },
+                                { type: 'run', start: 7, end: 11, frameRate: 12, repeat: -1 },
+                                { type: 'attack', start: 7, end: 11, frameRate: 8, repeat: 0 },
+                                { type: 'takeHit', start: 14, end: 17, frameRate: 8, repeat: 0 },
+                                { type: 'death', start: 21, end: 27, frameRate: 6, repeat: 0 }
+                            ],
+                            flipReversed: false,
+                            scale: 1.25,
+                            physicsBox: { width: 64, height: 32, offsetX: 0, offsetY: 32 }, // Optional
+                            tint: 0xFFFFFF,//0x00FF00,
+                            type: 'chaser',
+                            attackType: 'melee',
+                            attackRange: this.scale.width * 0.01,   
+                            attackPower: 15
+                        },
+                        // Other uncommon monsters...
+                    ],
+                    rare: [
+                        {
+                            name: 'nightborne_elite',
+                            spriteSheetPath: 'assets/enemies/region1/nightborne_elite.png',
+                            dimensions: { frameWidth: 80, frameHeight: 80 },
+                            animations: [
+                                { type: 'idle', start: 0, end: 8, frameRate: 6, repeat: -1 },
+                                { type: 'run', start: 23, end: 28, frameRate: 12, repeat: -1 },
+                                { type: 'attack', start: 46, end: 57, frameRate: 8, repeat: 0 },
+                                { type: 'takeHit', start: 69, end: 73, frameRate: 8, repeat: 0 },
+                                { type: 'death', start: 92, end: 114, frameRate: 6, repeat: 0 }
+                            ],
+                            flipReversed: true,
+                            scale: 3,
+                            physicsBox: { width: 20, height: 32, offsetX: 25, offsetY: 32 }, // Optional        
+                            tint: 0xFFFFFF,//0x00FF00,
+                            type: 'chaser',
+                            attackType: 'melee',
+                            attackRange: this.scale.width * 0.1, 
+                            attackPower: 35
+                        },
+                        // Other rare monsters...
+                    ],
+                    // Other rarities...
+                },
+                // Other stages...
+            },
+            // Other regions...
+        };
+
+        // Preload only the relevant monster spritesheets
+        this.loadMonsterSpritesheets(this.monsterList, currentRegion, currentStage);
          
     }
 
+    loadMonsterSpritesheets(monsterList, region, stage) {
+        const loadedAssets = new Set(); // Track loaded spritesheets
+    
+        // If region is provided, use it; otherwise, loop over all regions
+        const regionsToLoad = region ? [region] : Object.keys(monsterList);
+    
+        regionsToLoad.forEach(regionKey => {
+            const region = monsterList[regionKey];
+    
+            // If stage is provided, use it; otherwise, loop over all stages for the region
+            const stagesToLoad = stage ? [stage] : Object.keys(region);
+    
+            stagesToLoad.forEach(stageKey => {
+                const stageData = region[stageKey];
+    
+                // Load each monster's spritesheet
+                Object.values(stageData).forEach(monsters => {
+                    monsters.forEach(monster => {
+                        const { name, spriteSheetPath, dimensions } = monster;
+    
+                        // Only load if not already loaded
+                        if (!loadedAssets.has(spriteSheetPath)) {
+                            this.load.spritesheet(name, spriteSheetPath, {
+                                frameWidth: dimensions.frameWidth,
+                                frameHeight: dimensions.frameHeight,
+                            });
+                            loadedAssets.add(spriteSheetPath);
+                        }
+                    });
+                });
+            });
+        });
+    }
+    
+
     create() {
+
 
         this.input.mouse.disableContextMenu();
 
@@ -226,7 +368,7 @@ export default class Badlands extends Phaser.Scene {
 
         // Create the text object on the screen
         const textObject = scene.add.text(scene.scale.width * (1 - 0.05), scene.scale.height * 0.25, controlsText, {
-            font: '24px Arial',  // Font style
+            font: '16px Arial',  // Font style
             fill: '#ffffff',     // Text color
             align: 'right'        // Align text to the left
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0);

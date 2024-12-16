@@ -68,7 +68,7 @@ export default class StageManager {
         // Loot Manager
         this.lootManager = new LootManager(this.scene, this)
         // Enemy Manager
-        this.enemyManager = new EnemyManager(this.scene, this)
+        this.enemyManager = new EnemyManager(this.scene, this, this.scene.monsterList)
         // Avatar Manager
         console.log('Getting Avatar: ' + this.region)
         this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.35, this.scene.scale.height * 0.85, this.input);
@@ -81,9 +81,7 @@ export default class StageManager {
         // Add Colliders
         this.addColliders()
 
-        const startTerrain = this.terrainManager.generateTerrain(0, 'ground', 'max')
-
-        //this.terrainManager.generateTerrain(this.scene.scale.width, 'ground', 'max')
+        const startTerrain = this.terrainManager.generateTerrain(0, 'ground', 'max', true, true, null, false)
 
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth, 'ground', 4)
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-500, 2000), 'low', 4)
@@ -155,6 +153,20 @@ export default class StageManager {
                     
                     this.avatarManager.sprite.y = 0
                     this.avatarManager.sprite.x += this.scene.scale.width * 0.05
+                    // Respawn invincibility
+                    this.avatarManager.canBeHurt = false
+                    this.scene.tweens.add({
+                        targets: this.avatarManager.sprite,
+                        alpha: { from: 1, to: 0.1 },
+                        duration: 100,
+                        yoyo: true,
+                        repeat: 10,
+                        onComplete: () => {
+                            this.avatarManager.sprite.setAlpha(1)
+                            this.avatarManager.canBeHurt = true
+                        }
+                    });
+
                     // Flash the camera red
                     this.cameraManager.mainCamera.flash(150, 255, 0, 0); // duration: 200ms, RGB: full red
                 }          
