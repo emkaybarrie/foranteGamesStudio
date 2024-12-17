@@ -43,6 +43,7 @@ export default class InputManager {
         // Set up gamepad controls (if needed)
         this.scene.input.gamepad.once('connected', (pad) => {
             this.gamepad = pad;
+            console.log(this.gamepad)
         });
 
         // Mouse click listeners

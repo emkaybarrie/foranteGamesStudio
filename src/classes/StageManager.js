@@ -22,9 +22,10 @@ export default class StageManager {
         this.baseSpeed = config.baseSpeed;
         this.addedSpeed = config.addedSpeed
 
-        this.stageProgress = 8000
+        this.stageProgress = 0
         this.stageLength = 10000
         this.stage = 1
+        this.stageStart = false
 
         this.layers = [];   // Array to hold generated layers
 
@@ -57,6 +58,8 @@ export default class StageManager {
             high: this.scene.physics.add.group()
         };
 
+        this.projectileGroup = this.scene.physics.add.group(); // Phaser group to manage projectiles
+
         // Initialise Managers
         
         // Scenery Manager
@@ -71,7 +74,7 @@ export default class StageManager {
         this.enemyManager = new EnemyManager(this.scene, this, this.scene.monsterList)
         // Avatar Manager
         console.log('Getting Avatar: ' + this.region)
-        this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.35, this.scene.scale.height * 0.85, this.input);
+        this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.35, this.scene.scale.height * 0.5, this.input);
         // Camera Manager
         this.cameraManager = new CameraManager(this.scene, this)
         
@@ -81,12 +84,33 @@ export default class StageManager {
         // Add Colliders
         this.addColliders()
 
-        const startTerrain = this.terrainManager.generateTerrain(0, 'ground', 'max', true, true, null, false)
+        const startTerrain = this.terrainManager.generateTerrain(0, 'ground', 'max', 'platform', false, true, null, false)
+
+        const tileSprite = startTerrain.getData('tileSprite'); // Access the associated tileSprite
+
+        this.scene.tweens.add({
+            targets: [startTerrain, tileSprite], // Include all related sprites
+            alpha: { from: 1, to: 0.9 }, // Gentle flashing
+            y: startTerrain.y - 25, // Floating effect
+            ease: 'Sine.easeInOut', // Smooth motion
+            duration: 1000, // Duration for one cycle
+            yoyo: true, // Oscillate back and forth
+            repeat: -1, // Loop indefinitely
+        });
 
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth, 'ground', 4)
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-500, 2000), 'low', 4)
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-250, 3000), 'medium', 4)
         this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-50, 5000), 'high', 4)
+
+        // Add check in the update method
+        this.scene.events.on('update', () => {
+            if (startTerrain.x + startTerrain.displayWidth * 0.75 < 0) { 
+                // Check if startTerrain has moved completely off the left side of the screen
+                this.stageStart = true;
+                console.log('Start Terrain moved off-screen, stageStart set to true');
+            }
+        });
 
         
 
@@ -127,6 +151,17 @@ export default class StageManager {
                     );
                 }
             }
+
+         // Loop through each enemy group
+            Object.keys(this.enemyGroups).forEach(groupKey => {
+                const group = this.enemyGroups[groupKey];
+                
+                // Create the collider between this group and the projectile group
+                this.scene.physics.add.collider(group, this.projectileGroup, (enemy, projectile) => {
+                    this.enemyManager.enemyTakeHit(enemy, projectile);
+                });
+            });
+
     }
 
     update(time, delta){
@@ -172,9 +207,17 @@ export default class StageManager {
                 }          
             }
 
-            this.baseSpeed = (this.avatarManager.traversalSpeed * (this.avatarManager.traversalSpeedModifier / 100)) + this.addedSpeed
+            if(this.avatarManager.mode == 0){
+                this.baseSpeed = (this.avatarManager.traversalSpeed * (this.avatarManager.traversalSpeedModifier / 100)) + this.addedSpeed
+            } else {
+                this.baseSpeed = 0
+            }
+            
 
-            this.stageProgress += this.baseSpeed
+            if(this.stageStart){
+                this.stageProgress += this.baseSpeed
+            }
+            
             this.uiManager.updateProgressBar(this.uiManager.progressBar, this.stageProgress,this.stageLength)
             if(this.stageProgress > this.stageLength ){
                 this.stage += 1

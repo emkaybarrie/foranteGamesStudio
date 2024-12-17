@@ -46,25 +46,14 @@ export default class ObstacleManager {
             group.getChildren().forEach(obstacle => {
                 obstacle.x -= this.stageManager.baseSpeed;
 
-                // if (terrain.isSequenceEnd && terrain.x < this.scene.scale.width && !terrain.triggeredNewSequence){
-                //     console.log(`Generating new ${terrain.elevation} terrain sequence`);
-                //     terrain.triggeredNewSequence = true
 
-                //     this.generateTerrainSequence(terrain.x + terrain.displayWidth, elevation)
-                // }
 
                 if (obstacle.x < -obstacle.displayWidth){
                     obstacle.destroy();
                     //console.log(`Destroying ${obstacle.elevation} terrain`);
                 } else {
                     
-                    // Update last platform position only if the platform is still visible
-                    // this.lastPlatformPosition[type] = { 
-                    //     x: platform.x, 
-                    //     y: platform.y, 
-                    //     width: platform.displayWidth, 
-                    //     height: platform.displayHeight  
-                    // };
+
                 }
             });
         });

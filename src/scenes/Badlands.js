@@ -117,8 +117,8 @@ export default class Badlands extends Phaser.Scene {
                                 { type: 'idle', start: 40, end: 43, frameRate: 6, repeat: -1 },
                                 { type: 'run', start: 0, end: 7, frameRate: 12, repeat: -1 },
                                 { type: 'attack', start: 24, end: 30, frameRate: 8, repeat: 0 },
-                                { type: 'takeHit', start: 8, end: 9, frameRate: 4, repeat: 0 },
-                                { type: 'death', start: 8, end: 15, frameRate: 6, repeat: 0 }
+                                { type: 'takeHit', start: 8, end: 9, frameRate: 6, repeat: 0 },
+                                { type: 'death', start: 8, end: 15, frameRate: 8, repeat: 0 }
                             ],
                             flipReversed: true,
                             scale: 1.5,
@@ -127,7 +127,7 @@ export default class Badlands extends Phaser.Scene {
                             type: 'default',
                             attackType: 'ranged',
                             attackRange: this.scale.width * 0.5,        
-                            attackPower: 10
+                            attackPower: 15
                         },
                         {
                             name: 'nightborne_warrior',
@@ -137,8 +137,8 @@ export default class Badlands extends Phaser.Scene {
                                 { type: 'idle', start: 0, end: 7, frameRate: 6, repeat: -1 },
                                 { type: 'run', start: 8, end: 15, frameRate: 12, repeat: -1 },
                                 { type: 'attack', start: 16, end: 25, frameRate: 8, repeat: 0 },
-                                { type: 'takeHit', start: 26, end: 28, frameRate: 8, repeat: 0 },
-                                { type: 'death', start: 29, end: 38, frameRate: 6, repeat: 0 }
+                                { type: 'takeHit', start: 26, end: 28, frameRate: 6, repeat: 0 },
+                                { type: 'death', start: 29, end: 38, frameRate: 10, repeat: 0 }
                             ],
                             flipReversed: false,
                             scale: 1.25,
@@ -147,7 +147,7 @@ export default class Badlands extends Phaser.Scene {
                             type: 'default',
                             attackType: 'melee',
                             attackRange: this.scale.width * 0.1,        
-                            attackPower: 20
+                            attackPower: 25
 
                         },
                         // Other common monsters...
@@ -161,8 +161,8 @@ export default class Badlands extends Phaser.Scene {
                                 { type: 'idle', start: 0, end: 5, frameRate: 6, repeat: -1 },
                                 { type: 'run', start: 7, end: 11, frameRate: 12, repeat: -1 },
                                 { type: 'attack', start: 7, end: 11, frameRate: 8, repeat: 0 },
-                                { type: 'takeHit', start: 14, end: 17, frameRate: 8, repeat: 0 },
-                                { type: 'death', start: 21, end: 27, frameRate: 6, repeat: 0 }
+                                { type: 'takeHit', start: 14, end: 17, frameRate: 6, repeat: 0 },
+                                { type: 'death', start: 21, end: 27, frameRate: 8, repeat: 0 }
                             ],
                             flipReversed: false,
                             scale: 1.25,
@@ -171,7 +171,7 @@ export default class Badlands extends Phaser.Scene {
                             type: 'chaser',
                             attackType: 'melee',
                             attackRange: this.scale.width * 0.01,   
-                            attackPower: 15
+                            attackPower: 20
                         },
                         // Other uncommon monsters...
                     ],
@@ -184,8 +184,8 @@ export default class Badlands extends Phaser.Scene {
                                 { type: 'idle', start: 0, end: 8, frameRate: 6, repeat: -1 },
                                 { type: 'run', start: 23, end: 28, frameRate: 12, repeat: -1 },
                                 { type: 'attack', start: 46, end: 57, frameRate: 8, repeat: 0 },
-                                { type: 'takeHit', start: 69, end: 73, frameRate: 8, repeat: 0 },
-                                { type: 'death', start: 92, end: 114, frameRate: 6, repeat: 0 }
+                                { type: 'takeHit', start: 69, end: 73, frameRate: 10, repeat: 0 },
+                                { type: 'death', start: 92, end: 114, frameRate: 12, repeat: 0 }
                             ],
                             flipReversed: true,
                             scale: 3,
@@ -194,7 +194,7 @@ export default class Badlands extends Phaser.Scene {
                             type: 'chaser',
                             attackType: 'melee',
                             attackRange: this.scale.width * 0.1, 
-                            attackPower: 35
+                            attackPower: 40
                         },
                         // Other rare monsters...
                     ],

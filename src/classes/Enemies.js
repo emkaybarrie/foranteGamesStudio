@@ -3,67 +3,9 @@ export default class EnemyManager {
         this.scene = scene;
         this.stageManager = stageManager;
         this.enemyGroups = this.stageManager.enemyGroups;
+        this.projectileGroup = this.stageManager.projectileGroup
         this.monsterList = monsterList; // A hierarchical list of monsters by region, stage, and rarity
         console.log(this.monsterList)
-        // this.monsterList = {
-        //     region1: {
-        //         stage1: {
-        //             common: [
-        //                 {
-        //                     name: 'nightborne_hound',
-        //                     spriteSheetPath: 'assets/enemies/region1/nightborne_hound.png',
-        //                     dimensions: { frameWidth: 64, frameHeight: 64 },
-        //                     animations: [
-        //                         { type: 'idle', start: 0, end: 5, frameRate: 6, repeat: -1 },
-        //                         { type: 'run', start: 7, end: 11, frameRate: 12, repeat: -1 },
-        //                         { type: 'attack', start: 7, end: 11, frameRate: 8, repeat: 0 },
-        //                         { type: 'takeHit', start: 14, end: 17, frameRate: 8, repeat: 0 },
-        //                         { type: 'death', start: 21, end: 27, frameRate: 6, repeat: 0 }
-        //                     ],
-        //                     type: 'default',
-        //                     scale: 1.25,
-        //                     tint: 0xFFFFFF,//0x00FF00,
-        //                     physicsBox: { width: 64, height: 32, offsetX: 0, offsetY: 32 }, // Optional
-        //                 },
-        //                 {
-        //                     name: 'nightborne_warrior',
-        //                     spriteSheetPath: 'assets/enemies/region1/nightborne_warrior.png',
-        //                     dimensions: { frameWidth: 140, frameHeight: 93 },
-        //                     animations: [
-        //                         { type: 'idle', start: 0, end: 7, frameRate: 6, repeat: -1 },
-        //                         { type: 'run', start: 8, end: 15, frameRate: 12, repeat: -1 },
-        //                         { type: 'attack', start: 16, end: 25, frameRate: 8, repeat: 0 },
-        //                         { type: 'takeHit', start: 26, end: 28, frameRate: 8, repeat: 0 },
-        //                        // { type: 'death', start: 21, end: 27, frameRate: 6, repeat: 0 }
-        //                     ],
-        //                     type: 'default',
-        //                     scale: 1.25,
-        //                     tint: 0xFFFFFF,//0x00FF00,
-        //                     physicsBox: { width: 20, height: 50, offsetX: 100, offsetY: 35 }, // Optional
-        //                 },
-        //                 {
-        //                     name: 'bellatrix',
-        //                     spriteSheetPath: 'assets/enemies/region1/bellatrix.png',
-        //                     dimensions: { frameWidth: 32, frameHeight: 32 },
-        //                     animations: [
-        //                         { type: 'idle', start: 0, end: 6, frameRate: 6, repeat: -1 },
-        //                        // { type: 'run', start: 7, end: 11, frameRate: 12, repeat: -1 },
-        //                        // { type: 'attack', start: 7, end: 11, frameRate: 8, repeat: 0 },
-        //                        // { type: 'takeHit', start: 14, end: 17, frameRate: 8, repeat: 0 },
-        //                       //  { type: 'death', start: 21, end: 27, frameRate: 6, repeat: 0 }
-        //                     ],
-        //                     type: 'default',
-        //                     scale: 2.5,
-        //                     tint: 0xFFFFFF,//0x00FF00,
-        //                 },
-        //                 // Other common monsters...
-        //             ],
-        //             // Other rarities...
-        //         },
-        //         // Other stages...
-        //     },
-        //     // Other regions...
-        // };
         
     }
 
@@ -120,6 +62,7 @@ export default class EnemyManager {
         this.assignAnimations(enemy, monsterData);
 
         // Custom behavior based on type
+        enemy.elevation = elevation
         enemy.name = monsterData.name
         enemy.flipReversed = monsterData.flipReversed
         enemy.type = monsterData.type || 'default'
@@ -127,15 +70,22 @@ export default class EnemyManager {
         enemy.attackRange = enemy.attackType === 'melee' 
         ? this.scene.scale.width * 0.1 
         : this.scene.scale.width * 0.5;
+        //enemy.projectileImageKey = 'nightborne_arrow'
+        enemy.projectileTriggerFrame = 6
         enemy.attackPower = monsterData.attackPower || 25
         enemy.jumpPower = Phaser.Math.Between(500, 1250);
+
+        enemy.currentHealth = Phaser.Math.Between(5 + (this.stageManager.stage * 0.5), 15 + (this.stageManager.stage * 1));
+        enemy.canBeHurt = true
+        enemy.canHurt = true
+        enemy.canAct = true
 
         // Play the default animation (e.g., idle)
         enemy.play(`${monsterData.name}_idle`);
 
         enemy.id = Phaser.Utils.String.UUID();
 
-        console.log(`Enemy Created: ${enemy.id}, Type: ${enemy.type}`);
+        //console.log(`Enemy Created: ${enemy.id}, Type: ${enemy.type}`);
     }
 
     assignAnimations(enemy, monsterData) {
@@ -169,11 +119,69 @@ export default class EnemyManager {
 
     enemyCollision(avatar, enemy) {
 
-        // Check if the enemy is attacking
+        if(!enemy.isTakingHit && enemy.canHurt){
+            // Check if the enemy is attacking
         const damage = enemy.isAttacking ? enemy.attackPower : 10; // Use attackPower if attacking, else default to 10
         
         avatar.takeHit(damage);
-        console.log(`Avatar collided with Enemy: ${enemy.id}, Damage: ${damage}`);
+        //console.log(`Avatar collided with Enemy: ${enemy.id}, Damage: ${damage}`);
+        }
+
+        
+    }
+
+    enemyTakeHit(enemy, hitSource) {
+        
+        hitSource.destroy()
+        enemy.setVelocityX(0)
+
+        if (enemy.canBeHurt){
+            if (!enemy.isTakingHit && enemy.currentHealth > 0){
+                enemy.isTakingHit = true
+                //this.canRegen = false
+
+                //const previousHealth = enemy.currentHealth;
+                console.log('Enemy Taking Hit: ' + hitSource.damage)
+                enemy.currentHealth -= hitSource.damage            
+
+                // Emit event when health changes
+                //this.emit('currentHealthChanged', previousHealth, true);
+                enemy.anims.stop()
+                enemy.play(`${enemy.name}_takeHit`, true)
+                enemy.setVelocityX(0)
+
+
+                setTimeout(() => {
+                    enemy.isTakingHit = false;
+                    //this.canRegen = true
+                // console.log("Switch is now off");
+                }, 750);
+
+            } else if (enemy.currentHealth <= 0) {
+                enemy.anims.stop()
+                enemy.canAct = false
+                enemy.isAttacking = false
+                enemy.canBeHurt = false
+                enemy.canHurt = false
+                
+                
+                enemy.play(`${enemy.name}_death`, true) 
+
+                enemy.once('animationcomplete', () => {
+                    enemy.setVelocityX(0)
+                    enemy.destroy()
+                    this.scene.score +=  15
+
+                });
+            }
+        }
+
+        
+
+        // Check if the enemy is attacking
+       // const damage = enemy.isAttacking ? enemy.attackPower : 10; // Use attackPower if attacking, else default to 10
+
+        //console.log(`Avatar collided with Enemy: ${enemy.id}, Damage: ${damage}`);
     }
 
     update() {
@@ -185,7 +193,7 @@ export default class EnemyManager {
 
                 if (enemy.x < -enemy.displayWidth) {
                     enemy.destroy();
-                    console.log(`Destroying ${enemy.elevation} enemy`);
+                    //console.log(`Destroying ${enemy.elevation} enemy`);
                 } else {
                     // Handle specific behaviors
                     const avatarX = this.stageManager.avatarManager.sprite.x;
@@ -194,20 +202,22 @@ export default class EnemyManager {
                     const enemyY = enemy.y;
 
                     const aggroRange = this.scene.scale.width * 0.75; // Aggro range on the x-axis
-                    const yAggroRange = this.scene.scale.height * 0.35 // Vertical proximity to trigger aggro
+                    const yAggroRange = this.scene.scale.height * 0.3 // Vertical proximity to trigger aggro
                     const attackRange = enemy.attackRange || this.scene.scale.width * 0.1; // Attack range
 
                     // Prioritize the "takeHit" animation if the enemy is hit
-                    if (enemy.isHit) {
-                        enemy.play(`${enemy.name}_takeHit`, true);
-                        enemy.setVelocityX(0); // Stop movement during takeHit
-                        return;
-                    }
+                    // if (enemy.isTakingHit) {
+                    //     enemy.play(`${enemy.name}_takeHit`, true);
+                    //     enemy.setVelocityX(0); // Stop movement during takeHit
+                    //     return;
+                    // }
 
                     // Check if the player is within aggro range
                     const isInAggroX = Math.abs(enemyX - avatarX) < aggroRange;
                     const isInAggroY = Math.abs(enemyY - avatarY) <= yAggroRange;
                     const isAggressive = isInAggroX && isInAggroY;
+
+                    if (!enemy.isTakingHit && enemy.canAct){
 
                     // Handle specific behaviors
                     if (isAggressive) {
@@ -225,17 +235,26 @@ export default class EnemyManager {
 
                         if (isInAttackRange) {
                             // Stop moving and attack
-                            if (!enemy.isAttacking) {
+                            if (!enemy.isAttacking && !enemy.isTakingHit) {
                                 enemy.isAttacking = true;
                                 enemy.setVelocityX(0); // Stop movement
-                                enemy.play(`${enemy.name}_attack`, true).once('animationcomplete', () => {
+
+                                // Play the attack animation
+                                enemy.play(`${enemy.name}_attack`, true)
+                                .once('animationcomplete', () => {
                                     enemy.isAttacking = false; // Allow movement again after attack animation
+                                })
+                                .on('animationupdate', (anim, frame) => {
+                                    // Check if this frame matches the projectile trigger frame
+                                    if (frame.index === enemy.projectileTriggerFrame && enemy.attackType === 'ranged' && !enemy.isTakingHit) {
+                                        this.fireProjectile(enemy);
+                                    }
                                 });
                             }
                         } else {
                             // Move toward the player if not in attack range
                             if (!enemy.isAttacking) {
-                                const moveSpeed = enemy.type === 'chaser' ? 350 : 150;
+                                const moveSpeed = enemy.type === 'chaser' ? 400 : 150;
                                 if (enemyX > avatarX) {
                                     enemy.setVelocityX(-moveSpeed - this.stageManager.addedSpeed);
                                 } else {
@@ -251,8 +270,68 @@ export default class EnemyManager {
                         enemy.setVelocityX(0); // Stop movement
                         enemy.play(`${enemy.name}_idle`, true);
                     }
+                    }
                 }
+
+
             });
         });
+
+        // Update projectile positions based on baseSpeed
+        this.projectileGroup.getChildren().forEach(projectile => {
+            projectile.x -= this.stageManager.baseSpeed ;
+
+            // Destroy if out of bounds to prevent memory leaks
+            if (projectile.x < 0 || projectile.x > this.scene.scale.width) {
+                projectile.destroy();
+                console.log('Projectile destroyed as it went out of bounds');
+            }
+        });
+    }
+
+    fireProjectile(enemy) {
+        const projectile = this.scene.physics.add.sprite(
+            enemy.x,
+            enemy.y - (enemy.displayHeight / 1.5),
+            `${enemy.name}_projectile` // The image key for the projectile
+        );
+
+        // Add projectile to the group
+        this.projectileGroup.add(projectile);
+
+        projectile.setScale(2,3).setDepth(6)
+        projectile.body.allowGravity = false;
+
+  
+        const speed = 650 ; // Projectile speed
+        var modifierArrow = 0
+        // Determine direction based on enemy facing
+        const leftDir = enemy.flipReversed ? -1 : 1;
+        const rightDir = enemy.flipReversed ? 1 : -1;
+
+        const direction = enemy.flipX ? leftDir : rightDir; // Determine the direction based on enemy facing
+
+        if (direction < 0){
+            projectile.flipX = true
+        } else {
+            modifierArrow = 250
+        }
+    
+        projectile.setVelocityX(direction * (speed + modifierArrow));
+        projectile.setCollideWorldBounds(true);
+        projectile.body.onWorldBounds = true; // Enable worldbounds event
+
+        // Destroy the projectile when it hits the edge of the screen
+        this.scene.physics.world.on('worldbounds', (body) => {
+            if (body.gameObject === projectile) {
+                projectile.destroy();
+                console.log('Projectile destroyed on world bounds');
+            }
+        });
+
+        
+    
+        // Optional: Add additional behaviors for the projectile here
+        console.log(`Fired projectile from ${enemy.name} at frame ${enemy.projectileTriggerFrame}`);
     }
 }

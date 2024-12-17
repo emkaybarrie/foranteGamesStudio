@@ -43,6 +43,11 @@ const preload = (scene) => {
 
     scene.load.image('avatarIcon1', 'assets/avatars/1/icons/avatarIcon_01.png')
 
+    //Stub
+
+    scene.load.image('nightborne_archer_projectile', 'assets/enemies/region1/nightborne_archer_projectile.png')
+    scene.load.image('avatar1_projectile', 'assets/avatars/1/animations/arrow.png')
+
 
 };
 

@@ -13,8 +13,7 @@ export default class MainMenu extends Phaser.Scene {
     }
 
     create() {
-      // Add keyboard and gamepad controls
-      this.input.gamepad.on('connected', (pad) => this.updateControlsTips('gamepad'));
+
 
       // Add and darken the background
       this.bg = this.add.image(0, 0, 'titleScreen2c').setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
@@ -22,7 +21,7 @@ export default class MainMenu extends Phaser.Scene {
       const titleText = this.add.image(this.scale.width * 0.5, this.scale.height * 0.35,'titleScreenText4').setOrigin(0.5).setScale(0.75)
 
       // Menu items (these can be dynamically added or retrieved)
-      const menuItems = ['Start Game', 'Test', 'Wiki', 'MyFi', 'Options', 'Credits', 'Exit'];
+      const menuItems = ['Start Game', 'Quick Play', 'Wiki', 'MyFi', 'Options', 'Credits', 'Exit'];
       this.menuText = [];
 
       // Create menu text objects
@@ -77,7 +76,7 @@ export default class MainMenu extends Phaser.Scene {
       }
 
       // Keyboard navigation: Use the up and down arrow keys to navigate
-      let selectedIndex = 0;
+      let selectedIndex = 1;
       this.menuText[selectedIndex].setStyle({ color: '#ffcc00' });  // Highlight the first item initially
 
       this.input.keyboard.on('keydown-UP', () => {
