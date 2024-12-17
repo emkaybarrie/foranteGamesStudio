@@ -1,6 +1,7 @@
 import preload from '../preload.js';
 import StageManager from '../classes/StageManager.js';
 import InputManager from '../classes/InputManager.js';
+import { config } from "../config.js";
 
 
 export default class Badlands extends Phaser.Scene {
@@ -96,7 +97,7 @@ export default class Badlands extends Phaser.Scene {
     preload(){
         // Load assets if needed
         preload(this);
-
+        console.log('Test_Preload')
         this.load.image('avatarIcon', `assets/avatars/${this.region}/icons/Badlands/default.png`)
         this.load.image('healthIcon', 'assets/images/healthIcon.png')
         this.load.image('manaIcon', 'assets/images/manaIcon.png')
@@ -204,14 +205,16 @@ export default class Badlands extends Phaser.Scene {
             },
             // Other regions...
         };
-
+        
         // Preload only the relevant monster spritesheets
         this.loadMonsterSpritesheets(this.monsterList, currentRegion, currentStage);
+  
          
     }
 
     loadMonsterSpritesheets(monsterList, region, stage) {
         const loadedAssets = new Set(); // Track loaded spritesheets
+  
     
         // If region is provided, use it; otherwise, loop over all regions
         const regionsToLoad = region ? [region] : Object.keys(monsterList);
@@ -242,11 +245,20 @@ export default class Badlands extends Phaser.Scene {
                 });
             });
         });
+ 
     }
     
 
     create() {
+    
+         // Pause game when "P" is pressed
+        this.input.keyboard.on('keydown-P', () => {
+            this.scene.pause(); // Pause this scene
+            this.scene.launch('PauseScreen'); // Launch the pause menu scene
+            this.scene.bringToTop('PauseScreen');
+        });
 
+        
 
         this.input.mouse.disableContextMenu();
 
@@ -357,6 +369,7 @@ export default class Badlands extends Phaser.Scene {
         Sprint: [D]
         Slow/Heal: [A] 
 
+        Pause: [P]
         Main Menu: [F5]
 
         Survive and beat your high score
@@ -380,10 +393,8 @@ export default class Badlands extends Phaser.Scene {
     incrementLevel() {
 
 
-        //this.avatar.switchMode()
-
         if(this.stageManager.stage < 12){
-        this.stageManager.addedSpeed += 0.25
+        this.stageManager.addedSpeed += 0.2
         this.stageManager.avatarManager.vitality += 1
         this.stageManager.avatarManager.focus += 2
         this.stageManager.avatarManager.adaptability += 4
@@ -427,4 +438,5 @@ export default class Badlands extends Phaser.Scene {
 
         
     }
+
 }

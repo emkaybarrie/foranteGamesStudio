@@ -5,7 +5,7 @@ export default class LoadingScreen extends Phaser.Scene {
 
     init(data) {
         // Data passed from the calling scene
-        this.targetScene = data.targetScene || 'GameScene';
+        this.targetScene = data.targetScene || 'Badlands';
         this.category = data.category || 'default';
         this.subCategory = data.subCategory || null; // Optional sub-category
         this.region = data.region || 1;
@@ -29,16 +29,8 @@ export default class LoadingScreen extends Phaser.Scene {
             this.load.spritesheet('coin', 'assets/images/coin.png', { frameWidth: 16, frameHeight: 16 });
 
             this.load.image('gold', 'assets/images/gold.png');
-            this.load.image('enemy', 'assets/images/enemy.png');
-            this.load.image('enemy2', 'assets/images/enemy2.png');
             this.load.image('dTerrainPlaceholder', 'assets/images/dTerrainPlaceholder.png');
-            this.load.image('ground_common', 'assets/images/ground_common.png');
-            this.load.image('ground_uncommon', 'assets/images/ground_uncommon.png');
-            this.load.image('low_common', 'assets/images/low_common.png');
-            this.load.image('low_uncommon', 'assets/images/low_uncommon.png');
-            this.load.image('medium_common', 'assets/images/medium_common.png');
-            this.load.image('medium_uncommon', 'assets/images/medium_uncommon.png');
-            this.load.image('high_common', 'assets/images/high_common.png');
+
     }
 
     create() {

@@ -9,6 +9,8 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.sprite = this.scene.physics.add.sprite(x, y, null); // Load your avatar image in preload
         this.sprite.setVisible(false)
 
+        
+
 
         this.sprite.setOrigin(0.5, 1); // Set origin to center horizontally and bottom vertically
         this.sprite.setDepth(6)
@@ -29,8 +31,10 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.action1PowerPercent = 0.1
         this.action1Cost = 10
         this.action2Cost = 35
-        this.special1Cost = 50
-        this.special2Cost = 75
+        this.special1PowerPercent = 0.25
+        this.special1Cost = 25
+        this.special2PowerPercent = 0.5
+        this.special2Cost = 50
         // Stats
 
         // Core stats are vitality, focus, stamina - correspond to emergency savings target, personal savings target, disposable spending target (avg. daily)
@@ -115,6 +119,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
             this.createAndLoadAnimation(avatarId, '1_atk', 10, 20, 0);  // Creates 'slide' animation with 5 frames at 8 FPS
             this.createAndLoadAnimation(avatarId, '2_atk', 15, 26, 0);  // Creates 'slide' animation with 5 frames at 8 FPS
+            this.createAndLoadAnimation(avatarId, '3_atk', 12, 12, 0);  // Creates 'attack 3' animation with 5 frames at 8 FPS
             this.createAndLoadAnimation(avatarId, 'air_atk', 10, 26, 0);  // Creates 'slide' animation with 5 frames at 8 FPS
             
             
@@ -244,65 +249,148 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
     }
 
     // Method to load images and create animation
-    createAndLoadAnimation(avatarId, keyName, totalFrames, frameRate = 10, repeat = -1) {
-        const customXScaling = 0.05
-        const customYScaling = 0.3
-        const customXOffset = 135;
-        const customYOffset = 87.5;
+    // createAndLoadAnimation(avatarId, keyName, totalFrames, frameRate = 10, repeat = -1) {
+    //     const customXScaling = 0.05
+    //     const customYScaling = 0.3
+    //     const customXOffset = 135;
+    //     const customYOffset = 87.5;
 
-        // 1. Load all frames for the animation
-        for (let i = 1; i <= totalFrames; i++) {
-            const frameKey = `${keyName}_${String(i).padStart(2, '0')}`;
-            this.scene.load.image(frameKey, `assets/avatars/${avatarId}/animations/${keyName}/${frameKey}.png`);
-        }
+    //     // 1. Load all frames for the animation
+    //     for (let i = 1; i <= totalFrames; i++) {
+    //         const frameKey = `${keyName}_${String(i).padStart(2, '0')}`;
+    //         this.scene.load.image(frameKey, `assets/avatars/${avatarId}/animations/${keyName}/${frameKey}.png`);
+    //     }
 
-        // 2. Once images are loaded, create the animation
-        this.scene.load.on('complete', () => {
-            // Build frame array for animation creation
-            const frames = Array.from({ length: totalFrames }, (_, i) => ({
-                key: `${keyName}_${String(i + 1).padStart(2, '0')}`,
-                frame: null // Set frame to null if not using a spritesheet
-            }));
+    //     // 2. Once images are loaded, create the animation
+    //     this.scene.load.on('complete', () => {
+    //         // Build frame array for animation creation
+    //         const frames = Array.from({ length: totalFrames }, (_, i) => ({
+    //             key: `${keyName}_${String(i + 1).padStart(2, '0')}`,
+    //             frame: null // Set frame to null if not using a spritesheet
+    //         }));
 
-            // Generate the animation
-            this.scene.anims.create({
-                key: keyName,               // Animation key (e.g., 'run')
-                frames: frames,             // Frames created from loaded images
-                frameRate: frameRate,       // Set the frame rate of the animation
-                repeat: repeat              // -1 for looping, 0 for once
-            });
+    //         // Generate the animation
+    //         this.scene.anims.create({
+    //             key: keyName,               // Animation key (e.g., 'run')
+    //             frames: frames,             // Frames created from loaded images
+    //             frameRate: frameRate,       // Set the frame rate of the animation
+    //             repeat: repeat              // -1 for looping, 0 for once
+    //         });
 
-            // Set sprite texture and make it visible once loaded
-            this.sprite.setTexture(frames[0].key); 
-            this.sprite.setVisible(true);
+    //         // Set sprite texture and make it visible once loaded
+    //         // Check if the texture key exists before setting it
+    //         if (frames && frames[0] && frames[0].key) {
+    //             this.sprite.setTexture(frames[0].key);
+    //             this.sprite.setVisible(true);
+    //         } else {
+    //             console.warn('Failed to set texture: frames or key is missing');
+    //         }
 
-            // Set the size and offset based on the first frame dimensions
-            const firstFrameKey = frames[0].key;
-            //console.log(firstFrameKey)
-            const texture = this.scene.textures.get(firstFrameKey);
-           // console.log(texture)
-            const frameData = texture.get(firstFrameKey);
-           // console.log(frameData)
+    //         // Set the size and offset based on the first frame dimensions
+    //         const firstFrameKey = frames[0].key;
+    //         //console.log(firstFrameKey)
+    //         const texture = this.scene.textures.get(firstFrameKey);
+    //        // console.log(texture)
+    //         const frameData = texture.get(firstFrameKey);
+    //        // console.log(frameData)
 
-            if (frameData) {
-                // Set the initial physics body size and offset based on the first frame
-                this.sprite.setSize(frameData.width * customXScaling, frameData.height * customYScaling);
-                this.sprite.setOffset(frameData.x + customXOffset, frameData.y + customYOffset); // Adjust if necessary to align correctly
+    //         if (frameData) {
+    //             // Set the initial physics body size and offset based on the first frame
+    //             this.sprite.setSize(frameData.width * customXScaling, frameData.height * customYScaling);
+    //             this.sprite.setOffset(frameData.x + customXOffset, frameData.y + customYOffset); // Adjust if necessary to align correctly
 
-               // console.log(`Sprite Position: ${this.sprite.x}, ${this.sprite.y}`);
-               // console.log(`Physics Body Size: ${this.sprite.body.width}, ${this.sprite.body.height}`);
-               // console.log(`Physics Body Offset: ${this.sprite.body.offset.x}, ${this.sprite.body.offset.y}`);
-            }
+    //            // console.log(`Sprite Position: ${this.sprite.x}, ${this.sprite.y}`);
+    //            // console.log(`Physics Body Size: ${this.sprite.body.width}, ${this.sprite.body.height}`);
+    //            // console.log(`Physics Body Offset: ${this.sprite.body.offset.x}, ${this.sprite.body.offset.y}`);
+    //         }
 
-            // Mark animations as loaded
-            this.animationsLoaded = true;
+    //         // Mark animations as loaded
+    //         this.animationsLoaded = true;
 
             
-        });
+    //     });
 
+    //     // Start loading immediately
+    //     this.scene.load.start();
+    // }
+
+    createAndLoadAnimation(avatarId, keyName, totalFrames, frameRate = 10, repeat = -1) {
+        const customXScaling = 0.05;
+        const customYScaling = 0.3;
+        const customXOffset = 135;
+        const customYOffset = 87.5;
+    
+        // 1. Check if all frames are already loaded
+        let allFramesLoaded = true;
+        for (let i = 1; i <= totalFrames; i++) {
+            const frameKey = `${keyName}_${String(i).padStart(2, '0')}`;
+            if (!this.scene.textures.exists(frameKey)) {
+                allFramesLoaded = false;
+                break;
+            }
+        }
+    
+        if (allFramesLoaded) {
+            console.log(`Animation '${keyName}' already loaded. Reusing existing assets.`);
+            this.createAnimation(keyName, totalFrames, frameRate, repeat, customXScaling, customYScaling, customXOffset, customYOffset);
+            return;
+        }
+    
+        // 2. If frames are not loaded, start loading them
+        for (let i = 1; i <= totalFrames; i++) {
+            const frameKey = `${keyName}_${String(i).padStart(2, '0')}`;
+            if (!this.scene.textures.exists(frameKey)) {
+                this.scene.load.image(frameKey, `assets/avatars/${avatarId}/animations/${keyName}/${frameKey}.png`);
+            }
+        }
+    
+        // 3. Once images are loaded, create the animation
+        this.scene.load.on('complete', () => {
+            this.createAnimation(keyName, totalFrames, frameRate, repeat, customXScaling, customYScaling, customXOffset, customYOffset);
+        });
+    
         // Start loading immediately
         this.scene.load.start();
     }
+    
+    createAnimation(keyName, totalFrames, frameRate, repeat, customXScaling, customYScaling, customXOffset, customYOffset) {
+        // Build frame array for animation creation
+        const frames = Array.from({ length: totalFrames }, (_, i) => ({
+            key: `${keyName}_${String(i + 1).padStart(2, '0')}`,
+            frame: null // Set frame to null if not using a spritesheet
+        }));
+    
+        // Generate the animation
+        this.scene.anims.create({
+            key: keyName,               // Animation key (e.g., 'run')
+            frames: frames,             // Frames created from loaded images
+            frameRate: frameRate,       // Set the frame rate of the animation
+            repeat: repeat              // -1 for looping, 0 for once
+        });
+    
+        // Set sprite texture and make it visible once loaded
+        if (frames && frames[0] && frames[0].key) {
+            this.sprite.setTexture(frames[0].key);
+            this.sprite.setVisible(true);
+        } else {
+            console.warn('Failed to set texture: frames or key is missing');
+        }
+    
+        // Set the size and offset based on the first frame dimensions
+        const firstFrameKey = frames[0].key;
+        const texture = this.scene.textures.get(firstFrameKey);
+        const frameData = texture.get(firstFrameKey);
+    
+        if (frameData) {
+            // Set the initial physics body size and offset based on the first frame
+            this.sprite.setSize(frameData.width * customXScaling, frameData.height * customYScaling);
+            this.sprite.setOffset(frameData.x + customXOffset, frameData.y + customYOffset);
+        }
+    
+        // Mark animations as loaded
+        this.animationsLoaded = true;
+    }
+    
 
     // Method to start the regeneration timer
     startRegen() {
@@ -437,9 +525,10 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
                     if (this.isOnGround){
                         this.sprite.flipX = false
-                        if(this.traversalSpeedModifier > 25){
-                            this.traversalSpeedModifier -= 1
+                        if(this.traversalSpeedModifier > 10){
+                            this.traversalSpeedModifier *= 0.75
                         }
+                    }
 
                         // Play the attack animation
                         this.sprite.anims.play('2_atk', true)
@@ -456,24 +545,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                                 }
                             })
                         
-                    } else {
-
-                        // Play the attack animation
-                        this.sprite.anims.play('air_atk', true)
-                            .on('animationstart', (anim) => {
-                                if (anim.key === 'air_atk') {
-        
-                                }
-                            })
-                            .on('animationupdate', (anim, frame) => {
-                                // Check if the animation is in the attack state and if the projectile is at frame 8
-                                if (anim.key === 'air_atk' && frame.index === 5) {
-
-                                    this.fireProjectile(this.action1PowerPercent * this.adaptability);
-                                }
-                            })
-                     }
-
                     this.sprite.once('animationcomplete', () => {
                         this.isDoingAction = false
                         this.sprite.clearTint();
@@ -522,6 +593,10 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                             });
                             if(!this.isOnGround){
                                 this.sprite.body.setVelocityY(this.sprite.body.velocity.y - 250)
+                            } else {
+                                if(this.traversalSpeedModifier > 10){
+                                    this.traversalSpeedModifier *= 0.85
+                                }
                             }
 
                         },
@@ -542,48 +617,118 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             }
         }
 
+        // special1Old() {
+        //     if (this.animationsLoaded && this.currentMana > this.special1Cost) {
+
+        
+        //         // Prevent stacking multiple tweens if one is already active
+        //         if (!this.isDoingSpecial) {
+        //             this.isDoingSpecial = true;
+
+        //             const previousMana = this.currentMana;
+        //             this.currentMana -= this.special1Cost
+        //             this.canRegen = false
+        //             // Emit event when health changes
+        //             this.emit('currentManaChanged', previousMana, true);
+        
+        //             const startValue = this.traversalSpeedModifier;
+        //             const targetValue = 300 //this.isOnGround ? Math.min(startValue + 150, 500) : Math.min(startValue + 100, 500);
+        //             const duration = 1000; // Duration in milliseconds (adjust as needed)
+        
+        //             // Create the tween
+        //             this.scene.tweens.add({
+        //                 targets: this,
+        //                 traversalSpeedModifier: targetValue, // Tween this property
+        //                 duration: duration,
+        //                 ease: 'Power1', // Smooth easing
+        //                 onStart: () => {
+        //                     console.log("Special1 started!");
+        //                     this.sprite.setTint(0x0000ff); // Visual feedback
+        //                     this.sprite.anims.play('run', true); // Play the 'run' animation
+        //                     // Add additional "on start" logic here
+        //                 },
+        //                 onUpdate: (tween, target) => {
+        //                     console.log(`Traversal Speed Modifier: ${this.traversalSpeedModifier}`);
+        //                     // Add additional "on update" logic here
+        //                 },
+        //                 onComplete: () => {
+        //                     console.log("Special1 complete!");
+        //                     this.isDoingSpecial = false;
+        //                     // Add additional "on complete" logic here
+        //                          this.sprite.clearTint();
+        //                          this.canRegen = true
+        //                 }
+        //             });
+        //         }
+        //     }
+        // }
+
         special1() {
             if (this.animationsLoaded && this.currentMana > this.special1Cost) {
 
         
-                // Prevent stacking multiple tweens if one is already active
-                if (!this.isDoingSpecial) {
-                    this.isDoingSpecial = true;
+                if (!this.isDoingSpecial){
+                    
+                    this.isDoingSpecial = true
 
-                    const previousMana = this.currentMana;
+                    const previousVitalsValue = this.currentMana;
                     this.currentMana -= this.special1Cost
                     this.canRegen = false
                     // Emit event when health changes
-                    this.emit('currentManaChanged', previousMana, true);
-        
-                    const startValue = this.traversalSpeedModifier;
-                    const targetValue = 300 //this.isOnGround ? Math.min(startValue + 150, 500) : Math.min(startValue + 100, 500);
-                    const duration = 1000; // Duration in milliseconds (adjust as needed)
-        
-                    // Create the tween
-                    this.scene.tweens.add({
-                        targets: this,
-                        traversalSpeedModifier: targetValue, // Tween this property
-                        duration: duration,
-                        ease: 'Power1', // Smooth easing
-                        onStart: () => {
-                            console.log("Special1 started!");
-                            this.sprite.setTint(0x0000ff); // Visual feedback
-                            this.sprite.anims.play('run', true); // Play the 'run' animation
-                            // Add additional "on start" logic here
-                        },
-                        onUpdate: (tween, target) => {
-                            console.log(`Traversal Speed Modifier: ${this.traversalSpeedModifier}`);
-                            // Add additional "on update" logic here
-                        },
-                        onComplete: () => {
-                            console.log("Special1 complete!");
-                            this.isDoingSpecial = false;
-                            // Add additional "on complete" logic here
-                                 this.sprite.clearTint();
-                                 this.canRegen = true
+                    this.emit('currentManaChanged', previousVitalsValue, true);
+
+
+                    if (this.isOnGround){
+                        this.sprite.flipX = false
+                        if(this.traversalSpeedModifier > 10){
+                            this.traversalSpeedModifier *= 0.5
                         }
-                    });
+
+                        // Play the attack animation
+                        this.sprite.anims.play('3_atk', true)
+                            .on('animationstart', (anim) => {
+                                if (anim.key === '3_atk') {
+        
+                                }
+                            })
+                            .on('animationupdate', (anim, frame) => {
+                                // Check if the animation is in the attack state and if the projectile is at frame 8
+                                if (anim.key === '3_atk' && frame.index === 7) {
+
+                                    this.fireProjectile(this.special1PowerPercent * this.focus, {power: 450, angle: -35, gravity: true, adjustRotation: true });
+                                    this.fireProjectile(this.special1PowerPercent * this.focus, {power: 650, angle: -45, gravity: true, adjustRotation: true });
+                                    this.fireProjectile(this.special1PowerPercent * this.focus, { power: 850, angle: -55, gravity: true, adjustRotation: true });
+                                }
+                            })
+
+                            console.log(this.isDoingSpecial)
+                        
+                    } else {
+
+                        // Play the attack animation
+                        this.sprite.anims.play('3_atk', true)
+                            .on('animationstart', (anim) => {
+                                if (anim.key === '3_atk') {
+        
+                                }
+                            })
+                            .on('animationupdate', (anim, frame) => {
+                                // Check if the animation is in the attack state and if the projectile is at frame 8
+                                if (anim.key === '3_atk' && frame.index === 7) {
+
+                                    //this.fireProjectile(this.special1PowerPercent * this.focus, { angle: 45, gravity: true, adjustRotation: true });
+                                }
+                            })
+                     }
+
+                    this.sprite.once('animationcomplete', () => {
+                        this.isDoingSpecial = false
+                        console.log(this.isDoingSpecial)
+                        this.sprite.clearTint();
+                        this.canBeHurt = true
+                        this.canRegen = true
+ 
+                   });
                 }
             }
         }
@@ -592,24 +737,70 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         special2(){
             if (this.animationsLoaded && this.currentMana > this.special2Cost){
                     
-                this.currentMana -= this.special1Cost
-                this.currentHealth += this.special2Cost * 0.75
+                if (!this.isDoingSpecial){
+                    
+                    this.isDoingSpecial = true
 
-                if (this.isOnGround){
-                    this.sprite.anims.play('slide', true); // Play the 'run' animation when moving
-                    if(this.traversalSpeedModifier > 50 ){
-                        this.traversalSpeedModifier -= 1.5
+                    const previousVitalsValue = this.currentMana;
+                    this.currentMana -= this.special2Cost
+                    this.canRegen = false
+                    // Emit event when health changes
+                    this.emit('currentManaChanged', previousVitalsValue, true);
+
+
+                    if (this.isOnGround){
+                        this.sprite.flipX = false
+                        if(this.traversalSpeedModifier > 10){
+                            this.traversalSpeedModifier *= 0.5
+                        }
+
+                        this.sprite.setVelocityY(-750)
+                        this.sprite.setVelocityX(-350)
+                    } else {
+                        this.sprite.setVelocityY(-600)
+                        this.sprite.setVelocityX(-250)
                     }
-                } else {
-                    if(this.traversalSpeedModifier > 75 ){
-                        this.traversalSpeedModifier -= 0.5
-                    }
+                        
+                        setTimeout(() => {
+                            // Play the attack animation
+                            this.sprite.anims.play('air_atk', true)
+                            .on('animationstart', (anim) => {
+                                if (anim.key === 'air_atk') {
+                                    //this.sprite.setVelocityY(0)
+                                    //this.sprite.setVelocityX(0)
+                                }
+                            })
+                            .on('animationupdate', (anim, frame) => {
+                                // Check if the animation is in the attack state and if the projectile is at frame 8
+                                if (anim.key === 'air_atk' && frame.index === 5) {
+                                    this.sprite.setVelocityY(-650)
+                                    this.sprite.setVelocityX(-350)
+                                    this.fireProjectile(this.special2PowerPercent * this.focus, {power: 500, angle: 45, gravity: false, adjustRotation: true });
+
+                                }
+                            })
+                        }, 350);
+                        
+
+                            console.log(this.isDoingSpecial)
+                        
+                     
+
+                    this.sprite.once('animationcomplete', () => {
+                        this.isDoingSpecial = false
+                        console.log(this.isDoingSpecial)
+                        this.sprite.clearTint();
+                        this.canBeHurt = true
+                        this.canRegen = true
+ 
+                   });
                 }
-    
         
                 
             }
         }
+
+
 
         resetC(){
             this.traversalSpeedModifier = 100 
@@ -619,12 +810,12 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         stop() {
 
        
-            if(!this.isDoingAction){
+            if(!this.isDoingAction && !this.isDoingSpecial){
                 
                 if (this.animationsLoaded){
                     if (this.isOnGround){
                         this.sprite.flipX = false
-                        if(!this.isDoingAction && !this.isDoingMovement && !this.isTakingHit){
+                        if(!this.isDoingAction && !this.isDoingSpecial && !this.isDoingMovement && !this.isTakingHit){
                             this.sprite.angle = 0
                             this.sprite.anims.play('run', true); // Play the 'run' animation when moving 
                         }
@@ -639,54 +830,80 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         }
 
-        fireProjectile(damage){
-            if(true){
-                
-                const projectile = this.scene.physics.add.sprite(
-                    this.sprite.x,
-                    this.sprite.y - (this.sprite.displayHeight * 0.25),
-                    //`${enemy.name}_projectile` // The image key for the projectile
-                    'avatar1_projectile'
-                );
+
+        fireProjectile(damage, options = {}) {
+            const {power = 1000, angle = 0, gravity = false, adjustRotation = false } = options;
         
-                // Add projectile to the group
-                this.stageManager.projectileGroup.add(projectile);
+            const projectile = this.scene.physics.add.sprite(
+                this.sprite.x,
+                this.sprite.y - (this.sprite.displayHeight * 0.25),
+                'avatar1_projectile'
+            );
         
-                projectile.damage = damage
-                
-                projectile.setScale(2,3).setDepth(6)
-                projectile.setSize(35,10)
-                projectile.body.allowGravity = false;
+            // Add projectile to the group
+            this.stageManager.projectileGroup.add(projectile);
         
-          
-                const speed = 1000 ; // Projectile speed
-                var modifierArrow = 0
-                // Determine direction based on enemy facing
-                const leftDir = -1 // enemy.flipReversed ? -1 : 1;
-                const rightDir = 1 //enemy.flipReversed ? 1 : -1;
+            projectile.damage = damage;
         
-                const direction = this.sprite.flipX ? leftDir : rightDir; // Determine the direction based on enemy facing
+            projectile.setScale(2, 3).setDepth(6);
+            projectile.setSize(35, 10);
+            projectile.body.allowGravity = gravity;
         
-                if (direction < 0){
-                    projectile.flipX = true
-                 } else {
-                    modifierArrow = 350
-                }
-            
-                projectile.setVelocityX(direction * (speed + modifierArrow));
-                projectile.setCollideWorldBounds(true);
-                projectile.body.onWorldBounds = true; // Enable worldbounds event
+            const speed = power; // Base projectile speed
+            let modifierArrow = 0;
         
-                // Destroy the projectile when it hits the edge of the screen
-                this.scene.physics.world.on('worldbounds', (body) => {
-                    if (body.gameObject === projectile) {
-                        projectile.destroy();
-                        console.log('Projectile destroyed on world bounds');
-                    }
-                });
+            // Determine direction based on facing
+            const leftDir = -1;
+            const rightDir = 1;
+            const direction = this.sprite.flipX ? leftDir : rightDir;
+        
+            if (direction < 0) {
+                projectile.flipX = true;
+            } else {
+                modifierArrow = 350;
             }
-            
+        
+            // Calculate velocity based on angle and direction
+            const angleRadians = Phaser.Math.DegToRad(angle); // Convert angle to radians
+            const velocityX = Math.cos(angleRadians) * (speed + modifierArrow) * direction;
+            const velocityY = Math.sin(angleRadians) * (speed + modifierArrow);
+        
+            projectile.setVelocity(velocityX, velocityY);
+        
+            // Dynamically adjust rotation as it travels
+            if (adjustRotation) {
+                projectile.rotation = Phaser.Math.Angle.Between(0, 0, velocityX, velocityY); // Initial rotation
+        
+                // Update rotation on every frame
+                projectile.update = () => {
+                    if (projectile.body) { // Ensure the body exists before accessing velocity
+                        projectile.rotation = Phaser.Math.Angle.Between(0, 0, projectile.body.velocity.x, projectile.body.velocity.y);
+                    }
+                };
+        
+                // Add projectile to the scene's update list
+                this.scene.events.on('update', projectile.update, this);
+            }
+        
+            // Ensure projectile stays within bounds
+            projectile.setCollideWorldBounds(true);
+            projectile.body.onWorldBounds = true;
+        
+            // Destroy projectile on world bounds collision
+            this.scene.physics.world.on('worldbounds', (body) => {
+                if (body.gameObject === projectile) {
+                    // Remove projectile from update list before destroying
+                    this.scene.events.off('update', projectile.update, this);
+                    projectile.destroy();
+                    console.log('Projectile destroyed on world bounds');
+                }
+            });
+        
+            console.log(`Fired projectile with angle: ${angle}, gravity: ${gravity}, adjustRotation: ${adjustRotation}`);
         }
+        
+        
+        
 
     // Mode 1 Controls
 
@@ -829,41 +1046,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         
     }
 
-    // startFlashing() {
-    //     // Clear any existing flash timer before starting a new one
-    // if (this.flashTimer) {
-    //     this.flashTimer.remove();
-    //     this.sprite.visible = true; // Ensure visibility is reset
-    // }
-
-    // // Set up the flash effect to toggle visibility
-    // this.flashTimer = this.scene.time.addEvent({
-    //     delay: this.flashInterval,
-    //     callback: () => {
-    //         this.sprite.visible = !this.sprite.visible; // Toggle visibility for flash effect
-    //     },
-    //     loop: true
-    // });
-    // }
-
-    // altAction1Release(){
-    //     // Stop flashing
-    //     if (this.flashTimer) {
-    //         this.flashTimer.remove();
-    //         this.sprite.visible = true; // Ensure visibility is reset
-    //     }
-
-    //     this.isCharging = false;
-    //     // Resume the animation from the paused frame
-    //     this.sprite.anims.resume();
-    //     this.sprite.once('animationcomplete', () => {
-    //         // Reset charge when animation completes
-    //         this.charge = 0;
-    //         // Return to idle after charge animation completes
-    //         this.sprite.anims.play('idle');
-    //         //this.isDoingAction = false
-    //     });
-    // }
 
     altAction2(){
         if (this.animationsLoaded){
@@ -937,7 +1119,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     if(this.traversalSpeedModifier > 35){
                         this.traversalSpeedModifier -= 50
                     } else {
-                        this.switchMode()
+                        //this.switchMode()
                     }
                 }
                 
@@ -968,7 +1150,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     this.scene.restartLevel()
 
                     
-                    this.sprite.x = this.scene.scale.width * 0.35
+                    this.sprite.x = this.scene.scale.width * 0.3
                     this.sprite.y = 0
                     this.sprite.setVelocity(0)
                     this.stageManager.cameraManager.mainCamera.flash(400, 255, 255, 255)
@@ -1115,37 +1297,44 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                 
                 
                
-                if(!this.isDoingAction){
-                if (controls.left && this.sprite.x > this.scene.scale.width * 0.25) {
-                    this.moveLeft();
-                } else
-                if (controls.right && this.sprite.x < this.scene.scale.width * 0.5) {
-                    this.moveRight();
-                } else if (!this.isDoingAction && !controls.action1 && !controls.action2 && !controls.special1 && !controls.special2 && !controls.down) {
-                    this.stop();  
-                }
-                
-    
+                if(!this.isDoingAction && !this.isDoingSpecial){
+                    if (controls.left && this.sprite.x > this.scene.scale.width * 0.25) {
+                        this.moveLeft();
+                    } else
+                    if (controls.right && this.sprite.x < this.scene.scale.width * 0.35) {
+                        this.moveRight();
+                    } else if (!this.isDoingAction  && !this.isDoingSpecial && !controls.action1 && !controls.action2 && !controls.special1 && !controls.special2 && !controls.down) {
+                        this.stop();  
+                    }
+
+                    // Accelration/Deceleration Controls
+                    if (controls.left && this.sprite.x < this.scene.scale.width * 0.25 && this.traversalSpeedModifier > 10){
+                        this.traversalSpeedModifier -= 2
+                    } else if (controls.right && this.sprite.x > this.scene.scale.width * 0.35 && this.traversalSpeedModifier < 200){
+                        this.traversalSpeedModifier += 2
+                    }
+                    
         
-                if (controls.jump || controls.up) {
-                    this.jump();
-                } else 
-                if (controls.down){
-                    this.moveDown()
-                } 
-            }
+            
+                    if (controls.jump || controls.up) {
+                        this.jump();
+                    } else 
+                    if (controls.down){
+                        this.moveDown()
+                    } 
+                }
     
     
-                if (controls.special2 && !this.isDoingAction){
+                if (controls.special2 && !this.isDoingAction && !this.isDoingSpecial){
                     this.special2();
                 } else
-                if (controls.special1 && !this.isDoingAction){
+                if (controls.special1 && !this.isDoingAction && !this.isDoingSpecial){
                     this.special1();
                 } else
-                if (controls.action2 && !this.isDoingAction){
+                if (controls.action2 && !this.isDoingAction && !this.isDoingSpecial){
                     this.action2();
                 } else
-                if (controls.action1 && !this.isDoingAction){
+                if (controls.action1 && !this.isDoingAction && !this.isDoingSpecial){
                     this.action1()
                 }
             } else {

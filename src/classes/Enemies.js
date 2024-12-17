@@ -76,6 +76,7 @@ export default class EnemyManager {
         enemy.jumpPower = Phaser.Math.Between(500, 1250);
 
         enemy.currentHealth = Phaser.Math.Between(5 + (this.stageManager.stage * 0.5), 15 + (this.stageManager.stage * 1));
+        enemy.maxHealth = enemy.currentHealth
         enemy.canBeHurt = true
         enemy.canHurt = true
         enemy.canAct = true
@@ -84,6 +85,9 @@ export default class EnemyManager {
         enemy.play(`${monsterData.name}_idle`);
 
         enemy.id = Phaser.Utils.String.UUID();
+
+        // Create the health bar for the enemy
+        this.createHealthBar(enemy);
 
         //console.log(`Enemy Created: ${enemy.id}, Type: ${enemy.type}`);
     }
@@ -117,6 +121,74 @@ export default class EnemyManager {
         });
     }
 
+    // Create a health bar for the enemy with a background
+    createHealthBar(enemy) {
+        // Set health bar size based on max health
+        const barWidth = 100; // Fixed width for the health bar (adjust as needed)
+        const barHeight = 10; // Height of the health bar
+        const backgroundWidth = barWidth; // Background width will match max health
+        const x = enemy.x + 10;
+        const y = enemy.y + 20; // Position below the enemy
+
+        // Create the background of the health bar (gray or black)
+        const backgroundBar = this.scene.add.rectangle(x, y, backgroundWidth, barHeight, 0x000000)
+            .setOrigin(0, 0.5) // Center the background
+            .setDepth(9); // Ensure it's rendered below the foreground bar
+
+        // Create the health bar foreground (red)
+        const healthBar = this.scene.add.rectangle(x, y, barWidth, barHeight, 0xff0000)
+            .setOrigin(0, 0.5) // Set origin to the right (shrinks from right to left)
+            .setDepth(10); // Ensure it's rendered above the background bar
+
+        // Store both bars on the enemy
+        enemy.backgroundHealthBar = backgroundBar;
+        enemy.healthBar = healthBar;
+
+        // Track when the health bar should disappear
+        enemy.lastHitTime = Date.now();
+
+        // Update the health bar position each frame
+        this.scene.events.on('update', () => {
+            this.updateHealthBarPosition(enemy);
+        });
+    }
+
+    // Update the health bar position based on the enemy's position
+    updateHealthBarPosition(enemy) {
+        if (enemy.healthBar && enemy.backgroundHealthBar) {
+            // Update health bar position to stay below the enemy
+            enemy.healthBar.setPosition(enemy.x + 10, enemy.y + 20); // Adjust as needed
+            enemy.backgroundHealthBar.setPosition(enemy.x + 10, enemy.y + 20); // Background follows the enemy too
+        }
+    }
+
+    // Update the health bar based on the current health
+    updateHealthBar(enemy) {
+        if (enemy.healthBar && enemy.backgroundHealthBar) {
+            // Ensure health is never below 0
+            if (enemy.currentHealth < 0) enemy.currentHealth = 0;
+
+            const healthPercent = enemy.currentHealth / enemy.maxHealth;
+            const backgroundWidth = enemy.backgroundHealthBar.width;
+            const newWidth = backgroundWidth * healthPercent;
+            
+            // Update the health bar's width based on current health
+            enemy.healthBar.setSize(newWidth, enemy.healthBar.height);
+
+
+
+        }
+    }
+
+    // Destroy the enemy and remove the health bar
+    destroyEnemy(enemy) {
+        if (enemy.healthBar) {
+            enemy.healthBar.destroy(); // Destroy health bar foreground
+            enemy.backgroundHealthBar.destroy(); // Destroy health bar background
+        }
+        enemy.destroy(); // Destroy the enemy sprite
+    }
+
     enemyCollision(avatar, enemy) {
 
         if(!enemy.isTakingHit && enemy.canHurt){
@@ -142,7 +214,37 @@ export default class EnemyManager {
 
                 //const previousHealth = enemy.currentHealth;
                 console.log('Enemy Taking Hit: ' + hitSource.damage)
-                enemy.currentHealth -= hitSource.damage            
+                
+                enemy.currentHealth -= hitSource.damage  
+                // Reset the time when the enemy took damage
+                enemy.lastHitTime = Date.now();
+
+                // Update the health bar's size and visibility
+                this.updateHealthBar(enemy);
+                // Emit the health change event to update the UI
+                enemy.emit('healthChanged', enemy.currentHealth, enemy.maxHealth); 
+
+                // Create damage text
+                this.createDamageText(enemy, hitSource.damage, hitSource.damageType);
+
+                let dmgTint = 0xffffff
+                if(hitSource.damage > 0){
+                    dmgTint = 0xff0000
+                }
+                
+                // Flash white or red to indicate a hit
+                this.scene.tweens.add({
+                    targets: enemy, // The enemy sprite
+                    tint: { from: 0xffffff, to: dmgTint }, // Flash red (0xff0000) or white (0xffffff)
+                    alpha: { from: 1, to: 0.7 }, // Add slight transparency for intensity
+                    duration: 100, // Short duration for the flash
+                    yoyo: true, // Go back to the original tint
+                    repeat: 2, // Flash 2 times
+                    onComplete: () => {
+                        enemy.clearTint(); // Ensure the tint is cleared after flashing
+                        enemy.setAlpha(1)
+                    }
+                });
 
                 // Emit event when health changes
                 //this.emit('currentHealthChanged', previousHealth, true);
@@ -169,7 +271,7 @@ export default class EnemyManager {
 
                 enemy.once('animationcomplete', () => {
                     enemy.setVelocityX(0)
-                    enemy.destroy()
+                    this.destroyEnemy(enemy)
                     this.scene.score +=  15
 
                 });
@@ -184,6 +286,50 @@ export default class EnemyManager {
         //console.log(`Avatar collided with Enemy: ${enemy.id}, Damage: ${damage}`);
     }
 
+    createDamageText(enemy, damage, damageType) {
+        // Determine the damage text style based on the type of damage
+        let textStyle = {
+            font: '28px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        };
+    
+        // Apply custom styles based on damage type
+        switch (damageType) {
+            case 'critical':
+                textStyle.fill = '#ffd700'; // Gold color for critical hits
+                textStyle.font = '32px Arial'; // Bigger text for critical hits
+                break;
+            case 'poison':
+                textStyle.fill = '#00ff00'; // Green color for poison
+                break;
+            case 'ice':
+                textStyle.fill = '#00ffff'; // Blue color for ice
+                break;
+            default:
+                textStyle.fill = '#ffffff'; // White for normal damage
+                break;
+        }
+    
+        // Create the damage text above the enemy
+        const damageText = this.scene.add.text(enemy.x, enemy.y - enemy.displayHeight / 2, `${Math.round(damage)}`, textStyle)
+            .setOrigin(0.5, 1)  // Center the text horizontally and position it above the enemy
+            .setDepth(10);  // Make sure the text is on top of the enemy sprite
+    
+        // Animate the text to move upwards and fade out
+        this.scene.tweens.add({
+            targets: damageText,
+            y: damageText.y - 50,  // Move text upwards
+            alpha: 0,  // Fade out the text
+            duration: 1000,  // The text will last 1 second before disappearing
+            ease: 'Linear',
+            onComplete: () => {
+                damageText.destroy();  // Destroy the text once the animation is complete
+            }
+        });
+    }
+
+
     update() {
         Object.keys(this.enemyGroups).forEach(elevation => {
             const group = this.enemyGroups[elevation];
@@ -192,7 +338,7 @@ export default class EnemyManager {
                 enemy.x -= this.stageManager.baseSpeed;
 
                 if (enemy.x < -enemy.displayWidth) {
-                    enemy.destroy();
+                    this.destroyEnemy(enemy)
                     //console.log(`Destroying ${enemy.elevation} enemy`);
                 } else {
                     // Handle specific behaviors
@@ -205,12 +351,6 @@ export default class EnemyManager {
                     const yAggroRange = this.scene.scale.height * 0.3 // Vertical proximity to trigger aggro
                     const attackRange = enemy.attackRange || this.scene.scale.width * 0.1; // Attack range
 
-                    // Prioritize the "takeHit" animation if the enemy is hit
-                    // if (enemy.isTakingHit) {
-                    //     enemy.play(`${enemy.name}_takeHit`, true);
-                    //     enemy.setVelocityX(0); // Stop movement during takeHit
-                    //     return;
-                    // }
 
                     // Check if the player is within aggro range
                     const isInAggroX = Math.abs(enemyX - avatarX) < aggroRange;
@@ -247,7 +387,7 @@ export default class EnemyManager {
                                 .on('animationupdate', (anim, frame) => {
                                     // Check if this frame matches the projectile trigger frame
                                     if (frame.index === enemy.projectileTriggerFrame && enemy.attackType === 'ranged' && !enemy.isTakingHit) {
-                                        this.fireProjectile(enemy);
+                                        this.fireProjectile(enemy, enemy.attackPower);
                                     }
                                 });
                             }
@@ -271,6 +411,28 @@ export default class EnemyManager {
                         enemy.play(`${enemy.name}_idle`, true);
                     }
                     }
+
+
+                    // Tween the alpha based on inactivity
+                    if (Date.now() - enemy.lastHitTime > 4000) {  // 2000ms = 2 seconds of inactivity
+                        if (enemy.healthBar.alpha !== 0) {
+                            this.scene.tweens.add({
+                                targets: [enemy.healthBar, enemy.backgroundHealthBar],
+                                alpha: 0,
+                                duration: 500, // 1 second fade out duration
+                                ease: 'Linear'
+                            });
+                        }
+                    } else {
+                        if (enemy.healthBar.alpha !== 1) {
+                            this.scene.tweens.add({
+                                targets: [enemy.healthBar, enemy.backgroundHealthBar],
+                                alpha: 1,
+                                duration: 250, // 1 second fade in duration
+                                ease: 'Linear'
+                            });
+                        }
+                    }
                 }
 
 
@@ -289,7 +451,7 @@ export default class EnemyManager {
         });
     }
 
-    fireProjectile(enemy) {
+    fireProjectile(enemy, damage = 5) {
         const projectile = this.scene.physics.add.sprite(
             enemy.x,
             enemy.y - (enemy.displayHeight / 1.5),
@@ -301,6 +463,8 @@ export default class EnemyManager {
 
         projectile.setScale(2,3).setDepth(6)
         projectile.body.allowGravity = false;
+
+        projectile.damage = damage;
 
   
         const speed = 650 ; // Projectile speed

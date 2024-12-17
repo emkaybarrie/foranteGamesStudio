@@ -74,7 +74,7 @@ export default class StageManager {
         this.enemyManager = new EnemyManager(this.scene, this, this.scene.monsterList)
         // Avatar Manager
         console.log('Getting Avatar: ' + this.region)
-        this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.35, this.scene.scale.height * 0.5, this.input);
+        this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.3, this.scene.scale.height * 0.25, this.input);
         // Camera Manager
         this.cameraManager = new CameraManager(this.scene, this)
         
