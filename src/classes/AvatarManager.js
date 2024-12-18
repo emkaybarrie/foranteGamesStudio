@@ -35,6 +35,17 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.special1Cost = 25
         this.special2PowerPercent = 0.5
         this.special2Cost = 50
+
+        // Stub Skills
+        this.skills = {
+            crescentBarrage: this.skill_CrescentBarrage,
+            huntingHawk: this.skill_HuntingHawk,
+            powerShot: this.skill_PowerShot,
+        };
+
+        this.equippedSkill_1 = this.skills.powerShot
+        this.equippedSkill_2 = this.skills.huntingHawk
+
         // Stats
 
         // Core stats are vitality, focus, stamina - correspond to emergency savings target, personal savings target, disposable spending target (avg. daily)
@@ -446,7 +457,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         moveLeft() {
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= 0.1
+                this.currentStamina -= 0.15
                 if (this.isOnGround){
                     this.sprite.flipX = false
 
@@ -464,7 +475,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         moveRight() {
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= 0.1
+                this.currentStamina -= 0.15
             
                 if (this.isOnGround){
                     this.sprite.flipX = false
@@ -481,7 +492,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         moveDown(){
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= 0.15
+                this.currentStamina -= 0.2
                 if (this.isOnGround){
                     this.sprite.flipX = false
                     this.sprite.anims.play('slide', true); // Play the 'run' animation when moving
@@ -495,7 +506,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
 
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= 0.15
+                this.currentStamina -= 0.2
                 this.isDoingMovement = true
                 if ((this.isOnGround || this.coyoteTimeCounter > 0) && !this.hasJumped){
                     this.sprite.setVelocityY(-this.jumpSpeed);
@@ -530,6 +541,12 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                         }
                     }
 
+                    // Animation Framerate Adjustments
+                    // Adjust the animation's framerate dynamically
+                    const anim = this.sprite.anims.animationManager.get('2_atk'); // Get the animation
+                    anim.frameRate = 20; // Set desired framerate (frames per second)
+
+
                         // Play the attack animation
                         this.sprite.anims.play('2_atk', true)
                             .on('animationstart', (anim) => {
@@ -541,7 +558,29 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                                 // Check if the animation is in the attack state and if the projectile is at frame 8
                                 if (anim.key === '2_atk' && frame.index === 8) {
 
-                                    this.fireProjectile(this.action1PowerPercent * this.adaptability);
+
+                                    this.fireProjectile({ 
+                                        damage: this.action1PowerPercent * this.adaptability,
+                                        power: 1000, 
+                                        angle: 0, 
+                                        gravity: false, 
+                                        adjustRotation: false, 
+                                        maxPierce: 0,
+                                        onHit: (enemy, projectile) => {
+                                            const isCrit = Math.random() < 0.05; // Example crit logic
+                        
+                                            // Apply damage and crit logic
+                                            projectile.damage = isCrit ? projectile.damage * 2 : projectile.damage;
+                                            projectile.damageType = isCrit ? 'critical' : 'normal';
+        
+                        
+                                            // Trigger visual effects for hit
+                                            // if (isCrit) {
+                                            //     projectile.damageType = 'critical'
+        
+                                            // }
+                                        }
+                                    });
                                 }
                             })
                         
@@ -580,7 +619,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                         duration: 150,
                         ease: 'Power1', // Easing for smooth movement
                         onStart: () => {
-                            console.log("Dash started!");
+                            //console.log("Dash started!");
                             this.canBeHurt = false
                             this.sprite.setTint(0x00ff00); // Visual feedback
                             this.sprite.anims.play('roll', true); // Play the 'run' animation when moving
@@ -607,7 +646,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                            // }
                         },
                         onComplete: () => {
-                            console.log("Dash complete!");
+                            //console.log("Dash complete!");
                             
                             
                         }
@@ -677,53 +716,14 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     // Emit event when health changes
                     this.emit('currentManaChanged', previousVitalsValue, true);
 
+                    // Equipped Skill Logic
+                    this.equippedSkill_1()
 
-                    if (this.isOnGround){
-                        this.sprite.flipX = false
-                        if(this.traversalSpeedModifier > 10){
-                            this.traversalSpeedModifier *= 0.5
-                        }
 
-                        // Play the attack animation
-                        this.sprite.anims.play('3_atk', true)
-                            .on('animationstart', (anim) => {
-                                if (anim.key === '3_atk') {
-        
-                                }
-                            })
-                            .on('animationupdate', (anim, frame) => {
-                                // Check if the animation is in the attack state and if the projectile is at frame 8
-                                if (anim.key === '3_atk' && frame.index === 7) {
-
-                                    this.fireProjectile(this.special1PowerPercent * this.focus, {power: 450, angle: -35, gravity: true, adjustRotation: true });
-                                    this.fireProjectile(this.special1PowerPercent * this.focus, {power: 650, angle: -45, gravity: true, adjustRotation: true });
-                                    this.fireProjectile(this.special1PowerPercent * this.focus, { power: 850, angle: -55, gravity: true, adjustRotation: true });
-                                }
-                            })
-
-                            console.log(this.isDoingSpecial)
-                        
-                    } else {
-
-                        // Play the attack animation
-                        this.sprite.anims.play('3_atk', true)
-                            .on('animationstart', (anim) => {
-                                if (anim.key === '3_atk') {
-        
-                                }
-                            })
-                            .on('animationupdate', (anim, frame) => {
-                                // Check if the animation is in the attack state and if the projectile is at frame 8
-                                if (anim.key === '3_atk' && frame.index === 7) {
-
-                                    //this.fireProjectile(this.special1PowerPercent * this.focus, { angle: 45, gravity: true, adjustRotation: true });
-                                }
-                            })
-                     }
-
+                    // Skill Completion
                     this.sprite.once('animationcomplete', () => {
                         this.isDoingSpecial = false
-                        console.log(this.isDoingSpecial)
+                        //.log(this.isDoingSpecial)
                         this.sprite.clearTint();
                         this.canBeHurt = true
                         this.canRegen = true
@@ -747,48 +747,14 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     // Emit event when health changes
                     this.emit('currentManaChanged', previousVitalsValue, true);
 
+                    // Equipped Skill Logic
+                    this.equippedSkill_2()
 
-                    if (this.isOnGround){
-                        this.sprite.flipX = false
-                        if(this.traversalSpeedModifier > 10){
-                            this.traversalSpeedModifier *= 0.5
-                        }
-
-                        this.sprite.setVelocityY(-750)
-                        this.sprite.setVelocityX(-350)
-                    } else {
-                        this.sprite.setVelocityY(-600)
-                        this.sprite.setVelocityX(-250)
-                    }
                         
-                        setTimeout(() => {
-                            // Play the attack animation
-                            this.sprite.anims.play('air_atk', true)
-                            .on('animationstart', (anim) => {
-                                if (anim.key === 'air_atk') {
-                                    //this.sprite.setVelocityY(0)
-                                    //this.sprite.setVelocityX(0)
-                                }
-                            })
-                            .on('animationupdate', (anim, frame) => {
-                                // Check if the animation is in the attack state and if the projectile is at frame 8
-                                if (anim.key === 'air_atk' && frame.index === 5) {
-                                    this.sprite.setVelocityY(-650)
-                                    this.sprite.setVelocityX(-350)
-                                    this.fireProjectile(this.special2PowerPercent * this.focus, {power: 500, angle: 45, gravity: false, adjustRotation: true });
-
-                                }
-                            })
-                        }, 350);
-                        
-
-                            console.log(this.isDoingSpecial)
-                        
-                     
-
+                    // Skill Completion
                     this.sprite.once('animationcomplete', () => {
                         this.isDoingSpecial = false
-                        console.log(this.isDoingSpecial)
+                        //console.log(this.isDoingSpecial)
                         this.sprite.clearTint();
                         this.canBeHurt = true
                         this.canRegen = true
@@ -800,6 +766,281 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             }
         }
 
+        // Skill Library
+
+            // Offensive
+            skill_CrescentBarrage(){
+                if (this.isOnGround){
+                    this.sprite.flipX = false
+                    if(this.traversalSpeedModifier > 10){
+                        this.traversalSpeedModifier *= 0.5
+                    }
+
+                }
+
+                // Play the attack animation
+                this.sprite.anims.play('3_atk', true)
+                    .on('animationstart', (anim) => {
+                        if (anim.key === '3_atk') {
+
+                        }
+                    })
+                    .on('animationupdate', (anim, frame) => {
+                        // Check if the animation is in the attack state and if the projectile is at frame 8
+                        if (anim.key === '3_atk' && frame.index === 7) {
+
+                            this.fireProjectile(this.special1PowerPercent * this.focus, {power: 450, angle: -35, gravity: true, adjustRotation: true });
+                            this.fireProjectile(this.special1PowerPercent * this.focus, {power: 650, angle: -45, gravity: true, adjustRotation: true });
+                            this.fireProjectile(this.special1PowerPercent * this.focus, { power: 850, angle: -55, gravity: true, adjustRotation: true });
+
+                            // Remove the animationupdate listener
+                             this.sprite.off('animationupdate');
+                        }
+                    })
+            }
+
+            skill_PowerShot(){
+
+                // On Ground vs In Air
+                if (this.isOnGround){
+                    this.sprite.flipX = false
+                    if(this.traversalSpeedModifier > 10){
+                        this.traversalSpeedModifier *= 0.25
+                    }
+
+                }
+
+                // Animation Framerate Adjustments
+                // Adjust the animation's framerate dynamically
+                const anim = this.sprite.anims.animationManager.get('2_atk'); // Get the animation
+                anim.frameRate = 10; // Set desired framerate (frames per second)
+
+                // Play the animation
+                this.sprite.anims.play('2_atk', true)
+                    .on('animationstart', (anim) => {
+                        if (anim.key === '2_atk') {
+
+                        }
+                    })
+                    .on('animationupdate', (anim, frame) => {
+                        // Check if the animation is in the attack state and if the projectile is at frame 8
+                        if (anim.key === '2_atk' && frame.index === 8) {
+
+                            // Fire the projectile
+                            this.fireProjectile({ 
+                                damage: this.special1PowerPercent * this.focus,
+                                power: 1250, 
+                                angle: 0, 
+                                gravity: false, 
+                                adjustRotation: false, 
+                                maxPierce: 1,
+                                onHit: (enemy, projectile) => {
+                                    const isCrit = true//Math.random() < 0.90; // Example crit logic
+                
+                                    // Apply damage and crit logic
+                                    projectile.actualDamage = isCrit ? projectile.damage * 2 : projectile.damage;
+                                    projectile.damageType = isCrit ? 'critical' : 'normal';
+
+                                }
+                            });
+
+                            // Remove the animationupdate listener
+                            this.sprite.off('animationupdate');
+                        }
+                    })
+            }
+
+            // Defensive
+            skill_HuntingHawk(){
+                if (this.isOnGround){
+                    this.sprite.flipX = false
+                    if(this.traversalSpeedModifier > 10){
+                        this.traversalSpeedModifier *= 0.5
+                    }
+
+                    this.sprite.setVelocityY(-750)
+                    this.sprite.setVelocityX(-350)
+                } else {
+                    this.sprite.setVelocityY(-600)
+                    this.sprite.setVelocityX(-250)
+                }
+                    
+                setTimeout(() => {
+                    // Play the attack animation
+                    this.sprite.anims.play('air_atk', true)
+                    .on('animationstart', (anim) => {
+                        if (anim.key === 'air_atk') {
+                            //this.sprite.setVelocityY(0)
+                            //this.sprite.setVelocityX(0)
+                        }
+                    })
+                    .on('animationupdate', (anim, frame) => {
+                        // Check if the animation is in the attack state and if the projectile is at frame 8
+                        if (anim.key === 'air_atk' && frame.index === 5) {
+                            this.sprite.setVelocityY(-650)
+                            this.sprite.setVelocityX(-350)
+                            this.fireProjectile(this.special2PowerPercent * this.focus, {power: 500, angle: 45, gravity: false, adjustRotation: true });
+
+                            // Remove the animationupdate listener
+                            this.sprite.off('animationupdate');
+
+                        }
+                    })
+                }, 350);
+            }
+
+            // Utility
+        
+        // fireProjectile(damage, options = {}) {
+        //     const { 
+        //         power = 1000, 
+        //         angle = 0, 
+        //         gravity = false, 
+        //         adjustRotation = false, 
+        //         onHit = () => {}, // Default empty function for onHit behavior
+        //         passThrough = false // Whether the projectile passes through targets
+        //     } = options;
+        
+        //     const projectile = this.scene.physics.add.sprite(
+        //         this.sprite.x,
+        //         this.sprite.y - (this.sprite.displayHeight * 0.25),
+        //         'avatar1_projectile'
+        //     );
+        
+        //     // Add projectile to the group
+        //     this.stageManager.friendlyProjectileGroup.add(projectile);
+        
+        //     projectile.damage = damage;
+        
+        //     projectile.setScale(2, 3).setDepth(6);
+        //     projectile.setSize(35, 10);
+        //     projectile.body.allowGravity = gravity;
+        
+        //     const speed = power; // Base projectile speed
+        //     let modifierArrow = 0;
+        
+        //     // Determine direction based on facing
+        //     const leftDir = -1;
+        //     const rightDir = 1;
+        //     const direction = this.sprite.flipX ? leftDir : rightDir;
+        
+        //     if (direction < 0) {
+        //         projectile.flipX = true;
+        //     } else {
+        //         modifierArrow = 350;
+        //     }
+        
+        //     // Calculate velocity based on angle and direction
+        //     const angleRadians = Phaser.Math.DegToRad(angle); // Convert angle to radians
+        //     const velocityX = Math.cos(angleRadians) * (speed + modifierArrow) * direction;
+        //     const velocityY = Math.sin(angleRadians) * (speed + modifierArrow);
+        
+        //     projectile.setVelocity(velocityX, velocityY);
+        
+        //     // Dynamically adjust rotation as it travels
+        //     if (adjustRotation) {
+        //         projectile.rotation = Phaser.Math.Angle.Between(0, 0, velocityX, velocityY); // Initial rotation
+        
+        //         // Update rotation on every frame
+        //         projectile.update = () => {
+        //             if (projectile.body) { // Ensure the body exists before accessing velocity
+        //                 projectile.rotation = Phaser.Math.Angle.Between(0, 0, projectile.body.velocity.x, projectile.body.velocity.y);
+        //             }
+        //         };
+        
+        //         // Add projectile to the scene's update list
+        //         this.scene.events.on('update', projectile.update, this);
+        //     }
+        
+        //     // Ensure projectile stays within bounds
+        //     projectile.setCollideWorldBounds(true);
+        //     projectile.body.onWorldBounds = true;
+        
+        //     // Destroy projectile on world bounds collision
+        //     this.scene.physics.world.on('worldbounds', (body) => {
+        //         if (body.gameObject === projectile) {
+        //             // Remove projectile from update list before destroying
+        //             this.scene.events.off('update', projectile.update, this);
+        //             projectile.destroy();
+        //             //console.log('Projectile destroyed on world bounds');
+        //         }
+        //     });
+        
+        //     //console.log(`Fired projectile with angle: ${angle}, gravity: ${gravity}, adjustRotation: ${adjustRotation}`);
+
+        //     // Handle collision with enemies
+        //     this.scene.physics.add.overlap(projectile, this.stageManager.enemyGroup, (proj, enemy) => {
+        //         if (proj.active) {
+        //             // Trigger the onHit effect
+        //             onHit(enemy, proj);
+
+        //             // Pass-through or destroy logic
+        //             if (!passThrough) {
+        //                 // Remove projectile from update list before destroying
+        //                 this.scene.events.off('update', projectile.update, this);
+        //                 proj.destroy();
+        //             }
+        //         }
+        //     });
+
+        //     return projectile; // Return the projectile for further manipulation if needed
+
+
+        // } // LOCAL BASED COLLIDER SYSTEM
+
+        fireProjectile(options = {}) {
+            const { 
+                damage = 0,
+                power = 1000, 
+                angle = 0, 
+                gravity = false, 
+                adjustRotation = false, 
+                onHit = () => {}, // Function to handle hit effects
+                maxPierce = 0 // Whether the projectile passes through targets
+            } = options;
+        
+            const projectile = this.scene.physics.add.sprite(
+                this.sprite.x,
+                this.sprite.y - (this.sprite.displayHeight * 0.25),
+                'avatar1_projectile'
+            );
+        
+            // Add projectile to the group
+            this.stageManager.friendlyProjectileGroup.add(projectile);
+        
+            projectile.damage = damage;
+            projectile.actualDamage = damage
+            projectile.maxPierce = maxPierce; // Store pass-through behavior
+            projectile.onHit = onHit; // Store the onHit function for later use
+            projectile.hitTargets = new Set(); // Use a Set to track already-hit enemies
+        
+            projectile.setScale(2, 3).setDepth(6);
+            projectile.setSize(35, 10);
+            projectile.body.allowGravity = gravity;
+        
+            // Set velocity
+            const speed = power;
+            const direction = this.sprite.flipX ? -1 : 1;
+            const angleRadians = Phaser.Math.DegToRad(angle);
+            projectile.setVelocity(
+                Math.cos(angleRadians) * speed * direction,
+                Math.sin(angleRadians) * speed
+            );
+        
+            // Adjust rotation dynamically
+            if (adjustRotation) {
+                projectile.rotation = Phaser.Math.Angle.Between(0, 0, projectile.body.velocity.x, projectile.body.velocity.y);
+                projectile.update = () => {
+                    if (projectile.body) {
+                        projectile.rotation = Phaser.Math.Angle.Between(0, 0, projectile.body.velocity.x, projectile.body.velocity.y);
+                    }
+                };
+                this.scene.events.on('update', projectile.update, this);
+            }
+        
+            return projectile;
+        }
+        
 
 
         resetC(){
@@ -831,76 +1072,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         }
 
 
-        fireProjectile(damage, options = {}) {
-            const {power = 1000, angle = 0, gravity = false, adjustRotation = false } = options;
-        
-            const projectile = this.scene.physics.add.sprite(
-                this.sprite.x,
-                this.sprite.y - (this.sprite.displayHeight * 0.25),
-                'avatar1_projectile'
-            );
-        
-            // Add projectile to the group
-            this.stageManager.projectileGroup.add(projectile);
-        
-            projectile.damage = damage;
-        
-            projectile.setScale(2, 3).setDepth(6);
-            projectile.setSize(35, 10);
-            projectile.body.allowGravity = gravity;
-        
-            const speed = power; // Base projectile speed
-            let modifierArrow = 0;
-        
-            // Determine direction based on facing
-            const leftDir = -1;
-            const rightDir = 1;
-            const direction = this.sprite.flipX ? leftDir : rightDir;
-        
-            if (direction < 0) {
-                projectile.flipX = true;
-            } else {
-                modifierArrow = 350;
-            }
-        
-            // Calculate velocity based on angle and direction
-            const angleRadians = Phaser.Math.DegToRad(angle); // Convert angle to radians
-            const velocityX = Math.cos(angleRadians) * (speed + modifierArrow) * direction;
-            const velocityY = Math.sin(angleRadians) * (speed + modifierArrow);
-        
-            projectile.setVelocity(velocityX, velocityY);
-        
-            // Dynamically adjust rotation as it travels
-            if (adjustRotation) {
-                projectile.rotation = Phaser.Math.Angle.Between(0, 0, velocityX, velocityY); // Initial rotation
-        
-                // Update rotation on every frame
-                projectile.update = () => {
-                    if (projectile.body) { // Ensure the body exists before accessing velocity
-                        projectile.rotation = Phaser.Math.Angle.Between(0, 0, projectile.body.velocity.x, projectile.body.velocity.y);
-                    }
-                };
-        
-                // Add projectile to the scene's update list
-                this.scene.events.on('update', projectile.update, this);
-            }
-        
-            // Ensure projectile stays within bounds
-            projectile.setCollideWorldBounds(true);
-            projectile.body.onWorldBounds = true;
-        
-            // Destroy projectile on world bounds collision
-            this.scene.physics.world.on('worldbounds', (body) => {
-                if (body.gameObject === projectile) {
-                    // Remove projectile from update list before destroying
-                    this.scene.events.off('update', projectile.update, this);
-                    projectile.destroy();
-                    console.log('Projectile destroyed on world bounds');
-                }
-            });
-        
-            console.log(`Fired projectile with angle: ${angle}, gravity: ${gravity}, adjustRotation: ${adjustRotation}`);
-        }
+
         
         
         
@@ -1101,7 +1273,12 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
     }
 
-    takeHit(damage = 50){
+    takeHit(damage = 50, hitSource){
+
+        if(hitSource){
+            hitSource.destroy()
+        }
+        this.sprite.setVelocityX(0)
 
         if(this.sprite.y > this.scene.scale.height){
             this.canBeHurt = true
@@ -1229,7 +1406,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             this.switchMode(); // No enemies nearby, switch to mode 0
         } else {
             // Optional: handle other modes or behavior when enemies are nearby
-            console.log('Enemies are nearby!');
+            //console.log('Enemies are nearby!');
         }
     }
     
@@ -1310,8 +1487,10 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     // Accelration/Deceleration Controls
                     if (controls.left && this.sprite.x < this.scene.scale.width * 0.25 && this.traversalSpeedModifier > 10){
                         this.traversalSpeedModifier -= 2
+                        this.currentStamina -= 0.2
                     } else if (controls.right && this.sprite.x > this.scene.scale.width * 0.35 && this.traversalSpeedModifier < 200){
                         this.traversalSpeedModifier += 2
+                        this.currentStamina -= 0.2
                     }
                     
         

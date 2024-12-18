@@ -73,6 +73,9 @@ export default class EnemyManager {
         //enemy.projectileImageKey = 'nightborne_arrow'
         enemy.projectileTriggerFrame = 6
         enemy.attackPower = monsterData.attackPower || 25
+        enemy.maxAttackCombo = monsterData.maxAttackCombo || 1
+        enemy.currentAttackCombo = 0
+        enemy.attackRecoveryTime = monsterData.attackRecoveryTime || 3000 
         enemy.jumpPower = Phaser.Math.Between(500, 1250);
 
         enemy.currentHealth = Phaser.Math.Between(5 + (this.stageManager.stage * 0.5), 15 + (this.stageManager.stage * 1));
@@ -80,6 +83,7 @@ export default class EnemyManager {
         enemy.canBeHurt = true
         enemy.canHurt = true
         enemy.canAct = true
+        enemy.canAttack = true
 
         // Play the default animation (e.g., idle)
         enemy.play(`${monsterData.name}_idle`);
@@ -203,88 +207,104 @@ export default class EnemyManager {
     }
 
     enemyTakeHit(enemy, hitSource) {
+
+    // Check if the projectile has already hit this enemy
+    if (hitSource.hitTargets.has(enemy)) {
+        return; // Skip further processing if the enemy has already been hit by this projectile
+    }
+
+    // Mark the enemy as hit
+    hitSource.hitTargets.add(enemy);
         
-        hitSource.destroy()
-        enemy.setVelocityX(0)
+    // Destroy the projectile if pass-through is disabled
+        if (hitSource.maxPierce <= 0) {
+            hitSource.destroy();
+        } else {
+            hitSource.maxPierce -= 1
+        }
+
+        // Stop enemy movement
+            enemy.setVelocityX(0);
 
         if (enemy.canBeHurt){
             if (!enemy.isTakingHit && enemy.currentHealth > 0){
                 enemy.isTakingHit = true
-                //this.canRegen = false
 
-                //const previousHealth = enemy.currentHealth;
-                console.log('Enemy Taking Hit: ' + hitSource.damage)
-                
-                enemy.currentHealth -= hitSource.damage  
+                // Trigger onHit function (e.g., critical hit or special effects)
+                if (hitSource.onHit) {
+                    hitSource.onHit(enemy, hitSource);
+                }
+
+                console.log('Enemy Taking Hit: ' + hitSource.actualDamage)
+                // Reduce enemy health
+                enemy.currentHealth -= hitSource.actualDamage;
+
                 // Reset the time when the enemy took damage
                 enemy.lastHitTime = Date.now();
 
-                // Update the health bar's size and visibility
-                this.updateHealthBar(enemy);
-                // Emit the health change event to update the UI
-                enemy.emit('healthChanged', enemy.currentHealth, enemy.maxHealth); 
-
-                // Create damage text
-                this.createDamageText(enemy, hitSource.damage, hitSource.damageType);
-
-                let dmgTint = 0xffffff
-                if(hitSource.damage > 0){
-                    dmgTint = 0xff0000
-                }
                 
-                // Flash white or red to indicate a hit
+
+                // Update health and visual feedback
+                this.updateHealthBar(enemy);
+                enemy.emit('healthChanged', enemy.currentHealth, enemy.maxHealth);
+                this.createDamageText(enemy, hitSource.actualDamage, hitSource.damageType);
+
+                // Flash effect
+                let dmgTint = hitSource.actualDamage > 0 ? 0xff0000 : 0xffffff;
                 this.scene.tweens.add({
-                    targets: enemy, // The enemy sprite
-                    tint: { from: 0xffffff, to: dmgTint }, // Flash red (0xff0000) or white (0xffffff)
-                    alpha: { from: 1, to: 0.7 }, // Add slight transparency for intensity
-                    duration: 100, // Short duration for the flash
-                    yoyo: true, // Go back to the original tint
-                    repeat: 2, // Flash 2 times
+                    targets: enemy,
+                    tint: { from: 0xffffff, to: dmgTint },
+                    alpha: { from: 1, to: 0.7 },
+                    duration: 100,
+                    yoyo: true,
+                    repeat: 2,
                     onComplete: () => {
-                        enemy.clearTint(); // Ensure the tint is cleared after flashing
-                        enemy.setAlpha(1)
+                        enemy.clearTint();
+                        enemy.setAlpha(1);
                     }
                 });
 
-                // Emit event when health changes
-                //this.emit('currentHealthChanged', previousHealth, true);
-                enemy.anims.stop()
-                enemy.play(`${enemy.name}_takeHit`, true)
-                enemy.setVelocityX(0)
+                // Check if the enemy is dead after taking the hit
+                if (enemy.currentHealth <= 0) {
+                    // Trigger death logic
+                    this.handleEnemyDeath(enemy);
+                } else {
+                    // Play hit animation if the enemy is still alive
+                    enemy.anims.stop();
+                    enemy.play(`${enemy.name}_takeHit`, true);
+                    enemy.setVelocityX(0);
 
-
-                setTimeout(() => {
-                    enemy.isTakingHit = false;
-                    //this.canRegen = true
-                // console.log("Switch is now off");
-                }, 750);
-
+                    setTimeout(() => {
+                        enemy.isTakingHit = false;
+                    }, 750);
+                }
             } else if (enemy.currentHealth <= 0) {
-                enemy.anims.stop()
-                enemy.canAct = false
-                enemy.isAttacking = false
-                enemy.canBeHurt = false
-                enemy.canHurt = false
-                
-                
-                enemy.play(`${enemy.name}_death`, true) 
-
-                enemy.once('animationcomplete', () => {
-                    enemy.setVelocityX(0)
-                    this.destroyEnemy(enemy)
-                    this.scene.score +=  15
-
-                });
+            // Handle immediate death if already below 0 health
+            this.handleEnemyDeath(enemy);
             }
         }
 
-        
-
-        // Check if the enemy is attacking
-       // const damage = enemy.isAttacking ? enemy.attackPower : 10; // Use attackPower if attacking, else default to 10
-
-        //console.log(`Avatar collided with Enemy: ${enemy.id}, Damage: ${damage}`);
     }
+
+    // Separate the death logic into a reusable function
+    handleEnemyDeath(enemy) {
+        // Stop any animations and disable enemy actions
+        enemy.anims.stop();
+        enemy.canAct = false;
+        enemy.isAttacking = false;
+        enemy.canBeHurt = false;
+        enemy.canHurt = false;
+
+        // Play death animation
+        enemy.play(`${enemy.name}_death`, true);
+
+        enemy.once('animationcomplete', () => {
+            enemy.setVelocityX(0);
+            this.destroyEnemy(enemy);
+            this.scene.score += 15; // Increment score
+        });
+    }
+
 
     createDamageText(enemy, damage, damageType) {
         // Determine the damage text style based on the type of damage
@@ -359,59 +379,71 @@ export default class EnemyManager {
 
                     if (!enemy.isTakingHit && enemy.canAct){
 
-                    // Handle specific behaviors
-                    if (isAggressive) {
-                        enemy.isAggressive = true;
+                        // Handle specific behaviors
+                        if (isAggressive && enemy.canAttack) {
+                            enemy.isAggressive = true;
 
-                        // Flip enemy to face the player
-                        if (enemyX > avatarX) {
-                            enemy.flipX = enemy.flipReversed ? true : false;
-                        } else {
-                            enemy.flipX = enemy.flipReversed ? false : true;
-                        }
-
-                        // Determine if the enemy is in attack range
-                        const isInAttackRange = Math.abs(enemyX - avatarX) <= attackRange;
-
-                        if (isInAttackRange) {
-                            // Stop moving and attack
-                            if (!enemy.isAttacking && !enemy.isTakingHit) {
-                                enemy.isAttacking = true;
-                                enemy.setVelocityX(0); // Stop movement
-
-                                // Play the attack animation
-                                enemy.play(`${enemy.name}_attack`, true)
-                                .once('animationcomplete', () => {
-                                    enemy.isAttacking = false; // Allow movement again after attack animation
-                                })
-                                .on('animationupdate', (anim, frame) => {
-                                    // Check if this frame matches the projectile trigger frame
-                                    if (frame.index === enemy.projectileTriggerFrame && enemy.attackType === 'ranged' && !enemy.isTakingHit) {
-                                        this.fireProjectile(enemy, enemy.attackPower);
-                                    }
-                                });
+                            // Flip enemy to face the player
+                            if (enemyX > avatarX) {
+                                enemy.flipX = enemy.flipReversed ? true : false;
+                            } else {
+                                enemy.flipX = enemy.flipReversed ? false : true;
                             }
-                        } else {
-                            // Move toward the player if not in attack range
-                            if (!enemy.isAttacking) {
-                                const moveSpeed = enemy.type === 'chaser' ? 400 : 150;
-                                if (enemyX > avatarX) {
-                                    enemy.setVelocityX(-moveSpeed - this.stageManager.addedSpeed);
-                                } else {
-                                    enemy.setVelocityX(moveSpeed + this.stageManager.addedSpeed);
+
+                            // Determine if the enemy is in attack range
+                            const isInAttackRange = Math.abs(enemyX - avatarX) <= attackRange;
+
+                            if (isInAttackRange) {
+                                // Stop moving and attack
+                                if (!enemy.isAttacking && !enemy.isTakingHit) {
+                                    enemy.isAttacking = true;
+                                    enemy.setVelocityX(0); // Stop movement
+
+                                    // Play the attack animation
+                                    enemy.play(`${enemy.name}_attack`, true)
+                                    .once('animationcomplete', () => {
+                                        enemy.isAttacking = false; // Allow movement again after attack animation
+                                        console.log('Enemy Attack Counter: ' + enemy.currentAttackCombo )
+                                        console.log('Enemy Attack Max Counter: ' + enemy.maxAttackCombo )
+                                        enemy.currentAttackCombo += 1
+                                    })
+                                    .on('animationupdate', (anim, frame) => {
+                                        // Check if this frame matches the projectile trigger frame
+                                        if (frame.index === enemy.projectileTriggerFrame && enemy.attackType === 'ranged' && !enemy.isTakingHit) {
+                                            this.fireProjectile(enemy, enemy.attackPower);
+                                        }
+                                    });
                                 }
-                                enemy.play(`${enemy.name}_run`, true);
+                            } else {
+                                // Move toward the player if not in attack range
+                                if (!enemy.isAttacking) {
+                                    const moveSpeed = enemy.type === 'chaser' ? 400 : 150;
+                                    if (enemyX > avatarX) {
+                                        enemy.setVelocityX(-moveSpeed - this.stageManager.addedSpeed);
+                                    } else {
+                                        enemy.setVelocityX(moveSpeed + this.stageManager.addedSpeed);
+                                    }
+                                    enemy.play(`${enemy.name}_run`, true);
+                                }
                             }
+                        } else {
+                            // Return to idle if the player is out of aggro range
+                            enemy.isAggressive = false;
+                            enemy.isAttacking = false;
+                            enemy.setVelocityX(0); // Stop movement
+                            enemy.play(`${enemy.name}_idle`, true);
                         }
-                    } else {
-                        // Return to idle if the player is out of aggro range
-                        enemy.isAggressive = false;
-                        enemy.isAttacking = false;
-                        enemy.setVelocityX(0); // Stop movement
-                        enemy.play(`${enemy.name}_idle`, true);
-                    }
                     }
 
+                    // Enemy Attack Recovery
+                    if (enemy.currentAttackCombo > enemy.maxAttackCombo){
+                        console.log('Enemy Recovering')
+                        enemy.canAttack = false
+                        enemy.currentAttackCombo = 0;
+                        setTimeout(() => {
+                            enemy.canAttack = true
+                        }, enemy.attackRecoveryTime);
+                    }
 
                     // Tween the alpha based on inactivity
                     if (Date.now() - enemy.lastHitTime > 4000) {  // 2000ms = 2 seconds of inactivity

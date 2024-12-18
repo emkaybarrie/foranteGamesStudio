@@ -97,7 +97,6 @@ export default class Badlands extends Phaser.Scene {
     preload(){
         // Load assets if needed
         preload(this);
-        console.log('Test_Preload')
         this.load.image('avatarIcon', `assets/avatars/${this.region}/icons/Badlands/default.png`)
         this.load.image('healthIcon', 'assets/images/healthIcon.png')
         this.load.image('manaIcon', 'assets/images/manaIcon.png')
@@ -128,7 +127,9 @@ export default class Badlands extends Phaser.Scene {
                             type: 'default',
                             attackType: 'ranged',
                             attackRange: this.scale.width * 0.5,        
-                            attackPower: 15
+                            attackPower: 15,
+                            maxAttackCombo: 2,
+                            attackRecoveryTime: 3000
                         },
                         {
                             name: 'nightborne_warrior',
@@ -148,7 +149,9 @@ export default class Badlands extends Phaser.Scene {
                             type: 'default',
                             attackType: 'melee',
                             attackRange: this.scale.width * 0.1,        
-                            attackPower: 25
+                            attackPower: 25,
+                            maxAttackCombo: 4,
+                            attackRecoveryTime: 2000
 
                         },
                         // Other common monsters...
@@ -171,8 +174,10 @@ export default class Badlands extends Phaser.Scene {
                             tint: 0xFFFFFF,//0x00FF00,
                             type: 'chaser',
                             attackType: 'melee',
-                            attackRange: this.scale.width * 0.01,   
-                            attackPower: 20
+                            attackRange: this.scale.width * 0,   
+                            attackPower: 20,
+                            maxAttackCombo: 1,
+                            attackRecoveryTime: 1000
                         },
                         // Other uncommon monsters...
                     ],
@@ -195,7 +200,9 @@ export default class Badlands extends Phaser.Scene {
                             type: 'chaser',
                             attackType: 'melee',
                             attackRange: this.scale.width * 0.1, 
-                            attackPower: 40
+                            attackPower: 40,
+                            maxAttackCombo: 3,
+                            attackRecoveryTime: 3000
                         },
                         // Other rare monsters...
                     ],

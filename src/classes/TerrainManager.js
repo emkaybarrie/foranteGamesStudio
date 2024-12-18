@@ -69,25 +69,29 @@ export default class TerrainManager {
                 2: 'platform'
             }
 
-            const generatedTerrain = this.generateTerrain(targetStartX, elevation, distanceSelections[Phaser.Math.Between(1, 3)], terrainType[Phaser.Math.Between(0, 0)])
-            generatedTerrain.id = i
-            if (i === numberOfTerrainSegments){
-                generatedTerrain.isSequenceEnd = true
-                this.scene.tweens.add({
-                    targets: generatedTerrain,  // The terrain to animate
-                    alpha: {from: 1, to: 0.95},
-                    //tint: { from: 0xFFFFFF, to: 0xFFFF00 },  // Change color to yellow (glowing effect)
-                    //displayHeight: generatedTerrain.displayHeight * 1.01, // Increase height by 1%
-                    yoyo: true,                 // Return to the starting position
-                    repeat: -1,                 // Repeat infinitely
-                    ease: 'Sine.easeInOut',     // Smooth easing for natural motion
-                    duration: 500               // Time in milliseconds for one up-and-down cycle
-                });
-            } else {
-
-            }
+            if(Phaser.Math.FloatBetween(0, 100) < 85 || elevation == 'ground'){
+                const generatedTerrain = this.generateTerrain(targetStartX, elevation, distanceSelections[Phaser.Math.Between(1, 3)], terrainType[Phaser.Math.Between(0, 0)])
+                generatedTerrain.id = i
+                if (i === numberOfTerrainSegments){
+                    generatedTerrain.isSequenceEnd = true
+                    this.scene.tweens.add({
+                        targets: generatedTerrain,  // The terrain to animate
+                        alpha: {from: 1, to: 0.95},
+                        //tint: { from: 0xFFFFFF, to: 0xFFFF00 },  // Change color to yellow (glowing effect)
+                        //displayHeight: generatedTerrain.displayHeight * 1.01, // Increase height by 1%
+                        yoyo: true,                 // Return to the starting position
+                        repeat: -1,                 // Repeat infinitely
+                        ease: 'Sine.easeInOut',     // Smooth easing for natural motion
+                        duration: 500               // Time in milliseconds for one up-and-down cycle
+                    });
+                } 
 
             lastTerrainEnd = generatedTerrain.x + generatedTerrain.displayWidth
+            } else {
+                lastTerrainEnd = Math.max(lastTerrainEnd + this.scene.scale.width, this.scene.scale.width)
+            }
+
+            
 
             
         }

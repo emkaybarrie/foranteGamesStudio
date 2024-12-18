@@ -59,6 +59,7 @@ export default class StageManager {
         };
 
         this.projectileGroup = this.scene.physics.add.group(); // Phaser group to manage projectiles
+        this.friendlyProjectileGroup = this.scene.physics.add.group(); // Phaser group to manage projectiles
 
         // Initialise Managers
         
@@ -108,7 +109,7 @@ export default class StageManager {
             if (startTerrain.x + startTerrain.displayWidth * 0.75 < 0) { 
                 // Check if startTerrain has moved completely off the left side of the screen
                 this.stageStart = true;
-                console.log('Start Terrain moved off-screen, stageStart set to true');
+                //console.log('Start Terrain moved off-screen, stageStart set to true');
             }
         });
 
@@ -136,6 +137,9 @@ export default class StageManager {
             this.scene.physics.add.collider(this.avatarManager.sprite, group, (avatarSprite, enemy) => this.enemyManager.enemyCollision(this.avatarManager,enemy), null, this);
         });
 
+        // Add a clollider for avatar and enemy projectiles
+        this.scene.physics.add.collider(this.avatarManager.sprite, this.projectileGroup, (avatarSprite, projectile) => this.avatarManager.takeHit(projectile.damage, projectile), null, this);
+
         // Add a collider for each enenmy group with the terrain group
         // Loop over each terrain type
             for (let terrainType in this.terrainGroups) {
@@ -153,14 +157,24 @@ export default class StageManager {
             }
 
          // Loop through each enemy group
-            Object.keys(this.enemyGroups).forEach(groupKey => {
-                const group = this.enemyGroups[groupKey];
+            // Object.keys(this.enemyGroups).forEach(groupKey => {
+            //     const group = this.enemyGroups[groupKey];
                 
-                // Create the collider between this group and the projectile group
-                this.scene.physics.add.collider(group, this.projectileGroup, (enemy, projectile) => {
-                    this.enemyManager.enemyTakeHit(enemy, projectile);
-                });
+            //     // Create the collider between this group and the enemy projectile group
+            //     this.scene.physics.add.collider(group, this.projectileGroup, (enemy, projectile) => {
+            //         this.enemyManager.enemyTakeHit(enemy, projectile);
+            //     });
+            // });
+
+        // Loop through each enemy group
+        Object.keys(this.enemyGroups).forEach(groupKey => {
+            const group = this.enemyGroups[groupKey];
+            
+            // Create the collider between this group and the friendly projectile group
+            this.scene.physics.add.overlap(group, this.friendlyProjectileGroup, (enemy, projectile) => {
+                this.enemyManager.enemyTakeHit(enemy, projectile);
             });
+        });
 
     }
 
