@@ -30,9 +30,9 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.action1Cost = 10
         this.action2Cost = 30
         this.special1PowerPercent = 0.5
-        this.special1Cost = 50
+        this.special1Cost = 45
         this.special2PowerPercent = 0.25
-        this.special2Cost = 25
+        this.special2Cost = 30
 
         // Stub Blessings
         this.selectedBlessings = [];
