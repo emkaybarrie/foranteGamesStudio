@@ -27,6 +27,17 @@ export default class LoadingScreen extends Phaser.Scene {
             // Loot
 
             this.load.spritesheet('coin', 'assets/images/coin.png', { frameWidth: 16, frameHeight: 16 });
+            //
+            this.load.spritesheet('animation_MajorReward', 'assets/images/animation_MajorReward.png', { frameWidth: 128, frameHeight: 128 });
+            //
+            this.load.spritesheet('hitAnim_bow', 'assets/images/hitAnimation_bow.png', { frameWidth: 512, frameHeight: 512 });
+            this.load.spritesheet('hitAnim_powerShot', 'assets/images/hitAnimation_powerShot.png', { frameWidth: 512, frameHeight: 512 });
+            this.load.spritesheet('hitAnim_huntingHawk', 'assets/images/hitAnimation_huntingHawk.png', { frameWidth: 512, frameHeight: 512 });
+
+            this.load.image('icon_crescentBarrage', 'assets/images/icon_crescentBarrage.png');
+            this.load.image('icon_powerShot', 'assets/images/icon_powerShot.png');
+            this.load.image('icon_huntingHawk', 'assets/images/icon_huntingHawk.png');
+            this.load.image('icon_huntersStep', 'assets/images/icon_huntersStep.png');
 
             this.load.image('gold', 'assets/images/gold.png');
             this.load.image('dTerrainPlaceholder', 'assets/images/dTerrainPlaceholder.png');

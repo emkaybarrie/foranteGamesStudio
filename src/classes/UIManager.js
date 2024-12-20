@@ -317,11 +317,30 @@
 
 export default class UIManager {
     constructor(scene, stageManager) {
+        
         this.scene = scene;
         this.stageManager = stageManager;
         this.avatar = this.stageManager.avatarManager;
 
+        this.momentumVersion = 2
+
+        // Scale factors relative to screen size
+        const baseScreenIncrementX = this.scaleForDPI(this.scene.scale.width * 0.01) ;
+        const baseScreenIncrementY = this.scaleForDPI(this.scene.scale.height * 0.01);
+
         const devicePixelRatio = window.devicePixelRatio; // Get the DPI scale factor
+
+        // Skill Slots
+        this.skillIcon1 = this.scene.add.image(baseScreenIncrementX * 20, baseScreenIncrementY * 5, null).setVisible(false)
+        .setOrigin(0)
+        .setDisplaySize(100, 100)
+        .setDepth(9);
+
+        this.skillIcon2 = this.scene.add.image(baseScreenIncrementX * 20 + 110, baseScreenIncrementY * 5, null).setVisible(false)
+        .setOrigin(0)
+        .setDisplaySize(100, 100)
+        .setDepth(9);
+        
 
         // Example: Create the progress bar
         const progressBarX = this.scene.scale.width * 0.65; // Positioned on the right side
@@ -334,9 +353,7 @@ export default class UIManager {
         // Initial update
         this.updateProgressBar(this.progressBar, 0, 100);
 
-        // Scale factors relative to screen size
-        const baseScreenIncrementX = this.scaleForDPI(this.scene.scale.width * 0.01) ;
-        const baseScreenIncrementY = this.scaleForDPI(this.scene.scale.height * 0.01);
+        
 
         // Avatar icon size and vitals icon size
         const avatarIconDesiredSize = this.scaleForDPI(this.scene.scale.width * 0.1); // Desired size of avatar icon in pixels
@@ -410,7 +427,103 @@ export default class UIManager {
             });
         });
 
+        // // Momentum BarV1 - REOSURCE BAR
+ 
+        //  // Create Momentum Bar below the avatar icon
+        //  const momentumBarX = this.avatarIcon.x;  // Align with the left side of the avatar icon
+        //  const momentumBarY = this.avatarIcon.y + this.avatarIcon.displayHeight + 10; // Below the avatar icon
+        //  const momentumBarWidth = this.avatarIcon.displayWidth; // Align with the avatar icon width
+        //  const momentumBarHeight = 10; // Height of the momentum bar
+ 
+        //  // Create the momentum bar
+        //  this.momentumBar = this.createMomentumBar(momentumBarX, momentumBarY, momentumBarWidth, momentumBarHeight);
+ 
+        //  // Initialize momentum value
+        //  //this.momentum = 100;  // Initial momentum value (could be updated dynamically)
+        //  this.updateMomentumBar();  // Update the bar immediately
+ 
+
+        // Create Dynamic Momentum Bar below the avatar icon
+        const momentumBarX = this.avatarIcon.x;  // Align with the left side of the avatar icon
+        const momentumBarY = this.avatarIcon.y + this.avatarIcon.displayHeight + 10; // Below the avatar icon
+        const momentumBarWidth = this.avatarIcon.displayWidth; // Align with the avatar icon width
+        const momentumBarHeight = 10; // Height of the momentum bar
+
+        // Create the momentum bar
+        this.momentumBar = this.createDynamicMomentumBar(momentumBarX, momentumBarY, momentumBarWidth, momentumBarHeight);
+
+        // Initialize momentum value
+        //this.momentum = 0;  // Initial momentum value (could be updated dynamically)
+        this.updateDynamicMomentumBar();  // Update the bar immediately
+      
+
+
     }
+        // V1 - TO BE USED FOR BAR FOR CORE RESOURCE COLLECTION [?]
+        // Create the momentum bar
+        // createMomentumBar(x, y, width, height) {
+        //     const bar = this.scene.add.rectangle(x, y, width, height, 0x6a0dad); // Dark purple color
+        //     bar.setOrigin(0, 0);  // Align to the left-top corner
+        //     bar.setDepth(9)
+        //     return bar;
+        // }
+    
+        // // Update the momentum bar based on the momentum value (0 to 100)
+        // updateMomentumBar() {
+        //     if (!this.momentumBar) return;
+    
+        //     const momentumPercentage = Phaser.Math.Clamp(this.avatar.traversalSpeedModifier / 250, 0, 1);  // Ensure the value stays between 0 and 1
+        //     this.momentumBar.setScale(momentumPercentage, 1); // Adjust width based on momentum percentage
+        // }
+    
+        // // Method to set the momentum value
+        // setMomentum(value) {
+        //     this.momentum = Phaser.Math.Clamp(value, 0, 250); // Ensure momentum is between 0 and 100
+        //     this.updateMomentumBar();
+        // }
+
+        // V2
+    // Create a dynamic momentum bar with center-based fill
+    createDynamicMomentumBar(x, y, width, height) {
+        const bar = this.scene.add.rectangle(x, y, width, height, 0x6a0dad); // Initial dark purple color
+        bar.setOrigin(0.5, 0.5);  // Set origin to center (for center-based filling)
+        bar.setDepth(9)
+        return bar;
+    }
+
+    // Update the dynamic momentum bar based on the momentum value
+    updateDynamicMomentumBar() {
+        if (!this.momentumBar) return;
+
+        const momentumBarWidth = this.avatarIcon.displayWidth;  // Use avatar icon width as the full width
+        const centerX = this.avatarIcon.x + this.avatarIcon.displayWidth / 2; // Center X of the bar
+
+        if (this.avatar.traversalSpeedModifier < 100) {
+            // Fill left (red) if momentum is 0 to 99
+            //const leftFillWidth = (momentumBarWidth * (this.avatar.traversalSpeedModifier / 100));
+            const leftFillWidth = momentumBarWidth * (1 - (this.avatar.traversalSpeedModifier / 100));
+            this.momentumBar.setFillStyle(0xff0000, 1); // Red color
+            this.momentumBar.setPosition(centerX - leftFillWidth / 2, this.momentumBar.y); // Center it based on the left fill
+            this.momentumBar.setSize(leftFillWidth, this.momentumBar.height); // Set width to represent the momentum
+        } else if (this.avatar.traversalSpeedModifier >= 100) {
+            // Fill right (green) if momentum is 101 to 250
+            const rightFillWidth = (momentumBarWidth * ((this.avatar.traversalSpeedModifier - 100) / 150));  // Map 101-250 to 0-100
+            this.momentumBar.setFillStyle(0x00ff00, 1); // Green color
+            this.momentumBar.setPosition(centerX - rightFillWidth / 2, this.momentumBar.y); // Center it based on the right fill
+            this.momentumBar.setSize(rightFillWidth, this.momentumBar.height); // Set width to represent the momentum
+        }
+
+        // Set position and size (ensures it stays below avatar icon)
+        this.momentumBar.setPosition(centerX, this.avatarIcon.y + this.avatarIcon.displayHeight + 10);  // Positioned below avatar
+    }
+
+    // Method to set the momentum value
+    setMomentum(value) {
+        this.momentum = Phaser.Math.Clamp(value, 0, 250); // Ensure momentum is between 0 and 250
+        this.updateDynamicMomentumBar();
+    }
+
+
 
     scaleForDPI(baseValue) {
         const devicePixelRatio = window.devicePixelRatio || 1;
@@ -562,6 +675,22 @@ export default class UIManager {
     update() {
         // Update the progress bar markers (stage progress)
         this.progressBar.markers[0].icon.setText(this.scene.stageManager.stage);
+        //this.updateMomentumBar();
+        this.updateDynamicMomentumBar()
+
+        if(this.stageManager.avatarManager.currentMana < this.stageManager.avatarManager.special1Cost){
+            this.skillIcon1.setAlpha(0.35)
+        } else {
+            this.skillIcon1.setAlpha(1)
+        }
+
+        if(this.stageManager.avatarManager.currentMana < this.stageManager.avatarManager.special2Cost){
+            this.skillIcon2.setAlpha(0.35)
+        } else {
+            this.skillIcon2.setAlpha(1)
+        }
+
+    
     }
 
     

@@ -230,8 +230,8 @@ export default class InputManager {
 
             controls.left = leftStickX < -0.5; // Tilt joystick left
             controls.right = leftStickX > 0.5; // Tilt joystick right
-            controls.up = leftStickY < -0.75; // Tilt joystick up
-            controls.down = leftStickY > 0.75; // Tilt joystick down
+            controls.up = leftStickY < -0.85; // Tilt joystick up
+            controls.down = leftStickY > 0.85; // Tilt joystick down
 
             // Buttons for actions
             controls.jump = this.gamepad.buttons[0] && this.gamepad.buttons[0].pressed; // A button

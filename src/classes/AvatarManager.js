@@ -25,26 +25,28 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         // Config
         this.flashInterval = 100; // Flash interval in milliseconds
         this.flashTimer = null;
-        
-        this.initLevelUpMenu()
 
         this.action1PowerPercent = 0.1
         this.action1Cost = 10
-        this.action2Cost = 35
-        this.special1PowerPercent = 0.25
-        this.special1Cost = 25
-        this.special2PowerPercent = 0.5
-        this.special2Cost = 50
+        this.action2Cost = 30
+        this.special1PowerPercent = 0.5
+        this.special1Cost = 50
+        this.special2PowerPercent = 0.25
+        this.special2Cost = 25
+
+        // Stub Blessings
+        this.selectedBlessings = [];
 
         // Stub Skills
         this.skills = {
             crescentBarrage: this.skill_CrescentBarrage,
             huntingHawk: this.skill_HuntingHawk,
             powerShot: this.skill_PowerShot,
+            huntersStep: this.skill_HuntersStep
         };
 
-        this.equippedSkill_1 = this.skills.powerShot
-        this.equippedSkill_2 = this.skills.huntingHawk
+        this.equippedSkill_1 = null//this.skills.powerShot
+        this.equippedSkill_2 = null//this.skills.huntingHawk
 
         // Stats
 
@@ -97,7 +99,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         // Status
         this.canAct = true
         this.canBeHurt = true
-        this.mode = 0
+        this.mode = 1
         this.isCharging = false
 
         
@@ -175,57 +177,24 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         
     }
 
-    // Initialize the menu container and options
-    initLevelUpMenu() {
-        const style = { font: '24px Arial', fill: '#ffffff' };
-        this.menuContainer = this.scene.add.container(this.scene.scale.width / 2, this.scene.scale.height / 2).setDepth(9).setVisible(false);
-
-        const optionTextA = this.scene.add.text(this.scene.cameras.main.x + 50, -50, 'Press V: Increase Vitality', style);
-        const optionTextS = this.scene.add.text(this.scene.cameras.main.x + 50, 0, 'Press F: Increase Focus', style);
-        const optionTextD = this.scene.add.text(this.scene.cameras.main.x + 50, 50, 'Press R: Increase Stamina', style);
-
-        this.menuContainer.add([optionTextA, optionTextS, optionTextD]);
+    // Apply a blessing effect (modify stats/abilities)
+    applyBlessing(blessing) {
+        console.log(`Applying blessing: ${blessing.name}`);
+        blessing.effect(this); // Call the effect function specific to the blessing
+        this.selectedBlessings.push(blessing.name); // Track selected blessings
     }
 
-        // Show the menu and attach key listeners
-        showLevelUpMenu(pointMultiplier) {
-            this.menuContainer.setVisible(true); // Show the menu
+    hasBlessing(blessingName) {
+        return this.selectedBlessings.includes(blessingName);
+    }
 
-            // Capture the A, S, and D keys
-            this.keyV = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.V);
-            this.keyF = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
-            this.keyR = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    // Function to display current player stats (for debugging/visualization)
+    showStats() {
+        console.log(`Health: ${this.maxHealth}, Speed: ${this.speed}, Jump: ${this.jumpHeight}`);
+        console.log(`Double Jump: ${this.canDoubleJump ? 'Enabled' : 'Disabled'}`);
+        console.log(`Damage: ${this.damage}, Defense: ${this.defense}`);
+    }
 
-            // Listen for key presses to select an option
-            this.keyV.once('down', () => this.selectLevelUpOption('V', pointMultiplier));
-            this.keyF.once('down', () => this.selectLevelUpOption('F', pointMultiplier));
-            this.keyR.once('down', () => this.selectLevelUpOption('R', pointMultiplier));
-        }
-
-            // Handle option selection, update stats, and hide menu
-            selectLevelUpOption(option, pointMultiplier = 1) {
-                switch (option) {
-                    case 'V':
-                        this.vitality += 5 * pointMultiplier;
-                        break;
-                    case 'F':
-                        this.focus += 5 * pointMultiplier;
-                        break;
-                    case 'R':
-                        this.adaptability += 5 * pointMultiplier;
-                        break;
-                }
-
-                this.refreshStats()
-                console.log('Vitality:' + this.vitality)
-                console.log('Focus:' + this.focus)
-                console.log('Adaptability: ' + this.adaptability)
-                // Hide the menu and cleanup listeners
-                this.menuContainer.setVisible(false);
-                //this.scene.input.keyboard.removeKey(this.keyA);
-                //this.scene.input.keyboard.removeKey(this.keyS);
-                //this.scene.input.keyboard.removeKey(this.keyD);
-            }
 
     // 
     refreshStats(){
@@ -244,7 +213,10 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.attackSpeed = 100 + (150 * ((this.adaptability - 100) / 100))
 
         // Movement
-        this.movementSpeed = Math.min(500 + (150  * ((this.adaptability - 100)/ 100)),750)
+        this.movementCost = 0.175
+        this.movementSpeed = Math.min(450 + (150  * ((this.adaptability - 100)/ 100)),750)
+        this.xRepositionLowerBound = this.scene.scale.width * 0.275
+        this.xRepositionUpperBound = this.scene.scale.width * 0.325
         this.repositionSpeed = Math.min(200 + (200  * ((this.adaptability - 100)/ 100)),450)
         this.repositionSpeedAir = Math.min(150 + (200  * ((this.adaptability - 100)/ 100)), 350)
         this.traversalSpeed = Math.min(((this.movementSpeed * 0.01) + (5  * ((this.adaptability - 100)/ 100))), 20)
@@ -457,7 +429,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         moveLeft() {
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= 0.15
+                this.currentStamina -= this.movementCost
                 if (this.isOnGround){
                     this.sprite.flipX = false
 
@@ -475,7 +447,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         moveRight() {
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= 0.15
+                this.currentStamina -= this.movementCost
             
                 if (this.isOnGround){
                     this.sprite.flipX = false
@@ -492,7 +464,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         moveDown(){
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= 0.2
+                this.currentStamina -= this.movementCost
                 if (this.isOnGround){
                     this.sprite.flipX = false
                     this.sprite.anims.play('slide', true); // Play the 'run' animation when moving
@@ -506,7 +478,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
 
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= 0.2
+                this.currentStamina -= this.movementCost
                 this.isDoingMovement = true
                 if ((this.isOnGround || this.coyoteTimeCounter > 0) && !this.hasJumped){
                     this.sprite.setVelocityY(-this.jumpSpeed);
@@ -572,13 +544,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                                             // Apply damage and crit logic
                                             projectile.damage = isCrit ? projectile.damage * 2 : projectile.damage;
                                             projectile.damageType = isCrit ? 'critical' : 'normal';
-        
                         
-                                            // Trigger visual effects for hit
-                                            // if (isCrit) {
-                                            //     projectile.damageType = 'critical'
-        
-                                            // }
                                         }
                                     });
                                 }
@@ -613,11 +579,61 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     this.emit('currentStaminaChanged', previousStamina, true);
 
                  // Create the tween
+                    // this.scene.tweens.add({
+                    //     targets: this.sprite,
+                    //     x: this.sprite.x + 25,
+                    //     duration: 150,
+                    //     ease: 'Power1', // Easing for smooth movement
+                    //     onStart: () => {
+                    //         //console.log("Dash started!");
+                    //         this.canBeHurt = false
+                    //         this.sprite.setTint(0x00ff00); // Visual feedback
+                    //         this.sprite.anims.play('roll', true); // Play the 'run' animation when moving
+                    //         this.sprite.once('animationcomplete', () => {
+                    //              this.isDoingAction = false
+                    //              this.sprite.clearTint();
+                    //              this.canBeHurt = true
+                    //              this.canRegen = true
+          
+                    //         });
+                    //         if(!this.isOnGround){
+                    //             this.sprite.body.setVelocityY(this.sprite.body.velocity.y - 250)
+                    //         } else {
+                    //             if(this.traversalSpeedModifier > 10){
+                    //                 this.traversalSpeedModifier *= 0.85
+                    //             }
+                    //         }
+
+                    //     },
+                    //     onUpdate: (tween, target) => {
+                    //        // if (tween.progress >= 0.5 && onHalfway) {
+                    //             //onHalfway(); // Call the halfway function once
+                    //             //onHalfway = null; // Ensure it only runs once
+                    //        // }
+                    //     },
+                    //     onComplete: () => {
+                    //         //console.log("Dash complete!");
+                            
+                            
+                    //     }
+                    // });
+
+                    // Momentum Boost
+                    // Get the current value of traversalSpeedModifier
+                    const currentValue = this.traversalSpeedModifier;
+
+                    // Define the amount you want to add
+                    const additionalValue = currentValue < 250 ? 50 : 5;
+
+                    // Calculate the target value
+                    const targetValue = currentValue + additionalValue;
+
+                    // Create the tween
                     this.scene.tweens.add({
-                        targets: this.sprite,
-                        x: this.sprite.x + 25,
-                        duration: 150,
-                        ease: 'Power1', // Easing for smooth movement
+                        targets: this.stageManager.avatarManager, // Object containing the property
+                        traversalSpeedModifier: targetValue, // Target value
+                        duration: 25, // Tween duration in milliseconds
+                        ease: 'Linear', // Tween easing
                         onStart: () => {
                             //console.log("Dash started!");
                             this.canBeHurt = false
@@ -632,23 +648,13 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                             });
                             if(!this.isOnGround){
                                 this.sprite.body.setVelocityY(this.sprite.body.velocity.y - 250)
-                            } else {
-                                if(this.traversalSpeedModifier > 10){
-                                    this.traversalSpeedModifier *= 0.85
-                                }
-                            }
-
+                            } 
                         },
                         onUpdate: (tween, target) => {
-                           // if (tween.progress >= 0.5 && onHalfway) {
-                                //onHalfway(); // Call the halfway function once
-                                //onHalfway = null; // Ensure it only runs once
-                           // }
+                            console.log(`Current traversalSpeedModifier: ${target.traversalSpeedModifier}`);
                         },
                         onComplete: () => {
-                            //console.log("Dash complete!");
-                            
-                            
+                            console.log('TraversalSpeedModifier increased!');
                         }
                     });
 
@@ -656,54 +662,8 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             }
         }
 
-        // special1Old() {
-        //     if (this.animationsLoaded && this.currentMana > this.special1Cost) {
-
-        
-        //         // Prevent stacking multiple tweens if one is already active
-        //         if (!this.isDoingSpecial) {
-        //             this.isDoingSpecial = true;
-
-        //             const previousMana = this.currentMana;
-        //             this.currentMana -= this.special1Cost
-        //             this.canRegen = false
-        //             // Emit event when health changes
-        //             this.emit('currentManaChanged', previousMana, true);
-        
-        //             const startValue = this.traversalSpeedModifier;
-        //             const targetValue = 300 //this.isOnGround ? Math.min(startValue + 150, 500) : Math.min(startValue + 100, 500);
-        //             const duration = 1000; // Duration in milliseconds (adjust as needed)
-        
-        //             // Create the tween
-        //             this.scene.tweens.add({
-        //                 targets: this,
-        //                 traversalSpeedModifier: targetValue, // Tween this property
-        //                 duration: duration,
-        //                 ease: 'Power1', // Smooth easing
-        //                 onStart: () => {
-        //                     console.log("Special1 started!");
-        //                     this.sprite.setTint(0x0000ff); // Visual feedback
-        //                     this.sprite.anims.play('run', true); // Play the 'run' animation
-        //                     // Add additional "on start" logic here
-        //                 },
-        //                 onUpdate: (tween, target) => {
-        //                     console.log(`Traversal Speed Modifier: ${this.traversalSpeedModifier}`);
-        //                     // Add additional "on update" logic here
-        //                 },
-        //                 onComplete: () => {
-        //                     console.log("Special1 complete!");
-        //                     this.isDoingSpecial = false;
-        //                     // Add additional "on complete" logic here
-        //                          this.sprite.clearTint();
-        //                          this.canRegen = true
-        //                 }
-        //             });
-        //         }
-        //     }
-        // }
-
         special1() {
-            if (this.animationsLoaded && this.currentMana > this.special1Cost) {
+            if (this.equippedSkill_1 && this.animationsLoaded && this.currentMana > this.special1Cost) {
 
         
                 if (!this.isDoingSpecial){
@@ -735,9 +695,9 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         
 
         special2(){
-            if (this.animationsLoaded && this.currentMana > this.special2Cost){
+            if (this.equippedSkill_2 && this.animationsLoaded && this.currentMana > this.special2Cost){
                     
-                if (!this.isDoingSpecial){
+                if (!this.isDoingSpecial && !this.special2Active){
                     
                     this.isDoingSpecial = true
 
@@ -754,7 +714,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     // Skill Completion
                     this.sprite.once('animationcomplete', () => {
                         this.isDoingSpecial = false
-                        //console.log(this.isDoingSpecial)
                         this.sprite.clearTint();
                         this.canBeHurt = true
                         this.canRegen = true
@@ -789,9 +748,60 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                         // Check if the animation is in the attack state and if the projectile is at frame 8
                         if (anim.key === '3_atk' && frame.index === 7) {
 
-                            this.fireProjectile(this.special1PowerPercent * this.focus, {power: 450, angle: -35, gravity: true, adjustRotation: true });
-                            this.fireProjectile(this.special1PowerPercent * this.focus, {power: 650, angle: -45, gravity: true, adjustRotation: true });
-                            this.fireProjectile(this.special1PowerPercent * this.focus, { power: 850, angle: -55, gravity: true, adjustRotation: true });
+
+                            // Fire the projectile
+                            this.fireProjectile({ 
+                                damage: this.special1PowerPercent * this.focus,
+                                power: 450, 
+                                angle: -35, 
+                                gravity: true, 
+                                adjustRotation: true, 
+                                maxPierce: 0,
+                                onHit: (enemy, projectile) => {
+                                    const isCrit = Math.random() < 0.025; // Example crit logic
+                
+                                    // Apply damage and crit logic
+                                    projectile.actualDamage = isCrit ? projectile.damage * 2 : projectile.damage;
+                                    projectile.damageType = isCrit ? 'critical' : 'normal';
+
+                                }
+                            });
+
+                            // Fire the projectile
+                            this.fireProjectile({ 
+                                damage: this.special1PowerPercent * this.focus,
+                                power: 650, 
+                                angle: -45, 
+                                gravity: true, 
+                                adjustRotation: true, 
+                                maxPierce: 0,
+                                onHit: (enemy, projectile) => {
+                                    const isCrit = Math.random() < 0.05; // Example crit logic
+                
+                                    // Apply damage and crit logic
+                                    projectile.actualDamage = isCrit ? projectile.damage * 2 : projectile.damage;
+                                    projectile.damageType = isCrit ? 'critical' : 'normal';
+
+                                }
+                            });
+
+                            // Fire the projectile
+                            this.fireProjectile({ 
+                                damage: this.special1PowerPercent * this.focus,
+                                power: 850, 
+                                angle: -55, 
+                                gravity: true, 
+                                adjustRotation: true, 
+                                maxPierce: 0,
+                                onHit: (enemy, projectile) => {
+                                    const isCrit = Math.random() < 0.025; // Example crit logic
+                
+                                    // Apply damage and crit logic
+                                    projectile.actualDamage = isCrit ? projectile.damage * 2 : projectile.damage;
+                                    projectile.damageType = isCrit ? 'critical' : 'normal';
+
+                                }
+                            });
 
                             // Remove the animationupdate listener
                              this.sprite.off('animationupdate');
@@ -835,11 +845,13 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                                 adjustRotation: false, 
                                 maxPierce: 1,
                                 onHit: (enemy, projectile) => {
-                                    const isCrit = true//Math.random() < 0.90; // Example crit logic
+                                    const isCrit = Math.random() < 0.15; // Example crit logic
                 
                                     // Apply damage and crit logic
                                     projectile.actualDamage = isCrit ? projectile.damage * 2 : projectile.damage;
                                     projectile.damageType = isCrit ? 'critical' : 'normal';
+
+                                    projectile.hitAnim = 'hitAnim_powerShot'
 
                                 }
                             });
@@ -850,7 +862,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     })
             }
 
-            // Defensive
             skill_HuntingHawk(){
                 if (this.isOnGround){
                     this.sprite.flipX = false
@@ -859,10 +870,10 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     }
 
                     this.sprite.setVelocityY(-750)
-                    this.sprite.setVelocityX(-350)
+                    this.sprite.setVelocityX(-250)
                 } else {
                     this.sprite.setVelocityY(-600)
-                    this.sprite.setVelocityX(-250)
+                    this.sprite.setVelocityX(-150)
                 }
                     
                 setTimeout(() => {
@@ -879,7 +890,28 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                         if (anim.key === 'air_atk' && frame.index === 5) {
                             this.sprite.setVelocityY(-650)
                             this.sprite.setVelocityX(-350)
-                            this.fireProjectile(this.special2PowerPercent * this.focus, {power: 500, angle: 45, gravity: false, adjustRotation: true });
+
+
+                            // Fire the projectile
+                            this.fireProjectile({ 
+                                damage: this.special2PowerPercent * this.focus,
+                                power: 500, 
+                                angle: 45, 
+                                gravity: false, 
+                                adjustRotation: true, 
+                                maxPierce: 0,
+                                onHit: (enemy, projectile) => {
+                                    const isCrit = true//Math.random() < 0.90; // Example crit logic
+                
+                                    // Apply damage and crit logic
+                                    projectile.actualDamage = isCrit ? projectile.damage * 2 : projectile.damage;
+                                    projectile.damageType = isCrit ? 'critical' : 'normal';
+
+                                    projectile.hitAnim = 'hitAnim_huntingHawk'
+
+
+                                }
+                            });
 
                             // Remove the animationupdate listener
                             this.sprite.off('animationupdate');
@@ -889,104 +921,70 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                 }, 350);
             }
 
+            // Defensive
+            skill_HuntersStep(){
+
+                this.isDoingSpecial = false
+                this.canRegen = true
+
+                if(!this.special2Active){
+                    this.special2Active = true
+
+
+                // Create the tween
+                this.scene.tweens.add({
+                    targets: this.sprite, // Object containing the property
+                    alpha: {from: 1, to: 0.35},
+                    ease: 'Linear', // Tween easing
+                    duration: 1000, // Tween duration in milliseconds
+                    yoyo: true,
+                    hold: 3000, // Hold for 500ms at the yoyo point before reversing
+                    onStart: () => {
+                        // Clear any existing tint and log reposition speed changes
+                        this.sprite.clearTint();
+                        //this.sprite.setTint(0x000000)
+                        this.movementSpeed *= 1.35
+                        this.repositionSpeed *= 1.35
+                        this.repositionSpeedAir *= 1.35
+
+                        this.xRepositionLowerBound *= 0.75
+                        this.xRepositionUpperBound *= 1.25
+
+                        this.movementCost *= 0.25
+
+                        
+                    },
+                    onUpdate: () => {
+                        if (this.sprite.alpha < 0.5){
+                            this.sprite.setTint(0x000000)
+                        } else if (this.sprite.alpha > 0.75) {
+                            this.sprite.clearTint()
+                        }
+                    },
+                    onYoyo: () => {
+                        
+
+                    },
+                    onRepeat: () => {
+
+                    },
+                    onComplete: () => {
+
+                        this.refreshStats()
+                        
+                        this.sprite.setAlpha(1)
+                        this.sprite.clearTint()
+                        this.special2Active = false
+                        this.isDoingSpecial = false
+                    }
+                });
+
+                }
+
+            }
+
             // Utility
         
-        // fireProjectile(damage, options = {}) {
-        //     const { 
-        //         power = 1000, 
-        //         angle = 0, 
-        //         gravity = false, 
-        //         adjustRotation = false, 
-        //         onHit = () => {}, // Default empty function for onHit behavior
-        //         passThrough = false // Whether the projectile passes through targets
-        //     } = options;
-        
-        //     const projectile = this.scene.physics.add.sprite(
-        //         this.sprite.x,
-        //         this.sprite.y - (this.sprite.displayHeight * 0.25),
-        //         'avatar1_projectile'
-        //     );
-        
-        //     // Add projectile to the group
-        //     this.stageManager.friendlyProjectileGroup.add(projectile);
-        
-        //     projectile.damage = damage;
-        
-        //     projectile.setScale(2, 3).setDepth(6);
-        //     projectile.setSize(35, 10);
-        //     projectile.body.allowGravity = gravity;
-        
-        //     const speed = power; // Base projectile speed
-        //     let modifierArrow = 0;
-        
-        //     // Determine direction based on facing
-        //     const leftDir = -1;
-        //     const rightDir = 1;
-        //     const direction = this.sprite.flipX ? leftDir : rightDir;
-        
-        //     if (direction < 0) {
-        //         projectile.flipX = true;
-        //     } else {
-        //         modifierArrow = 350;
-        //     }
-        
-        //     // Calculate velocity based on angle and direction
-        //     const angleRadians = Phaser.Math.DegToRad(angle); // Convert angle to radians
-        //     const velocityX = Math.cos(angleRadians) * (speed + modifierArrow) * direction;
-        //     const velocityY = Math.sin(angleRadians) * (speed + modifierArrow);
-        
-        //     projectile.setVelocity(velocityX, velocityY);
-        
-        //     // Dynamically adjust rotation as it travels
-        //     if (adjustRotation) {
-        //         projectile.rotation = Phaser.Math.Angle.Between(0, 0, velocityX, velocityY); // Initial rotation
-        
-        //         // Update rotation on every frame
-        //         projectile.update = () => {
-        //             if (projectile.body) { // Ensure the body exists before accessing velocity
-        //                 projectile.rotation = Phaser.Math.Angle.Between(0, 0, projectile.body.velocity.x, projectile.body.velocity.y);
-        //             }
-        //         };
-        
-        //         // Add projectile to the scene's update list
-        //         this.scene.events.on('update', projectile.update, this);
-        //     }
-        
-        //     // Ensure projectile stays within bounds
-        //     projectile.setCollideWorldBounds(true);
-        //     projectile.body.onWorldBounds = true;
-        
-        //     // Destroy projectile on world bounds collision
-        //     this.scene.physics.world.on('worldbounds', (body) => {
-        //         if (body.gameObject === projectile) {
-        //             // Remove projectile from update list before destroying
-        //             this.scene.events.off('update', projectile.update, this);
-        //             projectile.destroy();
-        //             //console.log('Projectile destroyed on world bounds');
-        //         }
-        //     });
-        
-        //     //console.log(`Fired projectile with angle: ${angle}, gravity: ${gravity}, adjustRotation: ${adjustRotation}`);
-
-        //     // Handle collision with enemies
-        //     this.scene.physics.add.overlap(projectile, this.stageManager.enemyGroup, (proj, enemy) => {
-        //         if (proj.active) {
-        //             // Trigger the onHit effect
-        //             onHit(enemy, proj);
-
-        //             // Pass-through or destroy logic
-        //             if (!passThrough) {
-        //                 // Remove projectile from update list before destroying
-        //                 this.scene.events.off('update', projectile.update, this);
-        //                 proj.destroy();
-        //             }
-        //         }
-        //     });
-
-        //     return projectile; // Return the projectile for further manipulation if needed
-
-
-        // } // LOCAL BASED COLLIDER SYSTEM
 
         fireProjectile(options = {}) {
             const { 
@@ -996,7 +994,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                 gravity = false, 
                 adjustRotation = false, 
                 onHit = () => {}, // Function to handle hit effects
-                maxPierce = 0 // Whether the projectile passes through targets
+                maxPierce = 0, // Whether the projectile passes through targets
             } = options;
         
             const projectile = this.scene.physics.add.sprite(
@@ -1058,7 +1056,12 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                         this.sprite.flipX = false
                         if(!this.isDoingAction && !this.isDoingSpecial && !this.isDoingMovement && !this.isTakingHit){
                             this.sprite.angle = 0
-                            this.sprite.anims.play('run', true); // Play the 'run' animation when moving 
+                            if(this.traversalSpeedModifier > 1){
+                                this.sprite.anims.play('run', true); // Play the 'run' animation when moving 
+                            } else {
+                                this.sprite.anims.play('idle', true); // Play the 'run' animation when moving 
+                            }
+                            
                         }
                     }
                 }
@@ -1294,7 +1297,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
                 if (this.mode == 0){
                     if(this.traversalSpeedModifier > 35){
-                        this.traversalSpeedModifier -= 50
+                        this.traversalSpeedModifier *= 0.5
                     } else {
                         //this.switchMode()
                     }
@@ -1314,7 +1317,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     this.isTakingHit = false;
                     this.canRegen = true
                 // console.log("Switch is now off");
-                }, 350);
+                }, 500);
 
             } else if (this.currentHealth <= 0) {
                 this.canAct = false
@@ -1367,7 +1370,9 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         if (this.mode == 0){
             this.mode = 1;
             this.scene.cameras.main.flash(500, 48, 25, 52)
-            this.stageManager.cameraManager.mainCamera.zoomTo(1.05, 500)
+            this.stageManager.cameraManager.mainCamera.zoomTo(1.25, 500)
+
+
         } else {
             this.mode = 0;
             this.stageManager.cameraManager.mainCamera.zoomTo(1,1000)
@@ -1402,8 +1407,8 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         });
     
         // Update the mode based on the presence of nearby enemies
-        if (!enemiesNearby) {
-            this.switchMode(); // No enemies nearby, switch to mode 0
+        if (!enemiesNearby && !this.stageManager.stageStart) {
+            //this.switchMode(); // No enemies nearby, switch to mode 0
         } else {
             // Optional: handle other modes or behavior when enemies are nearby
             //console.log('Enemies are nearby!');
@@ -1414,7 +1419,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
     update(time, delta) {
 
         // State 
-        this.refreshStats()
+        //this.refreshStats()
 
         
         // Adjust drag and max velocity based on ground status
@@ -1436,65 +1441,57 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
         if(this.mode == 0){
 
+
             if (this.stageManager.stageStart){
                 this.scene.score +=  0.05 * (this.traversalSpeedModifier / 100) 
             }
 
+            if (this.sprite.x < this.scene.scale.width * 0.25) {
+                this.sprite.setVelocityX(0)
+
+            } else
+            if (this.sprite.x > this.scene.scale.width * 0.35) {
+                this.sprite.setVelocityX(0)
+            }
+
             if(this.canAct && !this.isTakingHit){
                 if (this.isOnGround){
-                    if(this.traversalSpeedModifier > 150 ){
-                        this.traversalSpeedModifier -= 0.75
-                    } else
-                    if(this.traversalSpeedModifier > 125 ){
-                        this.traversalSpeedModifier -= 0.5
-                    } else 
+ 
                     if(this.traversalSpeedModifier > 100 ){
-                        this.traversalSpeedModifier -= 0.25
+                        this.traversalSpeedModifier -= 0.75
                     } else 
                     if (this.traversalSpeedModifier < 100 ) {
-                        this.traversalSpeedModifier += 0.25
-                    } else
-                    if(this.traversalSpeedModifier < 75 ){
-                        this.traversalSpeedModifier += 0.5
-                    } else  
-                    if (this.traversalSpeedModifier < 25 ) {
-                        this.traversalSpeedModifier += 1
-                    }
-                } else {
-                    if(this.traversalSpeedModifier > 150 ){
-                        this.traversalSpeedModifier -= 0.25
-                    } else
-                    if(this.traversalSpeedModifier > 125 ){
-                        this.traversalSpeedModifier -= 0.1
-                    } else 
-                    if(this.traversalSpeedModifier > 100 ){
-                        this.traversalSpeedModifier -= 0.05
+                        this.traversalSpeedModifier += 2
                     } 
-                }
-                
-                
-               
+
+                } 
+
+   
                 if(!this.isDoingAction && !this.isDoingSpecial){
-                    if (controls.left && this.sprite.x > this.scene.scale.width * 0.25) {
+
+                    // Accelration/Deceleration Controls
+
+                    // if (this.isOnGround && controls.left && this.traversalSpeedModifier > 50 && this.sprite.x <= xRepositionLowerBound){
+                    //     this.traversalSpeedModifier -= 4
+                    //     this.currentStamina -= 0.2
+                    // } else if (this.isOnGround && controls.right && this.traversalSpeedModifier < 150 && this.sprite.x >= xRepositionUpperBound){
+                    //     this.traversalSpeedModifier += 4
+                    //     this.currentStamina -= 0.2
+                    // }
+
+
+                    // Movement Controls
+
+                    if (controls.left && this.sprite.x > this.xRepositionLowerBound) {
                         this.moveLeft();
                     } else
-                    if (controls.right && this.sprite.x < this.scene.scale.width * 0.35) {
+                    if (controls.right && this.sprite.x < this.xRepositionUpperBound) {
                         this.moveRight();
                     } else if (!this.isDoingAction  && !this.isDoingSpecial && !controls.action1 && !controls.action2 && !controls.special1 && !controls.special2 && !controls.down) {
                         this.stop();  
                     }
 
-                    // Accelration/Deceleration Controls
-                    if (controls.left && this.sprite.x < this.scene.scale.width * 0.25 && this.traversalSpeedModifier > 10){
-                        this.traversalSpeedModifier -= 2
-                        this.currentStamina -= 0.2
-                    } else if (controls.right && this.sprite.x > this.scene.scale.width * 0.35 && this.traversalSpeedModifier < 200){
-                        this.traversalSpeedModifier += 2
-                        this.currentStamina -= 0.2
-                    }
-                    
-        
-            
+                                                        
                     if (controls.jump || controls.up) {
                         this.jump();
                     } else 
@@ -1503,7 +1500,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     } 
                 }
     
-    
+                // Moves Controls
                 if (controls.special2 && !this.isDoingAction && !this.isDoingSpecial){
                     this.special2();
                 } else
@@ -1522,7 +1519,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
             
             
-        } else {
+        } else if(this.mode == 1) {
 
             this.checkForNearbyEnemies()
 

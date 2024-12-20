@@ -195,7 +195,7 @@ export default class EnemyManager {
 
     enemyCollision(avatar, enemy) {
 
-        if(!enemy.isTakingHit && enemy.canHurt){
+        if(enemy.canHurt){
             // Check if the enemy is attacking
         const damage = enemy.isAttacking ? enemy.attackPower : 10; // Use attackPower if attacking, else default to 10
         
@@ -227,27 +227,72 @@ export default class EnemyManager {
             enemy.setVelocityX(0);
 
         if (enemy.canBeHurt){
-            if (!enemy.isTakingHit && enemy.currentHealth > 0){
-                enemy.isTakingHit = true
+            enemy.canHurt = false
+            if (enemy.currentHealth > 0){
+    
 
                 // Trigger onHit function (e.g., critical hit or special effects)
                 if (hitSource.onHit) {
                     hitSource.onHit(enemy, hitSource);
                 }
 
-                console.log('Enemy Taking Hit: ' + hitSource.actualDamage)
+                console.log(hitSource)
+
+                //console.log('Enemy Taking Hit: ' + hitSource.actualDamage)
                 // Reduce enemy health
                 enemy.currentHealth -= hitSource.actualDamage;
 
                 // Reset the time when the enemy took damage
                 enemy.lastHitTime = Date.now();
 
-                
-
                 // Update health and visual feedback
                 this.updateHealthBar(enemy);
                 enemy.emit('healthChanged', enemy.currentHealth, enemy.maxHealth);
                 this.createDamageText(enemy, hitSource.actualDamage, hitSource.damageType);
+                // Hit Effect
+                if(!hitSource.hitAnim) hitSource.hitAnim = 'hitAnim_bow'
+                 // Create the new object for the hit effect animation
+                let hitEffect = this.scene.add.sprite(enemy.x + enemy.displayWidth / 2, enemy.y - enemy.displayHeight / 2); // Replace 'hitEffectSprite' with your actual sprite name
+                hitEffect.setOrigin(0.5, 0.5).setDepth(enemy.depth).setScale(0.75);  // Center the sprite for the animation
+
+                // Optionally adjust size, rotation, or tint of the hit effect sprite
+                //hitEffect.setTint(0x800080); // Example: purple tint for the hit effect
+
+                // Determine the animation to play based on the hitSource
+                let hitAnim = hitSource.hitAnim; // Default hit animation
+
+                // if (hitSource.damageType === 'fire') {
+                //     hitAnim = 'fire_hit'; // Animation for fire damage
+                // } else if (hitSource.damageType === 'ice') {
+                //     hitAnim = 'ice_hit'; // Animation for ice damage
+                // } else if (hitSource.damageType === 'critical') {
+                //     hitAnim = 'critical_hit'; // Animation for critical damage
+                // } else if (hitSource.customAnim) {
+                //     hitAnim = hitSource.customAnim; // Custom animation from hitSource
+                // }
+
+                // Play the determined animation on the hitEffect
+                hitEffect.anims.play(hitAnim);
+
+                // Update hitEffect position to follow the enemy
+                // hitEffect.update = () => {
+                //     // Continuously update the position of hitEffect to match the enemy's position
+                //     hitEffect.setPosition(enemy.x, enemy.y);
+                // };
+
+                // In the scene update method:
+                this.scene.events.on('postupdate', () => {
+                    if (hitEffect) {
+                        hitEffect.setPosition(enemy.x + enemy.displayWidth / 2, enemy.y - enemy.displayHeight / 2);
+                    }
+                });
+
+                // Set up the animation completion callback to destroy the hitEffect object
+                hitEffect.on('animationcomplete', () => {
+                    hitEffect.setAlpha(0); // Optionally make it invisible first
+                    hitEffect.destroy();   // Destroy the hitEffect object after animation
+                });
+                
 
                 // Flash effect
                 let dmgTint = hitSource.actualDamage > 0 ? 0xff0000 : 0xffffff;
@@ -268,6 +313,7 @@ export default class EnemyManager {
                 if (enemy.currentHealth <= 0) {
                     // Trigger death logic
                     this.handleEnemyDeath(enemy);
+                    
                 } else {
                     // Play hit animation if the enemy is still alive
                     enemy.anims.stop();
@@ -275,12 +321,13 @@ export default class EnemyManager {
                     enemy.setVelocityX(0);
 
                     setTimeout(() => {
-                        enemy.isTakingHit = false;
-                    }, 750);
+                        enemy.canHurt = true
+                    }, 1000);
                 }
             } else if (enemy.currentHealth <= 0) {
             // Handle immediate death if already below 0 health
             this.handleEnemyDeath(enemy);
+
             }
         }
 
@@ -288,6 +335,30 @@ export default class EnemyManager {
 
     // Separate the death logic into a reusable function
     handleEnemyDeath(enemy) {
+        // Momentum Boost
+        // Get the current value of traversalSpeedModifier
+        const currentValue = this.stageManager.avatarManager.traversalSpeedModifier;
+
+        // Define the amount you want to add
+        const additionalValue = 50;
+
+        // Calculate the target value
+        const targetValue = currentValue + additionalValue;
+
+        // Create the tween
+        this.scene.tweens.add({
+            targets: this.stageManager.avatarManager, // Object containing the property
+            traversalSpeedModifier: targetValue, // Target value
+            duration: 500, // Tween duration in milliseconds
+            ease: 'Linear', // Tween easing
+            onUpdate: (tween, target) => {
+                //console.log(`Current traversalSpeedModifier: ${target.traversalSpeedModifier}`);
+            },
+            onComplete: () => {
+                //e.log('TraversalSpeedModifier increased!');
+            }
+        });
+
         // Stop any animations and disable enemy actions
         enemy.anims.stop();
         enemy.canAct = false;
@@ -302,6 +373,8 @@ export default class EnemyManager {
             enemy.setVelocityX(0);
             this.destroyEnemy(enemy);
             this.scene.score += 15; // Increment score
+                        
+            
         });
     }
 
@@ -357,6 +430,16 @@ export default class EnemyManager {
             group.getChildren().forEach(enemy => {
                 enemy.x -= this.stageManager.baseSpeed;
 
+                // Enemy Attack Recovery
+                if (enemy.currentAttackCombo >= enemy.maxAttackCombo){
+                    //console.log('Enemy Recovering')
+                    enemy.canAttack = false
+                    enemy.currentAttackCombo = 0;
+                    setTimeout(() => {
+                        enemy.canAttack = true
+                    }, enemy.attackRecoveryTime);
+                }
+
                 if (enemy.x < -enemy.displayWidth) {
                     this.destroyEnemy(enemy)
                     //console.log(`Destroying ${enemy.elevation} enemy`);
@@ -403,16 +486,19 @@ export default class EnemyManager {
                                     enemy.play(`${enemy.name}_attack`, true)
                                     .once('animationcomplete', () => {
                                         enemy.isAttacking = false; // Allow movement again after attack animation
-                                        console.log('Enemy Attack Counter: ' + enemy.currentAttackCombo )
-                                        console.log('Enemy Attack Max Counter: ' + enemy.maxAttackCombo )
                                         enemy.currentAttackCombo += 1
                                     })
                                     .on('animationupdate', (anim, frame) => {
                                         // Check if this frame matches the projectile trigger frame
-                                        if (frame.index === enemy.projectileTriggerFrame && enemy.attackType === 'ranged' && !enemy.isTakingHit) {
+                                        if (anim.key === `${enemy.name}_attack` && frame.index === enemy.projectileTriggerFrame && enemy.attackType === 'ranged' && !enemy.isTakingHit) {
                                             this.fireProjectile(enemy, enemy.attackPower);
+
+                                            // Remove the animationupdate listener
+                                            enemy.off('animationupdate');
                                         }
                                     });
+
+                                    
                                 }
                             } else {
                                 // Move toward the player if not in attack range
@@ -435,15 +521,7 @@ export default class EnemyManager {
                         }
                     }
 
-                    // Enemy Attack Recovery
-                    if (enemy.currentAttackCombo > enemy.maxAttackCombo){
-                        console.log('Enemy Recovering')
-                        enemy.canAttack = false
-                        enemy.currentAttackCombo = 0;
-                        setTimeout(() => {
-                            enemy.canAttack = true
-                        }, enemy.attackRecoveryTime);
-                    }
+
 
                     // Tween the alpha based on inactivity
                     if (Date.now() - enemy.lastHitTime > 4000) {  // 2000ms = 2 seconds of inactivity
@@ -478,7 +556,7 @@ export default class EnemyManager {
             // Destroy if out of bounds to prevent memory leaks
             if (projectile.x < 0 || projectile.x > this.scene.scale.width) {
                 projectile.destroy();
-                console.log('Projectile destroyed as it went out of bounds');
+                //console.log('Projectile destroyed as it went out of bounds');
             }
         });
     }
@@ -521,13 +599,13 @@ export default class EnemyManager {
         this.scene.physics.world.on('worldbounds', (body) => {
             if (body.gameObject === projectile) {
                 projectile.destroy();
-                console.log('Projectile destroyed on world bounds');
+                //console.log('Projectile destroyed on world bounds');
             }
         });
 
         
     
         // Optional: Add additional behaviors for the projectile here
-        console.log(`Fired projectile from ${enemy.name} at frame ${enemy.projectileTriggerFrame}`);
+        //console.log(`Fired projectile from ${enemy.name} at frame ${enemy.projectileTriggerFrame}`);
     }
 }

@@ -64,6 +64,8 @@ export default class LootManager {
         // Increase the score
         this.scene.score += 10;
         this.scene.scoreText.setText(`Score: ${this.scene.score}`);
+
+        
         loot.collected = true
 
             // Flash effect before bouncing

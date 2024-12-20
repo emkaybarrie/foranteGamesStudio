@@ -128,8 +128,8 @@ export default class Badlands extends Phaser.Scene {
                             attackType: 'ranged',
                             attackRange: this.scale.width * 0.5,        
                             attackPower: 15,
-                            maxAttackCombo: 2,
-                            attackRecoveryTime: 3000
+                            maxAttackCombo: 1,
+                            attackRecoveryTime: 2500
                         },
                         {
                             name: 'nightborne_warrior',
@@ -150,7 +150,7 @@ export default class Badlands extends Phaser.Scene {
                             attackType: 'melee',
                             attackRange: this.scale.width * 0.1,        
                             attackPower: 25,
-                            maxAttackCombo: 4,
+                            maxAttackCombo: 3,
                             attackRecoveryTime: 2000
 
                         },
@@ -215,6 +215,36 @@ export default class Badlands extends Phaser.Scene {
         
         // Preload only the relevant monster spritesheets
         this.loadMonsterSpritesheets(this.monsterList, currentRegion, currentStage);
+
+        //Stub  animation
+        this.anims.create({
+            key: 'animation_MajorReward',  // The key that will be used to refer to this animation
+            frames: this.anims.generateFrameNumbers('animation_MajorReward', { start: 0, end: 29 }),  // Frame range (adjust according to your spritesheet)
+            frameRate: 24,  // Animation speed (frames per second)
+            repeat: -1,  // Repeat the animation indefinitely
+            //yoyo: true
+        });
+
+        this.anims.create({
+            key: 'hitAnim_bow',  // The key that will be used to refer to this animation
+            frames: this.anims.generateFrameNumbers('hitAnim_bow', { start: 0, end: 15 }),  // Frame range (adjust according to your spritesheet)
+            frameRate: 28,  // Animation speed (frames per second)
+            repeat: 0  // Repeat the animation indefinitely
+        });
+
+        this.anims.create({
+            key: 'hitAnim_powerShot',  // The key that will be used to refer to this animation
+            frames: this.anims.generateFrameNumbers('hitAnim_powerShot', { start: 0, end: 15 }),  // Frame range (adjust according to your spritesheet)
+            frameRate: 22,  // Animation speed (frames per second)
+            repeat: 0  // Repeat the animation indefinitely
+        });
+
+        this.anims.create({
+            key: 'hitAnim_huntingHawk',  // The key that will be used to refer to this animation
+            frames: this.anims.generateFrameNumbers('hitAnim_huntingHawk', { start: 0, end: 15 }),  // Frame range (adjust according to your spritesheet)
+            frameRate: 28,  // Animation speed (frames per second)
+            repeat: 0  // Repeat the animation indefinitely
+        });
   
          
     }
@@ -257,12 +287,25 @@ export default class Badlands extends Phaser.Scene {
     
 
     create() {
+
+        // // Scale factors relative to screen size
+        const baseScreenIncrementX = this.scale.width * 0.01;
+        const baseScreenIncrementY = this.scale.height * 0.01;
+
+        
     
          // Pause game when "P" is pressed
         this.input.keyboard.on('keydown-P', () => {
             this.scene.pause(); // Pause this scene
             this.scene.launch('PauseScreen'); // Launch the pause menu scene
             this.scene.bringToTop('PauseScreen');
+        });
+
+         // Blessings game when "B" is pressed
+         this.input.keyboard.on('keydown-B', () => {
+            this.scene.pause(); // Pause this scene
+            this.scene.launch('BlessingsScreen',{ mainScene: this.stageManager, avatar: this.stageManager.avatarManager }); // Launch the pause menu scene
+            this.scene.bringToTop('BlessingsScreen');
         });
 
         
@@ -303,9 +346,7 @@ export default class Badlands extends Phaser.Scene {
                 volume: 0.5  // Adjust the volume (optional, between 0 and 1)
             });
 
-            // // Scale factors relative to screen size
-            const baseScreenIncrementX = this.scale.width * 0.01;
-            const baseScreenIncrementY = this.scale.height * 0.01;
+            
 
         
 
@@ -359,7 +400,6 @@ export default class Badlands extends Phaser.Scene {
         // Stage Manager
         this.stageManager = new StageManager (this, this.inputManager, stageConfig)
 
-
   
         
     }
@@ -371,10 +411,9 @@ export default class Badlands extends Phaser.Scene {
         Move: [ARROWS]
         Jump: [SPACE] or [TAP/CLICK]
 
-        Dodge: [Q] or [RIGHT/DOUBLE CLICK]
+        Dodge: [Q] or [DOUBLE CLICK]
         Attack: [E]
-        Sprint: [D]
-        Slow/Heal: [A] 
+        Skills: [A] and [D]
 
         Pause: [P]
         Main Menu: [F5]
@@ -429,7 +468,9 @@ export default class Badlands extends Phaser.Scene {
         this.inputManager.update();
 
         this.scoreText.setText(`Score: ${Math.round(this.score)}`);
-        //this.avatarHealthText.setText(`Health:         ${Math.round(this.stageManager.avatarManager.currentHealth)}`)
+
+
+         
 
 
 

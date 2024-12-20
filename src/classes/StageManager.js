@@ -26,6 +26,7 @@ export default class StageManager {
         this.stageLength = 10000
         this.stage = 1
         this.stageStart = false
+        
 
         this.layers = [];   // Array to hold generated layers
 
@@ -75,7 +76,7 @@ export default class StageManager {
         this.enemyManager = new EnemyManager(this.scene, this, this.scene.monsterList)
         // Avatar Manager
         console.log('Getting Avatar: ' + this.region)
-        this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.3, this.scene.scale.height * 0.25, this.input);
+        this.avatarManager = new AvatarManager(this.scene, this, this.region, this.scene.scale.width * 0.1, 0, this.input);
         // Camera Manager
         this.cameraManager = new CameraManager(this.scene, this)
         
@@ -85,9 +86,17 @@ export default class StageManager {
         // Add Colliders
         this.addColliders()
 
-        const startTerrain = this.terrainManager.generateTerrain(0, 'ground', 'max', 'platform', false, true, null, false)
+        // Camera Set Up
+        // this.stageManager.cameraManager.mainCamera.startFollow(this.sprite, true, 0.1, 0.1)
+        // // Optional: Add a "deadzone" (an area where the player can move without moving the camera)
+        // this.stageManager.cameraManager.mainCamera.setDeadzone(500, 250); // 200x150 deadzone area
+        // this.stageManager.cameraManager.mainCamera.setFollowOffset(-100, 0); // Offsets the camera 100 pixels to the left
+        this.cameraManager.mainCamera.startFollow(this.avatarManager.sprite, true, 0.1, 0.1)
 
+        const startTerrain = this.terrainManager.generateTerrain(0, 'medium', 'max', 'platform', false, true, null, false)
         const tileSprite = startTerrain.getData('tileSprite'); // Access the associated tileSprite
+
+        //tileSprite.setTint(0x800080); // Apply a purple tint to the sprite
 
         this.scene.tweens.add({
             targets: [startTerrain, tileSprite], // Include all related sprites
@@ -99,18 +108,37 @@ export default class StageManager {
             repeat: -1, // Loop indefinitely
         });
 
-        this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth, 'ground', 4)
-        this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-500, 2000), 'low', 4)
-        this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-250, 3000), 'medium', 4)
-        this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-50, 5000), 'high', 4)
+        const starterMajorReward = this.scene.physics.add.sprite(this.scene.scale.width * 0.3, startTerrain.y - 175).setOrigin(0.5).setDisplaySize(150,150).setDepth(8);
+        starterMajorReward.body.setImmovable(true);
+        starterMajorReward.body.allowGravity = false;
+    
 
+        // Play the coin animation immediately after creating the loot sprite
+        starterMajorReward.anims.play('animation_MajorReward');  // Start the animation created earlier
+
+
+        this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth, 'ground', 1)
+        this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-500, 2000), 'low')
+        this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-250, 3000), 'medium')
+        this.terrainManager.generateTerrainSequence(startTerrain.x + startTerrain.displayWidth + Phaser.Math.Between(-50, 5000), 'high')
+        console.log(this.scene);
         // Add check in the update method
         this.scene.events.on('update', () => {
-            if (startTerrain.x + startTerrain.displayWidth * 0.75 < 0) { 
-                // Check if startTerrain has moved completely off the left side of the screen
-                this.stageStart = true;
+            if (this.avatarManager.sprite.x >= starterMajorReward.x && !this.stageStart) { 
+            this.scene.scene.pause(); // Pause this scene
+            this.scene.scene.launch('BlessingsScreen',{ mainScene: this, avatar: this.avatarManager }); // Launch the pause menu scene
+            this.scene.scene.bringToTop('BlessingsScreen');
+                
                 //console.log('Start Terrain moved off-screen, stageStart set to true');
+            } else if (startTerrain && starterMajorReward && this.stageStart && !this.starterBlessingSelected){
+                this.starterBlessingSelected = true
+                this.avatarManager.mode = 0
+                this.cameraManager.mainCamera.flash(500, 48, 25, 52)
+                starterMajorReward.destroy()
+
+                
             }
+
         });
 
         
@@ -201,7 +229,7 @@ export default class StageManager {
                 if(this.avatarManager.currentHealth > 0){
                     
                     this.avatarManager.sprite.y = 0
-                    this.avatarManager.sprite.x += this.scene.scale.width * 0.05
+                    this.avatarManager.sprite.x = this.scene.scale.width * 0.3
                     // Respawn invincibility
                     this.avatarManager.canBeHurt = false
                     this.scene.tweens.add({

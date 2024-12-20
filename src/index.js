@@ -7,12 +7,14 @@ import MainMenu from './scenes/MainMenu.js';
 import Login from './scenes/Login.js';
 import LoadingScreen from './scenes/LoadingScreen.js';
 import PauseScreen from './scenes/PauseScreen.js';
+import BlessingsScreen from './scenes/BlessingsScreen.js';
 
 // Add scenes to the configuration
 
 config.scene.push(Start);
 config.scene.push(LoadingScreen)
 config.scene.push(PauseScreen)
+config.scene.push(BlessingsScreen)
 config.scene.push(MainMenu)
 config.scene.push(Login)
 config.scene.push(Base);
