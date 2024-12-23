@@ -213,7 +213,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.attackSpeed = 100 + (150 * ((this.adaptability - 100) / 100))
 
         // Movement
-        this.movementCost = 0.175
+        this.movementCost = 0//0.175
         this.movementSpeed = Math.min(450 + (150  * ((this.adaptability - 100)/ 100)),750)
         this.xRepositionLowerBound = this.scene.scale.width * 0.275
         this.xRepositionUpperBound = this.scene.scale.width * 0.325
@@ -428,7 +428,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
     // Mode 0 Controls
 
         moveLeft() {
-            if (this.animationsLoaded && this.currentStamina > 0){
+            if (this.animationsLoaded){
                 this.currentStamina -= this.movementCost
                 if (this.isOnGround){
                     this.sprite.flipX = false
