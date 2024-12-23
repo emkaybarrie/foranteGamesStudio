@@ -1,9 +1,12 @@
 import { config } from "../config.js";
+import { saveSpiritDataToDb } from "../functions/Db_Functions.js";
+
 
 export default class Base extends Phaser.Scene {
     constructor() {
         super('Base');
-
+        this.scriptId = 'AKfycbw1zakrf0zclJNWzBSXjIKTfudd6Q9-YHNq6EvP7JGQ4OrtPIs0SwrgJCsAyoB4Y5eu'
+        this.sheetUrl = `https://script.google.com/macros/s/${this.scriptId}/exec`;
         this.selectedRegion = Phaser.Math.Between(1,1)
     }
 
@@ -218,19 +221,6 @@ export default class Base extends Phaser.Scene {
         const stats = ['Stat 1', 'Stat 2', 'Stat 3'];
         const statPositionsY = [this.sAPointY - this.scale.height * 0.15 , this.sAPointY - this.scale.height * 0.1, this.sAPointY - this.scale.height * 0.05];
 
-        // this.statButtons = stats.map((stat, index) => {
-        //     const statText = this.add.text((this.sAPointX * 4) - this.scale.width * 0.075, statPositionsY[index], `${stat}: TBC`, { fontSize: '28px', fill: '#fff' });
-        //     statText.setOrigin(0, 0.5)
-            
-        //     const button = this.add.text((this.sAPointX * 4) + this.scale.width * 0.075 , statPositionsY[index], '+', { fontSize: '30px', fill: '#0f0' })
-        //         .setInteractive()
-        //         .setOrigin(0.5)
-        //         .on('pointerdown', () => this.allocateSpiritPoint(stat));
-
-        //     button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5); // Button is disabled if no points available
-        //     // Store the stat name inside the button object
-        //     return { statText, button, stat: stat };  // Store the stat name here
-        // });
 
         // Spirit Points counter
         this.avatarName = this.add.text(this.sAPointX * 4 , this.sAPointY - this.scale.height * 0.2, 'Eros', { fontStyle: 'bold', fontSize: '24px', fill: '#fff' });
@@ -256,6 +246,10 @@ export default class Base extends Phaser.Scene {
     }
 
     startBadlands() {
+        // Save Latest Spirit Data
+        if(this.playerData.id > 0){
+        saveSpiritDataToDb(this.sheetUrl,this.playerData.id,this.playerData.spiritPoints, this.playerData.vitality, this.playerData.focus, this.playerData.adaptability)
+        }
         console.log(this.selectedRegion)
 
         switch (this.selectedRegion){

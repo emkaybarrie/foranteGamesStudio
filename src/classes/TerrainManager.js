@@ -174,7 +174,26 @@ export default class TerrainManager {
                 break;
             }
         }
-    
+
+        // Define terrain tiles for each region
+        // const terrainTilesByRegion = {
+        //     1: { ground: 16, low: 20, medium: 16, high: 20 },
+        //     2: { ground: 18, low: 18, medium: 18, high: 18 },
+        //     3: { ground: 30, low: 32, medium: 34, high: 36 },
+        //     // Add more regions as needed
+        // };
+
+        // const terrainTopRowTilesByRegion = {
+        //     1: { ground: 0, low: 0, medium: 0, high: 0 },
+        //     2: { ground: 18, low: 18, medium: 18, high: 18 },
+        //     3: { ground: 30, low: 32, medium: 34, high: 36 },
+        //     // Add more regions as needed
+        // };
+
+        // // Get terrain tiles based on the current region
+        // const terrainTiles = terrainTilesByRegion[this.scene.region] || terrainTilesByRegion[1]; // Default to region 1 if undefined
+        // const topRowTiles = terrainTopRowTilesByRegion[this.scene.region] || terrainTilesByRegion[1]; // Default to region 1 if undefined
+        
         // Define which tile index corresponds to which terrain type
         const terrainTiles = {
             ground: 16,  // Main body tile index
@@ -182,6 +201,7 @@ export default class TerrainManager {
             medium: 20,
             high: 22
         };
+
     
         const topRowTiles = {
             ground: 0,  // Top row tile index for ground

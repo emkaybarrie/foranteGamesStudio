@@ -3,6 +3,16 @@ import StageManager from '../classes/StageManager.js';
 import InputManager from '../classes/InputManager.js';
 import { config } from "../config.js";
 
+const musicList = {
+    1:'142',
+    2:'Blame Brett',
+    3:'Francesca',
+    4:'From Eden',
+    5:'Kings Season',
+    6:'Spartacus',
+    7:'Stay Crunchy',
+    8:'Xylem Up',
+}
 
 export default class Badlands extends Phaser.Scene {
     constructor() {
@@ -14,6 +24,8 @@ export default class Badlands extends Phaser.Scene {
         this.level = 1
         this.score = 0
         this.touchControls = null;
+        this.currentTrack = null
+        this.levelRestarting = false
 
     }
 
@@ -23,17 +35,6 @@ export default class Badlands extends Phaser.Scene {
         this.playerData = data.playerData
     }
 
-    // Method to load the high score from localStorage
-    loadHighScore() {
-        const savedHighScore = localStorage.getItem('highScore');
-        return savedHighScore ? JSON.parse(savedHighScore) : { score: 0, level: 1 };
-    }
-
-    // Method to save the high score to localStorage
-    saveHighScore(score, level) {
-        const highScoreData = { score, level };
-        localStorage.setItem('highScore', JSON.stringify(highScoreData));
-    }
 
     async saveScoreToDb(score, stage){
         try {
@@ -60,12 +61,10 @@ export default class Badlands extends Phaser.Scene {
           }
     }
 
-    decreaseScore(amount){
-
-        this.score = Math.round(Math.max(this.score - amount, 0))
-    }
 
     restartLevel(){
+        if(!this.levelRestarting){
+            this.levelRestarting = true
         console.log('Restarting')
         // Save Score
         // Save the score and level only if the current score is higher than the saved one
@@ -88,6 +87,19 @@ export default class Badlands extends Phaser.Scene {
 
         // Update the texts
         this.scoreText.setText(`Score: ${this.score}`);
+
+        // Restart Music
+        console.log('Playing New song')
+        this.playTrackFromMusicList()
+
+        // Reset Flag
+        setTimeout(() => {
+            this.levelRestarting = false
+        // console.log("Switch is now off");
+        }, 500);
+        }
+
+
 
         
     }
@@ -328,24 +340,13 @@ export default class Badlands extends Phaser.Scene {
                 this.createControlsText(this);
             }
             
-
-            const musicList = {
-                1:'142',
-                2:'BlameBrett',
-                3:'Francesca',
-                4:'FromEden',
-                5:'KingsSeason',
-                6:'Spartacus',
-                7:'StayCrunchy',
-                8:'XylemUp',
-            }
-
-            // Play the background music on loop
-            this.sound.play('backgroundMusic' + Phaser.Math.Between(1,8), {
-                loop: true,  // Set to true to make the music repeat
-                volume: 0.5  // Adjust the volume (optional, between 0 and 1)
-            });
-
+            // Play the background music 
+            setTimeout(() => {
+                
+                this.playTrackFromMusicList()
+        
+            }, 1000);
+            
             
 
         
@@ -470,6 +471,72 @@ export default class Badlands extends Phaser.Scene {
         
 
         
+    }
+
+
+
+    playTrackFromMusicList(track = 0){
+        if (this.currentTrack){
+            this.currentTrack.stop()
+        }
+
+        let selectedTrack
+        if (track == 0){
+            track = Phaser.Math.Between(1, 8)
+        } 
+
+        selectedTrack = 'backgroundMusic' + track; // Select chosen track
+        
+         
+        this.currentTrack = this.sound.add(selectedTrack, {
+            loop: false,  // Set to false because we want to manually handle the looping
+            volume: 0.5,  // Adjust the volume (optional, between 0 and 1)
+        });
+    
+        // Add a listener for when the music ends
+        this.currentTrack.on('complete', () => {
+            // Play the next random song when the current one finishes
+            this.playTrackFromMusicList();
+        });
+    
+        // Play the music
+        this.currentTrack.play();
+        this.showTrackName(musicList[track]);
+
+    }
+
+    // Function to display the track name briefly on the screen
+    showTrackName(trackName, duration = 3000) {
+        // Create a text object to display the track name
+        const trackNameText = this.add.text(this.scale.width / 2, this.scale.height / 4, `Now Playing: ${trackName}`, {
+            fontSize: '32px',
+            fill: '#ffffff',
+            fontStyle: 'bold',
+            stroke: '#000000', // Optional: Add a stroke for better visibility
+            strokeThickness: 3,
+            align: 'center',
+        }).setOrigin(0.5, 0.5).setDepth(9); // Center the text
+
+        // Fade in the text (optional)
+        trackNameText.setAlpha(0);
+        this.tweens.add({
+            targets: trackNameText,
+            alpha: 1, // Fully visible
+            duration: 500, // Fade-in duration
+            onComplete: () => {
+                // Keep the text for the duration, then fade out
+                this.time.delayedCall(duration, () => {
+                    this.tweens.add({
+                        targets: trackNameText,
+                        alpha: 0, // Fade out
+                        duration: 500,
+                        onComplete: () => {
+                            trackNameText.destroy(); // Remove the text after it fades out
+                        },
+                    });
+                });
+            },
+        });
     }
 
 }

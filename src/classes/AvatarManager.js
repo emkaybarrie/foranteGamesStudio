@@ -1310,7 +1310,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
                 this.sprite.anims.play('take_hit', true); // Play the 'run' animation when moving
 
-                this.scene.decreaseScore(Phaser.Math.Between(5,10)) 
+                this.scene.score -= Phaser.Math.Between(5,10)
                 this.scene.cameras.main.flash(250, 255, 100, 0)
 
                 setTimeout(() => {

@@ -157,16 +157,16 @@ export default class StageManager {
 
         // Add a collider for each loot group with the player
         Object.values(this.lootGroups).forEach(group => {
-            this.scene.physics.add.collider(this.avatarManager.sprite, group, (avatarSprite, loot) => this.lootManager.lootCollision(this.avatarManager,loot), null, this);
+            this.scene.physics.add.overlap(this.avatarManager.sprite, group, (avatarSprite, loot) => this.lootManager.lootCollision(this.avatarManager,loot), null, this);
         });
 
         // Add a collider for each enemy group with the player
         Object.values(this.enemyGroups).forEach(group => {
-            this.scene.physics.add.collider(this.avatarManager.sprite, group, (avatarSprite, enemy) => this.enemyManager.enemyCollision(this.avatarManager,enemy), null, this);
+            this.scene.physics.add.overlap(this.avatarManager.sprite, group, (avatarSprite, enemy) => this.enemyManager.enemyCollision(this.avatarManager,enemy), null, this);
         });
 
         // Add a clollider for avatar and enemy projectiles
-        this.scene.physics.add.collider(this.avatarManager.sprite, this.projectileGroup, (avatarSprite, projectile) => this.avatarManager.takeHit(projectile.damage, projectile), null, this);
+        this.scene.physics.add.overlap(this.avatarManager.sprite, this.projectileGroup, (avatarSprite, projectile) => this.avatarManager.takeHit(projectile.damage, projectile), null, this);
 
         // Add a collider for each enenmy group with the terrain group
         // Loop over each terrain type
