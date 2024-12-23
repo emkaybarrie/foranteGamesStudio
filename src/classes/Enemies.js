@@ -335,29 +335,7 @@ export default class EnemyManager {
 
     // Separate the death logic into a reusable function
     handleEnemyDeath(enemy) {
-        // Momentum Boost
-        // Get the current value of traversalSpeedModifier
-        const currentValue = this.stageManager.avatarManager.traversalSpeedModifier;
 
-        // Define the amount you want to add
-        const additionalValue = 50;
-
-        // Calculate the target value
-        const targetValue = currentValue + additionalValue;
-
-        // Create the tween
-        this.scene.tweens.add({
-            targets: this.stageManager.avatarManager, // Object containing the property
-            traversalSpeedModifier: targetValue, // Target value
-            duration: 500, // Tween duration in milliseconds
-            ease: 'Linear', // Tween easing
-            onUpdate: (tween, target) => {
-                //console.log(`Current traversalSpeedModifier: ${target.traversalSpeedModifier}`);
-            },
-            onComplete: () => {
-                //e.log('TraversalSpeedModifier increased!');
-            }
-        });
 
         // Stop any animations and disable enemy actions
         enemy.anims.stop();
@@ -451,7 +429,7 @@ export default class EnemyManager {
                     const enemyY = enemy.y;
 
                     const aggroRange = this.scene.scale.width * 0.75; // Aggro range on the x-axis
-                    const yAggroRange = this.scene.scale.height * 0.3 // Vertical proximity to trigger aggro
+                    const yAggroRange = this.scene.scale.height * 0.25 // Vertical proximity to trigger aggro
                     const attackRange = enemy.attackRange || this.scene.scale.width * 0.1; // Attack range
 
 

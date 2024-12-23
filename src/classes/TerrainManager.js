@@ -111,10 +111,10 @@ export default class TerrainManager {
     ) {
         // Define terrain type chances based on elevation
         const terrainTypeChancesByElevation = {
-            ground: { normal: 95, platform: 10 },  
-            low: { normal: 99, platform: 1 },   
-            medium: { normal: 60, platform: 40 }, 
-            high: { normal: 40, platform: 60 }    
+            ground: { normal: 95, platform: 5 },  
+            low: { normal: 90, platform: 10 },   
+            medium: { normal: 70, platform: 30 }, 
+            high: { normal: 55, platform: 45 }    
         };
     
         // Define distance chances based on elevation
@@ -311,7 +311,7 @@ export default class TerrainManager {
         }
     
         physicsBody.body.allowGravity = false;
-        physicsBody.body.checkCollision.down = true;
+        physicsBody.body.checkCollision.down = false;
         physicsBody.body.checkCollision.left = false;
         physicsBody.body.checkCollision.right = false;
     
@@ -362,7 +362,7 @@ export default class TerrainManager {
                     }
 
             for (let i = 0; i < enemiesToSpawn; i++) {
-                if (Phaser.Math.FloatBetween(0, 100) < 60) {
+                if (Phaser.Math.FloatBetween(0, 100) < 35) {
                     this.stageManager.enemyManager.addEnemy(
                         terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
                         terrainBounds.top,

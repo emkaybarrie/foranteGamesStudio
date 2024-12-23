@@ -29,10 +29,10 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.action1PowerPercent = 0.1
         this.action1Cost = 10
         this.action2Cost = 30
-        this.special1PowerPercent = 0.5
-        this.special1Cost = 45
-        this.special2PowerPercent = 0.25
-        this.special2Cost = 30
+        this.special1PowerPercent = 0.65
+        this.special1Cost = 65
+        this.special2PowerPercent = 0.35
+        this.special2Cost = 35
 
         // Stub Blessings
         this.selectedBlessings = [];
@@ -45,8 +45,8 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             huntersStep: this.skill_HuntersStep
         };
 
-        this.equippedSkill_1 = null//this.skills.powerShot
-        this.equippedSkill_2 = null//this.skills.huntingHawk
+        this.equippedSkill_1 = null
+        this.equippedSkill_2 = null
 
         // Stats
 
@@ -1461,7 +1461,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                         this.traversalSpeedModifier -= 0.75
                     } else 
                     if (this.traversalSpeedModifier < 100 ) {
-                        this.traversalSpeedModifier += 2
+                        this.traversalSpeedModifier += 0.75
                     } 
 
                 } 
@@ -1471,13 +1471,13 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
                     // Accelration/Deceleration Controls
 
-                    // if (this.isOnGround && controls.left && this.traversalSpeedModifier > 50 && this.sprite.x <= xRepositionLowerBound){
-                    //     this.traversalSpeedModifier -= 4
-                    //     this.currentStamina -= 0.2
-                    // } else if (this.isOnGround && controls.right && this.traversalSpeedModifier < 150 && this.sprite.x >= xRepositionUpperBound){
-                    //     this.traversalSpeedModifier += 4
-                    //     this.currentStamina -= 0.2
-                    // }
+                    if (this.isOnGround && controls.left && this.traversalSpeedModifier > 50 && this.sprite.x <= this.xRepositionLowerBound){
+                        this.traversalSpeedModifier -= 2
+                        this.currentStamina -= 0.2
+                    } else if (this.isOnGround && controls.right && this.traversalSpeedModifier < 200 && this.sprite.x >= this.xRepositionUpperBound){
+                        this.traversalSpeedModifier += 2
+                        this.currentStamina -= 0.2
+                    }
 
 
                     // Movement Controls

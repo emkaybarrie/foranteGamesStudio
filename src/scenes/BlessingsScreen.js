@@ -79,11 +79,7 @@ class BlessingsScreen extends Phaser.Scene {
     }
 
     preload() {
-        // this.load.image('icon_crescentBarrage', 'assets/images/icon_crescentBarrage.png');
-        // this.load.image('icon_powerShot', 'assets/images/icon_powerShot.png');
-        // this.load.image('icon_huntingHawk', 'assets/images/icon_huntingHawk.png');
-        // this.load.image('icon_huntersStep', 'assets/images/icon_huntersStep.png');
-        // Load other icons here...
+
     }
 
     create() {
@@ -100,15 +96,15 @@ class BlessingsScreen extends Phaser.Scene {
         const blessings = this.getBlessings(type, category, maxRarity, numOptions);
 
         // Calculate vertical spacing to ensure blessings don't overlap
-        const totalHeight = blessings.length * 200; // Adjust the height per blessing here
+        const totalHeight = blessings.length * (config.height * 0.2); // Adjust the height per blessing here
         const startY = (config.height - totalHeight) * 0.35; // Center the blessings vertically
 
         blessings.forEach((blessing, index) => {
-            const box = this.add.container(config.width * 0.25, startY + (index * 200)); // Adjust the X and Y position for each blessing
+            const box = this.add.container(config.width * 0.25, startY + (index * (config.height * 0.2))); // Adjust the X and Y position for each blessing
 
             // Box background (for visual styling)
             //const selectionBox = this.add.image(0, 0, 'box_bg').setOrigin(0).setScale(0.5);
-            const selectionBox = this.add.rectangle(0, 0, config.width * 0.45, config.height * 0.165, 0x000000, 0.5).setOrigin(0);
+            const selectionBox = this.add.rectangle(0, 0, config.width * 0.5, config.height * 0.165, 0x000000, 0.75).setOrigin(0);
                                 // Create the tween
                                 this.tweens.add({
                                     targets: selectionBox, // Object containing the property
@@ -128,25 +124,29 @@ class BlessingsScreen extends Phaser.Scene {
                                 });
 
             // Blessing icon (placed to the left)
-            //const icon = this.add.image(10, 10, `icon_${blessing.name.toLowerCase()}`).setOrigin(0).setScale(0.5);
-            const icon = this.add.image(10, 10, `icon_${blessing.iconName}`).setOrigin(0).setScale(0.5).setDisplaySize(150,150);
+            const icon = this.add.image(config.width * 0.01, config.width * 0.01, `icon_${blessing.iconName}`).setOrigin(0).setScale(0.5).setDisplaySize(config.width * 0.075,config.width * 0.075);
 
             const textAnchorPoint = icon.x + icon.displayWidth
-            const gap = 10
+            const gap = config.width * 0.02
             // Blessing name (placed to the right of the icon)
-            const nameText = this.add.text(textAnchorPoint + gap, 10, blessing.name, { fontSize: '28px', fill: '#fff', fontStyle: 'bold' }).setOrigin(0);
+            const fontSizeScaling = config.width / 1920
+            const nameFontSize = 28 * fontSizeScaling
+            const nameText = this.add.text(textAnchorPoint + gap, config.height * 0.01, blessing.name, { fontSize: `${nameFontSize}px`, fill: '#fff', fontStyle: 'bold' }).setOrigin(0);
 
             // Blessing description (below the name, to the right)
-            const descriptionText = this.add.text(textAnchorPoint + gap, 50, blessing.description, { fontSize: '26px', fill: '#fff', wordWrap: { width: 600 } }).setOrigin(0);
-
+            const descriptionFontSize = 26 * fontSizeScaling
+            const descriptionText = this.add.text(textAnchorPoint + gap, nameText.y + nameText.displayHeight + config.height * 0.01, blessing.description, { fontSize: `${descriptionFontSize}px`, fill: '#fff', wordWrap: { width: config.width * 0.4 } }).setOrigin(0);
+            
+            const detailsFontSize = 22 * fontSizeScaling
             // Blessing type (below description, to the right)
-            const typeText = this.add.text(textAnchorPoint + gap, 120, `Type: ${blessing.type}`, { fontSize: '26px', fill: '#fff' }).setOrigin(0);
+            const typeText = this.add.text(textAnchorPoint + gap, selectionBox.y + selectionBox.displayHeight - config.height * 0.03, `Type: ${blessing.type}`, { fontSize: `${detailsFontSize}px`, fill: '#fff' }).setOrigin(0);
 
             // Blessing rarity (below type, to the right)
-            const rarityText = this.add.text(textAnchorPoint + gap, 150, `Rarity: ${blessing.rarity}`, { fontSize: '24px', fill: '#fff' }).setOrigin(0);
+            const rarityText = this.add.text(typeText.x + typeText.displayWidth + config.width * 0.025, selectionBox.y + selectionBox.displayHeight - config.height * 0.03, `Rarity: ${blessing.rarity}`, { fontSize: `${detailsFontSize}px`, fill: '#fff' }).setOrigin(0);
 
             // Select button (far right)
-            const selectButton = this.add.text(textAnchorPoint + gap + 600, 100, 'Select', { fontSize: '24px', fill: '#0f0' }).setOrigin(0);
+            const selectButtonFontSize = 26 * fontSizeScaling
+            const selectButton = this.add.text(selectionBox.x + selectionBox.displayWidth - config.width * 0.1, selectionBox.y + selectionBox.displayHeight - config.height * 0.03, 'Select', { fontSize: `${selectButtonFontSize}px`, fill: '#0f0' }).setOrigin(0);
             selectButton.setInteractive();
             selectButton.on('pointerdown', () => {
                 if (!this.selectedBlessings.includes(blessing.name)) {
@@ -154,9 +154,9 @@ class BlessingsScreen extends Phaser.Scene {
                     this.avatar.applyBlessing(blessing); // Apply the blessing effect to the player
                     console.log(`Selected Blessing: ${blessing.name}`);
                     if(blessing.skillSlot == 1){
-                        this.stageManager.uiManager.skillIcon1.setTexture(`icon_${blessing.iconName}`).setDisplaySize(100, 100).setVisible(true); // Change the texture to a new one
+                        this.stageManager.uiManager.skillIcon1.setTexture(`icon_${blessing.iconName}`).setDisplaySize(config.width * 0.05, config.width * 0.05).setVisible(true); // Change the texture to a new one
                     } else {
-                        this.stageManager.uiManager.skillIcon2.setTexture(`icon_${blessing.iconName}`).setDisplaySize(100, 100).setVisible(true); // Change the texture to a new one
+                        this.stageManager.uiManager.skillIcon2.setTexture(`icon_${blessing.iconName}`).setDisplaySize(config.width * 0.05, config.width * 0.05).setVisible(true); // Change the texture to a new one
                     }
                     
                     this.avatar.showStats(); // Display the updated player stats for debugging

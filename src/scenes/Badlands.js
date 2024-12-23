@@ -352,13 +352,13 @@ export default class Badlands extends Phaser.Scene {
 
         // Initialize the score display
         this.scoreText = this.add.text(baseScreenIncrementX * 95, baseScreenIncrementY * 5, `Score: ${this.score}`, {
-            fontSize: '48px',
+            fontSize: '42px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
 
         // High Score And Level
         this.recordText_Score = this.add.text(baseScreenIncrementX * 95, this.scoreText.y + baseScreenIncrementY * 10, `High Score: ${Math.round(this.highScore)}`, {
-            fontSize: '48px',
+            fontSize: '24px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
 
@@ -366,22 +366,7 @@ export default class Badlands extends Phaser.Scene {
             fontSize: '24px',
             fill: '#fff'
         }).setDepth(9).setScrollFactor(0).setOrigin(1,0)
-
-         // Configure stage setup
-         var stageConfig = {}
-
-         if(this.region == 2){
-            stageConfig = {
-                regionId: 2,
-                areaId: 1,
-                routeId: 1,
-                numberOfLayers: 4,
-                baseSpeed: 0,
-                addedSpeed: 0,
-                parallaxSpeeds: [1,0.5,0.35,0.01]
-            };
-         } else {
-            stageConfig = {
+           const stageConfig = {
                 regionId: 1,
                 areaId: 1,
                 routeId: 1,
@@ -390,7 +375,7 @@ export default class Badlands extends Phaser.Scene {
                 addedSpeed: 0,
                 parallaxSpeeds: [1,0.35,0.9,0.85,0.65,0.35,0.1,0.05,0.01]
             };
-         }
+         
          
          // Input Manager
         this.inputManager = new InputManager(this)

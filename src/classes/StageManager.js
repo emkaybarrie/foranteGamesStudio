@@ -93,22 +93,22 @@ export default class StageManager {
         // this.stageManager.cameraManager.mainCamera.setFollowOffset(-100, 0); // Offsets the camera 100 pixels to the left
         this.cameraManager.mainCamera.startFollow(this.avatarManager.sprite, true, 0.1, 0.1)
 
-        const startTerrain = this.terrainManager.generateTerrain(0, 'medium', 'max', 'platform', false, true, null, false)
+        const startTerrain = this.terrainManager.generateTerrain(0, 'low', 'max', 'normal', false, true, null, false)
         const tileSprite = startTerrain.getData('tileSprite'); // Access the associated tileSprite
 
         //tileSprite.setTint(0x800080); // Apply a purple tint to the sprite
 
         this.scene.tweens.add({
             targets: [startTerrain, tileSprite], // Include all related sprites
-            alpha: { from: 1, to: 0.9 }, // Gentle flashing
-            y: startTerrain.y - 25, // Floating effect
+            alpha: { from: 1, to: 0.85 }, // Gentle flashing
+            //y: startTerrain.y - 25, // Floating effect
             ease: 'Sine.easeInOut', // Smooth motion
             duration: 1000, // Duration for one cycle
             yoyo: true, // Oscillate back and forth
             repeat: -1, // Loop indefinitely
         });
 
-        const starterMajorReward = this.scene.physics.add.sprite(this.scene.scale.width * 0.3, startTerrain.y - 175).setOrigin(0.5).setDisplaySize(150,150).setDepth(8);
+        const starterMajorReward = this.scene.physics.add.sprite(this.scene.scale.width * 0.3, startTerrain.y - this.scene.scale.height * 0.3).setOrigin(0.5).setDisplaySize(this.scene.scale.width * 0.1,this.scene.scale.width * 0.1).setDepth(8);
         starterMajorReward.body.setImmovable(true);
         starterMajorReward.body.allowGravity = false;
     
