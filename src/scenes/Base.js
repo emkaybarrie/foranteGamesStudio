@@ -203,6 +203,7 @@ export default class Base extends Phaser.Scene {
             this.spiritPointsText.setText(`Spirit Points: ${this.playerData.spiritPoints}`);
             this.statButtons.forEach((button) => {
                 // Update the stat text (using the stat property stored inside button)
+                console.log(`Updating ${button.stat}: ${this.playerData[button.stat.toLowerCase()]}`);
                 button.statText.setText(`${button.stat}: ${this.playerData[button.stat.toLowerCase()]}`);
                 button.button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5);  // Disable button when no points left
             });
@@ -217,19 +218,19 @@ export default class Base extends Phaser.Scene {
         const stats = ['Stat 1', 'Stat 2', 'Stat 3'];
         const statPositionsY = [this.sAPointY - this.scale.height * 0.15 , this.sAPointY - this.scale.height * 0.1, this.sAPointY - this.scale.height * 0.05];
 
-        this.statButtons = stats.map((stat, index) => {
-            const statText = this.add.text((this.sAPointX * 4) - this.scale.width * 0.075, statPositionsY[index], `${stat}: TBC`, { fontSize: '28px', fill: '#fff' });
-            statText.setOrigin(0, 0.5)
+        // this.statButtons = stats.map((stat, index) => {
+        //     const statText = this.add.text((this.sAPointX * 4) - this.scale.width * 0.075, statPositionsY[index], `${stat}: TBC`, { fontSize: '28px', fill: '#fff' });
+        //     statText.setOrigin(0, 0.5)
             
-            const button = this.add.text((this.sAPointX * 4) + this.scale.width * 0.075 , statPositionsY[index], '+', { fontSize: '30px', fill: '#0f0' })
-                .setInteractive()
-                .setOrigin(0.5)
-                .on('pointerdown', () => this.allocateSpiritPoint(stat));
+        //     const button = this.add.text((this.sAPointX * 4) + this.scale.width * 0.075 , statPositionsY[index], '+', { fontSize: '30px', fill: '#0f0' })
+        //         .setInteractive()
+        //         .setOrigin(0.5)
+        //         .on('pointerdown', () => this.allocateSpiritPoint(stat));
 
-            button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5); // Button is disabled if no points available
-            // Store the stat name inside the button object
-            return { statText, button, stat: stat };  // Store the stat name here
-        });
+        //     button.setAlpha(this.playerData.spiritPoints > 0 ? 1 : 0.5); // Button is disabled if no points available
+        //     // Store the stat name inside the button object
+        //     return { statText, button, stat: stat };  // Store the stat name here
+        // });
 
         // Spirit Points counter
         this.avatarName = this.add.text(this.sAPointX * 4 , this.sAPointY - this.scale.height * 0.2, 'Eros', { fontStyle: 'bold', fontSize: '24px', fill: '#fff' });
