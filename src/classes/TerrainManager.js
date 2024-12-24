@@ -68,7 +68,7 @@ export default class TerrainManager {
                 2: 'platform'
             }
 
-            if(Phaser.Math.FloatBetween(0, 100) < 85 || elevation == 'ground' || i == numberOfTerrainSegments){
+            if(Phaser.Math.FloatBetween(0, 100) < 65 || elevation == 'ground' || i == numberOfTerrainSegments){
                 const generatedTerrain = this.generateTerrain(targetStartX, elevation, distanceSelections[Phaser.Math.Between(1, 3)], terrainType[Phaser.Math.Between(0, 0)])
                 generatedTerrain.id = i
                 if (i === numberOfTerrainSegments){
@@ -348,13 +348,15 @@ export default class TerrainManager {
     
         if (populateTerrain) {
             const terrainBounds = physicsBody.getBounds();
-            if (Phaser.Math.FloatBetween(0, 100) < 75) {
+            
+            if (Phaser.Math.FloatBetween(0, 100) < 65) {
                 this.stageManager.obstacleManager.addObstacle(
                     terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
                     terrainBounds.top,
                     elevation
                 );
             }
+
             this.stageManager.lootManager.addLoot(
                 terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
                 terrainBounds.top,

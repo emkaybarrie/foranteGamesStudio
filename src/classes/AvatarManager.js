@@ -8,10 +8,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.stageManager = stageManager
         this.sprite = this.scene.physics.add.sprite(x, y, null); // Load your avatar image in preload
         this.sprite.setVisible(false)
-
-        
-
-
         this.sprite.setOrigin(0.5, 1); // Set origin to center horizontally and bottom vertically
         this.sprite.setDepth(6)
         this.sprite.setScale(1,1)
@@ -23,16 +19,14 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.sprite.setDragX(2000); // Lower drag in air
 
         // Config
-        this.flashInterval = 100; // Flash interval in milliseconds
-        this.flashTimer = null;
 
         this.action1PowerPercent = 0.1
-        this.action1Cost = 10
-        this.action2Cost = 30
+        this.action1Cost = 0//10
+        this.action2Cost = 0//30
         this.special1PowerPercent = 0.65
-        this.special1Cost = 65
+        this.special1Cost = 0//65
         this.special2PowerPercent = 0.35
-        this.special2Cost = 35
+        this.special2Cost = 0//35
 
         // Stub Blessings
         this.selectedBlessings = [];
@@ -48,24 +42,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.equippedSkill_1 = null
         this.equippedSkill_2 = null
 
-        // Stats
-
-        // Core stats are vitality, focus, stamina - correspond to emergency savings target, personal savings target, disposable spending target (avg. daily)
-        // Spending more than target average has negative affects and vice versa
-        
-        // Vitality represents emergency savings target spending and affects avatars following properties:
-        // - Health
-        // - Energy Regen
-
-        // Focus represents personal savings spending and affects avatars following properties:
-        // - Cast Speed
-        // - Cast Damage
-
-        // Stamina represents monthly dispopsable spending and affects avatars following properties:
-        // - Movement Speed / Agility
-        // - Attack Speed
-        // - Attack Damage
-        
+        // Stats      
 
         // Core
         // Vitals
@@ -91,9 +68,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         
 
             // Combat
-            this.charge = 0;
             this.nextActionSequence = 2
-            this.attackSpeed = 100 * 2
 
         
         // Status
@@ -131,7 +106,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             this.createAndLoadAnimation(avatarId, 'slide', 10, 12, 0);  // Creates 'slide' animation with 5 frames at 8 FPS
 
             this.createAndLoadAnimation(avatarId, '1_atk', 10, 20, 0);  // Creates 'slide' animation with 5 frames at 8 FPS
-            this.createAndLoadAnimation(avatarId, '2_atk', 15, 26, 0);  // Creates 'slide' animation with 5 frames at 8 FPS
+            this.createAndLoadAnimation(avatarId, '2_atk', 15, 26, 0);  // Creates 'attack 2' animation with 5 frames at 8 FPS
             this.createAndLoadAnimation(avatarId, '3_atk', 12, 12, 0);  // Creates 'attack 3' animation with 5 frames at 8 FPS
             this.createAndLoadAnimation(avatarId, 'air_atk', 10, 26, 0);  // Creates 'slide' animation with 5 frames at 8 FPS
             
@@ -161,14 +136,8 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         }
 
         this.currentHealth = this.maxHealth
-        this.currentMana = 25 //this.maxMana
-        this.currentStamina = 25 //this.maxStamina
-
-        // this.emit('currentHealthChanged', this.currentHealth, false);
-        // this.emit('currentManaChanged', this.currentMana, false);
-        // this.emit('currentStaminaChanged', this.currentStamina, false);
-
-
+        this.currentMana = 0//this.maxMana
+        this.currentStamina = this.maxStamina
 
         
         // Start the regeneration timer
@@ -176,18 +145,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         
         
     }
-
-    // Apply a blessing effect (modify stats/abilities)
-    applyBlessing(blessing) {
-        console.log(`Applying blessing: ${blessing.name}`);
-        blessing.effect(this); // Call the effect function specific to the blessing
-        this.selectedBlessings.push(blessing.name); // Track selected blessings
-    }
-
-    hasBlessing(blessingName) {
-        return this.selectedBlessings.includes(blessingName);
-    }
-
     // Function to display current player stats (for debugging/visualization)
     showStats() {
         console.log(`Health: ${this.maxHealth}, Speed: ${this.speed}, Jump: ${this.jumpHeight}`);
@@ -195,8 +152,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         console.log(`Damage: ${this.damage}, Defense: ${this.defense}`);
     }
 
-
-    // 
     refreshStats(){
         // Vitals
         this.energyRegen = (100 + (100  * ((this.vitality - 100)/ 100)) ) / 40
@@ -210,13 +165,16 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         
 
         // Combat
-        this.attackSpeed = 100 + (150 * ((this.adaptability - 100) / 100))
+        this.attackSpeed = 100 + (100 * ((this.adaptability - 100) / 100))
 
         // Movement
         this.movementCost = 0//0.175
-        this.movementSpeed = Math.min(450 + (150  * ((this.adaptability - 100)/ 100)),750)
+
         this.xRepositionLowerBound = this.scene.scale.width * 0.275
         this.xRepositionUpperBound = this.scene.scale.width * 0.325
+    
+        this.movementSpeed = Math.min(400 + (150  * ((this.adaptability - 100)/ 100)),750)
+        this.movementSpeed_Air = Math.min(350 + (150  * ((this.adaptability - 100)/ 100)),650)
         this.repositionSpeed = Math.min(200 + (200  * ((this.adaptability - 100)/ 100)),450)
         this.repositionSpeedAir = Math.min(150 + (200  * ((this.adaptability - 100)/ 100)), 350)
         this.traversalSpeed = Math.min(((this.movementSpeed * 0.01) + (5  * ((this.adaptability - 100)/ 100))), 20)
@@ -230,6 +188,19 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.currentMana = this.maxMana
         this.currentStamina = this.maxStamina
     }
+
+    // Apply a blessing effect (modify stats/abilities)
+    applyBlessing(blessing) {
+        console.log(`Applying blessing: ${blessing.name}`);
+        blessing.effect(this); // Call the effect function specific to the blessing
+        this.selectedBlessings.push(blessing.name); // Track selected blessings
+    }
+
+    hasBlessing(blessingName) {
+        return this.selectedBlessings.includes(blessingName);
+    }
+
+
 
     // Method to load images and create animation
     // createAndLoadAnimation(avatarId, keyName, totalFrames, frameRate = 10, repeat = -1) {
@@ -425,54 +396,87 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    // Mode 0 Controls
-
+    // Controls
         moveLeft() {
-            if (this.animationsLoaded){
-                this.currentStamina -= this.movementCost
-                if (this.isOnGround){
-                    this.sprite.flipX = false
-
-                        this.sprite.setVelocityX(-this.repositionSpeed); // Stop horizontal movement 
-
-                   
-                    this.sprite.anims.play('run', true); // Play the 'run' animation when moving
-                } else {
-                    this.sprite.flipX = false
-                    this.sprite.setVelocityX(-this.repositionSpeedAir); // Stop horizontal movement 
-                    
+            if (this.animationsLoaded && this.currentStamina > 0){
+                if (this.mode == 0){
+                    this.currentStamina -= this.movementCost
+                    if (this.isOnGround){
+                        this.sprite.flipX = false
+    
+                            this.sprite.setVelocityX(-this.repositionSpeed); // Stop horizontal movement 
+    
+                       
+                        this.sprite.anims.play('run', true); // Play the 'run' animation when moving
+                    } else {
+                        this.sprite.flipX = false
+                        this.sprite.setVelocityX(-this.repositionSpeedAir); // Stop horizontal movement 
+                        
+                    }
+                } else if (this.mode == 1){
+                    //this.currentStamina -= this.movementCost
+                    if (this.isOnGround){
+                        this.sprite.flipX = true
+                        this.sprite.setVelocityX(-this.movementSpeed); // Stop horizontal movement 
+                        this.sprite.anims.play('run', true); // Play the 'run' animation when moving
+                    } else {
+                        this.sprite.flipX = true
+                        this.sprite.setVelocityX(-this.movementSpeed_Air); // Stop horizontal movement 
+                        
+                    }
                 }
+
             }
         }
 
         moveRight() {
             if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= this.movementCost
+                if (this.mode == 0){
+                    this.currentStamina -= this.movementCost
+                
+                    if (this.isOnGround){
+                        this.sprite.flipX = false
             
-                if (this.isOnGround){
-                    this.sprite.flipX = false
-        
-                    this.sprite.setVelocityX(this.repositionSpeed); // Stop horizontal movement 
-              
-                    this.sprite.anims.play('run', true); // Play the 'run' animation when moving
-                } else {
-                    this.sprite.flipX = false
-                    this.sprite.setVelocityX(this.repositionSpeedAir); // Stop horizontal movement 
+                        this.sprite.setVelocityX(this.repositionSpeed); // Stop horizontal movement 
+                
+                        this.sprite.anims.play('run', true); // Play the 'run' animation when moving
+                    } else {
+                        this.sprite.flipX = false
+                        this.sprite.setVelocityX(this.repositionSpeedAir); // Stop horizontal movement 
+                    }
+                } else if (this.mode == 1){
+                    //this.currentStamina -= this.movementCost
+                
+                    if (this.isOnGround){
+                        this.sprite.flipX = false
+            
+                        this.sprite.setVelocityX(this.movementSpeed); // Stop horizontal movement 
+                
+                        this.sprite.anims.play('run', true); // Play the 'run' animation when moving
+                    } else {
+                        this.sprite.flipX = false
+                        this.sprite.setVelocityX(this.movementSpeed_Air); // Stop horizontal movement 
+                    }
                 }
             }
         }
 
-        moveDown(){
-            if (this.animationsLoaded && this.currentStamina > 0){
-                this.currentStamina -= this.movementCost
-                if (this.isOnGround){
-                    this.sprite.flipX = false
-                    this.sprite.anims.play('slide', true); // Play the 'run' animation when moving
+        moveDown() {
+
+            if (this.animationsLoaded && this.currentStamina > 0) {
+
+                // Normal "move down" behavior
+                this.currentStamina -= this.movementCost;
+                if (this.isOnGround) {
+                    this.sprite.flipX = false;
+                    this.sprite.anims.play('slide', true); // Play the 'slide' animation
+                    this.isDucking = true
                 } else {
-                    this.sprite.setVelocityY(this.sprite.body.velocity.y + (this.hangTimeSpeed)); // Stop horizontal movement 
+                    this.sprite.setVelocityY(this.sprite.body.velocity.y + this.hangTimeSpeed); // Adjust vertical velocity
                 }
             }
         }
+
 
         jump() {
 
@@ -516,7 +520,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     // Animation Framerate Adjustments
                     // Adjust the animation's framerate dynamically
                     const anim = this.sprite.anims.animationManager.get('2_atk'); // Get the animation
-                    anim.frameRate = 20; // Set desired framerate (frames per second)
+                    anim.frameRate = 20 * (this.attackSpeed / 100); // Set desired framerate (frames per second)
 
 
                         // Play the attack animation
@@ -566,7 +570,9 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
             if (this.animationsLoaded && this.currentStamina > this.action2Cost ){
                 
-     
+                if (this.isOnGround && this.isDucking){
+                    this.handleDropThrough(); // Trigger the drop-through logic
+                } else
                 
                 if (!this.isDoingAction){
                     
@@ -578,48 +584,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                     // Emit event when health changes
                     this.emit('currentStaminaChanged', previousStamina, true);
 
-                 // Create the tween
-                    // this.scene.tweens.add({
-                    //     targets: this.sprite,
-                    //     x: this.sprite.x + 25,
-                    //     duration: 150,
-                    //     ease: 'Power1', // Easing for smooth movement
-                    //     onStart: () => {
-                    //         //console.log("Dash started!");
-                    //         this.canBeHurt = false
-                    //         this.sprite.setTint(0x00ff00); // Visual feedback
-                    //         this.sprite.anims.play('roll', true); // Play the 'run' animation when moving
-                    //         this.sprite.once('animationcomplete', () => {
-                    //              this.isDoingAction = false
-                    //              this.sprite.clearTint();
-                    //              this.canBeHurt = true
-                    //              this.canRegen = true
-          
-                    //         });
-                    //         if(!this.isOnGround){
-                    //             this.sprite.body.setVelocityY(this.sprite.body.velocity.y - 250)
-                    //         } else {
-                    //             if(this.traversalSpeedModifier > 10){
-                    //                 this.traversalSpeedModifier *= 0.85
-                    //             }
-                    //         }
-
-                    //     },
-                    //     onUpdate: (tween, target) => {
-                    //        // if (tween.progress >= 0.5 && onHalfway) {
-                    //             //onHalfway(); // Call the halfway function once
-                    //             //onHalfway = null; // Ensure it only runs once
-                    //        // }
-                    //     },
-                    //     onComplete: () => {
-                    //         //console.log("Dash complete!");
-                            
-                            
-                    //     }
-                    // });
-
-                    // Momentum Boost
-                    // Get the current value of traversalSpeedModifier
                     const currentValue = this.traversalSpeedModifier;
 
                     // Define the amount you want to add
@@ -660,6 +624,25 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
 
                 }
             }
+        }
+
+        // Handle the drop-through logic
+        handleDropThrough() {
+            //if (this.elevation !== 'ground') { // Prevent dropping if the terrain type is "ground"
+                // Temporarily disable collisions
+                this.sprite.body.checkCollision.down = false;
+
+                // Re-enable collisions after a delay
+                this.scene.time.delayedCall(50, () => {
+                    this.sprite.body.checkCollision.down = true;
+                });
+
+                // Force the sprite to fall
+                this.sprite.setVelocityY(this.dropSpeed || 300); // Optional: Adjust drop speed
+                console.log("Dropping through terrain to the next level!");
+            //} else {
+               // console.log("Cannot drop through ground terrain.");
+            //}
         }
 
         special1() {
@@ -1047,15 +1030,13 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         }
 
         stop() {
-
-       
-            if(!this.isDoingAction && !this.isDoingSpecial){
-                
-                if (this.animationsLoaded){
+            if (this.animationsLoaded){
+                if(this.mode == 0){
                     if (this.isOnGround){
                         this.sprite.flipX = false
                         if(!this.isDoingAction && !this.isDoingSpecial && !this.isDoingMovement && !this.isTakingHit){
                             this.sprite.angle = 0
+                            this.isDucking = false
                             if(this.traversalSpeedModifier > 1){
                                 this.sprite.anims.play('run', true); // Play the 'run' animation when moving 
                             } else {
@@ -1064,14 +1045,21 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
                             
                         }
                     }
+                } else if (this.mode == 1){
+                    if (this.isOnGround){
+                        if(!this.isDoingAction && !this.isDoingSpecial && !this.isDoingMovement && !this.isTakingHit){
+                            this.sprite.angle = 0
+                            this.isDucking = false
+                            if(Math.abs(this.sprite.body.velocity.x) > 50){ // Stub for slide transition
+                                this.sprite.anims.play('slide', true); // Play the 'slide' animation when moving 
+                            } else {
+                                this.sprite.anims.play('idle', true); // Play the 'run' animation when moving 
+                            }
+                            
+                        }
+                    }
                 }
-
             }
-                
-                
-
-            
-
         }
 
 
@@ -1081,53 +1069,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         
 
     // Mode 1 Controls
-
-    altMoveLeft() {
-        if (this.animationsLoaded){
-            this.isDoingMovement = true
-            if (this.isOnGround){
-                this.sprite.flipX = true
-                    if (!this.isDoingAction){
-                        this.sprite.setVelocityX(-this.movementSpeed)
-                        this.sprite.anims.play('run', true); // Play the 'run' animation when moving
-                    } 
-                
-            } else {
-                this.sprite.flipX = true
-                this.sprite.setVelocityX(Math.max(this.sprite.body.velocity.x - 20, -300)); // Reduced speed in air
-            }
-        }
-    }
-
-    altMoveRight() {
-        if (this.animationsLoaded){
-            this.isDoingMovement = true
-            if (this.isOnGround){
-                this.sprite.flipX = false
-                    if (!this.isDoingAction){
-                        this.sprite.setVelocityX(this.movementSpeed)
-                        this.sprite.anims.play('run', true); // Play the 'run' animation when moving
-                    } 
-                
-            } else {
-                this.sprite.flipX = false
-                this.sprite.setVelocityX(Math.min(this.sprite.body.velocity.x + 20, 300)); // Reduced speed in air
-                //this.sprite.x += 2.5; // Stop horizontal movement 
-                
-            }
-        }
-    }
-
-    altMoveDown(){
-        if (this.animationsLoaded){
-            if (this.isOnGround){
-                this.sprite.flipX = false
-                this.sprite.anims.play('roll', true); // Play the 'run' animation when moving
-            } else {
-                this.sprite.setVelocityY(this.sprite.body.velocity.y + (this.hangTimeSpeed * 0.1)); // Stop horizontal movement 
-            }
-        }
-    }
 
 
     altAction1(){
@@ -1251,30 +1192,6 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         }
     }
 
-    altSpecial2(){
-        if (this.animationsLoaded){
-            if (this.isOnGround){
-                this.sprite.anims.play('roll', true); // Play the 'run' animation when moving
-            } else {
-                this.sprite.anims.play('roll', true); // Play the 'run' animation when moving
-            }
-        }
-    }
-
-    altStop() {
-        if (this.animationsLoaded){
-            if (this.isOnGround){
-                
-                if(!this.isDoingAction && !this.isDoingMovement){
-                    this.sprite.anims.play('idle', true); // Play the 'run' animation when moving 
-                }
-            } else {
-
-            }  
-        }
-        
-
-    }
 
     takeHit(damage = 50, hitSource){
 
@@ -1524,13 +1441,13 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
             this.checkForNearbyEnemies()
 
             if (controls.left) {
-                this.altMoveLeft();
+                this.moveLeft();
             } else
             if (controls.right) {
-                this.altMoveRight();
+                this.moveRight();
             } else             
             if(true) {
-                    this.altStop(); // Stop horizontal movement if no keys pressed   
+                    this.stop(); // Stop horizontal movement if no keys pressed   
             }
 
             if (controls.jump || controls.up) {
