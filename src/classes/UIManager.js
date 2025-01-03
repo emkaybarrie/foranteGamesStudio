@@ -1,11 +1,10 @@
 
 import { config } from "../config.js";
 export default class UIManager {
-    constructor(scene, stageManager) {
+    constructor(scene) {
         
         this.scene = scene;
-        this.stageManager = stageManager;
-        this.avatar = this.stageManager.avatarManager;
+        this.avatar = this.scene.avatarManager;
 
         this.momentumVersion = 2
 
@@ -140,6 +139,9 @@ export default class UIManager {
         // Initialize momentum value
         //this.momentum = 0;  // Initial momentum value (could be updated dynamically)
         this.updateDynamicMomentumBar();  // Update the bar immediately
+
+        // Register the update event for manager
+        this.scene.events.on('update', this.update, this);
       
 
 
@@ -359,17 +361,17 @@ export default class UIManager {
 
     update() {
         // Update the progress bar markers (stage progress)
-        this.progressBar.markers[0].icon.setText(this.scene.stageManager.stage);
+        this.progressBar.markers[0].icon.setText(this.scene.stage);
         //this.updateMomentumBar();
         this.updateDynamicMomentumBar()
 
-        if(this.stageManager.avatarManager.currentMana < this.stageManager.avatarManager.special1Cost){
+        if(this.scene.avatarManager.currentMana < this.scene.avatarManager.special1Cost){
             this.skillIcon1.setAlpha(0.35)
         } else {
             this.skillIcon1.setAlpha(1)
         }
 
-        if(this.stageManager.avatarManager.currentMana < this.stageManager.avatarManager.special2Cost){
+        if(this.scene.avatarManager.currentMana < this.scene.avatarManager.special2Cost){
             this.skillIcon2.setAlpha(0.35)
         } else {
             this.skillIcon2.setAlpha(1)

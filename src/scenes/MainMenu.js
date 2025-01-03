@@ -10,10 +10,12 @@ export default class MainMenu extends Phaser.Scene {
   
     preload() {
       // Preload assets
+
     }
 
     create() {
-
+      // Play Main Menu Music
+      this.sound.play('music_mainMenu')
 
       // Add and darken the background
       this.bg = this.add.image(0, 0, 'titleScreen2c').setOrigin(0).setScale(1).setDisplaySize(config.width, config.height);
@@ -119,7 +121,7 @@ export default class MainMenu extends Phaser.Scene {
               this.playerData = {
                 id: 0,
                 alias: 'Guest',
-                level: 1,
+                stage: 1,
                 score: 0,
                 spiritLevel: 1,
                 power: 20,
@@ -449,11 +451,11 @@ export default class MainMenu extends Phaser.Scene {
               if (index + 1 == 2){
                 this.scene.start(`Login`, {imageKey: this.storyImageKey});
               } else {
-                // Freeplay
+                // Quick Play
                 this.playerData = {
                   id: 0,
                   alias: 'Guest',
-                  level: 1,
+                  stage: 1,
                   score: 0,
                   spiritLevel: 1,
                   power: 20,

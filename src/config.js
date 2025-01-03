@@ -10,10 +10,10 @@ export const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 2000 },
-            fps: 60,
             debug: false,
-        },
+            fps:120,
+            gravity: {y: 2000 } // Adjust based on your game
+        }
     },
     input: {
         keyboard: true,

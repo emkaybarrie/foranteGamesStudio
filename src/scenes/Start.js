@@ -14,8 +14,6 @@ export default class Start extends Phaser.Scene {
 
     create() {
 
-        
-
         this.cameras.main.fadeIn(1500, 0, 0, 0);
 
         // Debug
@@ -64,6 +62,8 @@ export default class Start extends Phaser.Scene {
             fill: '#fff',
             fontStyle: 'bold'
         }).setOrigin(0.5);
+
+        this.showUpdateLog()
 
         // Create a fade-in and fade-out effect using a tween
         this.tweens.add({
@@ -139,6 +139,29 @@ export default class Start extends Phaser.Scene {
                 this.scene.start('MainMenu');
                 this.scale.startFullscreen();
         };
+    }
+
+    showUpdateLog() {
+        // Create a background for the text box (optional)
+        this.textBoxBackground = this.add.rectangle(20, 20, 300, 120, 0x000000, 0.5)
+            .setOrigin(0, 0)
+            .setStrokeStyle(2, 0xffffff); // Adds a white border
+        
+        // Create the text object
+        this.updateLog = this.add.text(30, 30, '', {
+            fontSize: '14px',
+            fill: '#ffffff',
+            wordWrap: { width: config.width * 0.25 },
+            lineSpacing: 8 // Adds spacing between lines
+        });
+
+        // Set placeholder log text
+        this.updateLog.setText(
+            "Latest Major Updates (03/01):\n" +
+            " - New environments added\n" +
+            " - Terrain generation updated\n" +
+            " - Added starting area and skill selection shrine"
+        );
     }
 
 

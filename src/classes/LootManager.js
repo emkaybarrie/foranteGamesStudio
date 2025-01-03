@@ -1,8 +1,7 @@
 export default class LootManager {
-    constructor(scene, stageManager) {
+    constructor(scene) {
         this.scene = scene;
-        this.stageManager = stageManager
-        this.lootGroups = this.stageManager.lootGroups
+        this.lootGroup = this.scene.physics.add.group()
 
         this.scene.anims.create({
             key: 'coinAnim',  // The key that will be used to refer to this animation
@@ -11,28 +10,25 @@ export default class LootManager {
             repeat: -1  // Repeat the animation indefinitely
         });
 
+        // Register the update event for manager
+        this.scene.events.on('update', this.update, this);
+
 
     }
 
-    // create(){
-
-    // }
-
-
-    addLoot(x, y, elevation = 'ground', texture = 'coin', options = {}) {
+    add(x, y, texture = 'coin', options = {}) {
         const loot = this.scene.physics.add.sprite(x, y, texture).setOrigin(0, 1);
 
         // Play the coin animation immediately after creating the loot sprite
         loot.anims.play('coinAnim');  // Start the animation created earlier
 
         // Add Terrain to Terrain group in Stage Manager
-        this.lootGroups[elevation].add(loot);
+        this.lootGroup.add(loot);
 
 
         // Set physics properties
         loot.body.setImmovable(true);
         loot.body.allowGravity = false;
-        loot.elevation = elevation; // Store platform type on the platform object for easy identification
 
         loot.setDepth(5)
                 .setScale(3)
@@ -53,74 +49,67 @@ export default class LootManager {
         
     }
 
-    
-
-    lootCollision(avatar, loot){
-        //console.log('Avatar collected Loot')
-
-       
-        if(!loot.collected){
-
-        // Increase the score
-        this.scene.score += 10;
-        this.scene.scoreText.setText(`Score: ${this.scene.score}`);
-
-        
-        loot.collected = true
-
-            // Flash effect before bouncing
-            this.scene.tweens.add({
-                targets: loot,
-                alpha: { from: 1, to: 0.5 },
-                duration: 150,
-                yoyo: true,
-                onStart: () => {
-                    // Bounce effect
-                    this.scene.tweens.add({
-                        targets: loot,
-                        y: loot.y - 50, // Bounce upwards
-                        duration: 250,
-                        ease: 'Power2',
-                        yoyo: true,
-                        onComplete: () => {
-                            // Destroy the coin after bounce
-                            loot.destroy();
-                        }
-                    });
-                }
-            });
-       }
+    addColliders(){
+         // Add a collider for each loot group with the player
+            this.scene.physics.add.overlap(
+                this.scene.avatarManager.sprite, 
+                this.lootGroup, 
+                (sprite, loot) => this.handleAvatarCollisions(this.scene.avatarManager,loot),
+                null,
+                this
+            );
+      
     }
 
+        handleAvatarCollisions(avatar, loot){
+
+        
+            if(!loot.collected){
+                console.log('Score increased')   
+            // Increase the score
+            this.scene.score += 10;
+            this.scene.scoreText.setText(`Score: ${this.scene.score}`);
+
+            
+            loot.collected = true
+
+                // Flash effect before bouncing
+                this.scene.tweens.add({
+                    targets: loot,
+                    alpha: { from: 1, to: 0.5 },
+                    duration: 150,
+                    yoyo: true,
+                    onStart: () => {
+                        // Bounce effect
+                        this.scene.tweens.add({
+                            targets: loot,
+                            y: loot.y - 50, // Bounce upwards
+                            duration: 250,
+                            ease: 'Power2',
+                            yoyo: true,
+                            onComplete: () => {
+                                // Destroy the coin after bounce
+                                loot.destroy();
+                            }
+                        });
+                    }
+                });
+        }
+        }
+
     update() {
-        Object.keys(this.lootGroups).forEach(elevation => {
-            const group = this.lootGroups[elevation];
+ 
+      
 
-            group.getChildren().forEach(loot => {
-                loot.x -= this.stageManager.baseSpeed;
-
-                // if (terrain.isSequenceEnd && terrain.x < this.scene.scale.width && !terrain.triggeredNewSequence){
-                //     console.log(`Generating new ${terrain.elevation} terrain sequence`);
-                //     terrain.triggeredNewSequence = true
-
-                //     this.generateTerrainSequence(terrain.x + terrain.displayWidth, elevation)
-                // }
+            this.lootGroup.getChildren().forEach(loot => {
+                loot.x -= this.scene.baseSpeed;
 
                 if (loot.x < -loot.displayWidth){
                     loot.destroy();
                     //console.log(`Destroying ${loot.elevation} loot`);
-                } else {
-                    
-                    // Update last platform position only if the platform is still visible
-                    // this.lastPlatformPosition[type] = { 
-                    //     x: platform.x, 
-                    //     y: platform.y, 
-                    //     width: platform.displayWidth, 
-                    //     height: platform.displayHeight  
-                    // };
-                }
+                } 
             });
-        });
+      
 
     }
 

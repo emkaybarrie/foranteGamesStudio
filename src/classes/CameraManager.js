@@ -1,11 +1,9 @@
 export default class CameraManager {
-    constructor(scene, stageManager) {
+    constructor(scene) {
         this.scene = scene
         this.mainCamera = this.scene.cameras.main
-        this.stageManager = stageManager
 
-
-        this.mainCamera.startFollow(this.stageManager.avatarManager.sprite);
+        this.mainCamera.startFollow(this.scene.avatarManager.sprite, true, 0.1, 0.1);
 
         // Optionally set camera bounds to match the game world size
         //this.cameras.main.setBounds(0, 0, this.scale.width, this.scale.height);

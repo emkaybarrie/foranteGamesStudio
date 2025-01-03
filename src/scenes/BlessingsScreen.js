@@ -74,12 +74,9 @@ class BlessingsScreen extends Phaser.Scene {
 
     init(data) {
         console.log(data);
-        this.stageManager = data.mainScene
+        this.badlands = data.mainScene
         this.avatar = data.avatar; // Store the avatar instance
-    }
-
-    preload() {
-
+        this.blessingsConfig = data.blessingsConfig
     }
 
     create() {
@@ -87,10 +84,10 @@ class BlessingsScreen extends Phaser.Scene {
         this.add.rectangle(0, 0, config.width, config.height, 0x000000, 0.25).setOrigin(0);
 
         // Set up the UI for blessing selection
-        const numOptions = 3; // Can be configured
-        const type = 'skill'; // Can be 'action', 'skill', 'passive', or 'random'
-        const category = 'random'; // Can be 'offensive', 'defensive', 'utility', or 'random'
-        const maxRarity = 'rare'; // Defines the highest possible rarity
+        const numOptions = this.blessingsConfig.numOptions; // Can be configured
+        const type = this.blessingsConfig.type; // Can be 'action', 'skill', 'passive', or 'random'
+        const category = this.blessingsConfig.category; // Can be 'offensive', 'defensive', 'utility', or 'random'
+        const maxRarity = this.blessingsConfig.maxRarity; // Defines the highest possible rarity
 
         // Get blessings to display
         const blessings = this.getBlessings(type, category, maxRarity, numOptions);
@@ -152,18 +149,18 @@ class BlessingsScreen extends Phaser.Scene {
                 if (!this.selectedBlessings.includes(blessing.name)) {
                     this.selectedBlessings.push(blessing.name);
                     this.avatar.applyBlessing(blessing); // Apply the blessing effect to the player
-                    console.log(`Selected Blessing: ${blessing.name}`);
+                    //console.log(`Selected Blessing: ${blessing.name}`);
                     if(blessing.skillSlot == 1){
-                        this.stageManager.uiManager.skillIcon1.setTexture(`icon_${blessing.iconName}`).setDisplaySize(config.width * 0.05, config.width * 0.05).setVisible(true); // Change the texture to a new one
+                        this.badlands.uiManager.skillIcon1.setTexture(`icon_${blessing.iconName}`).setDisplaySize(config.width * 0.05, config.width * 0.05).setVisible(true); // Change the texture to a new one
                     } else {
-                        this.stageManager.uiManager.skillIcon2.setTexture(`icon_${blessing.iconName}`).setDisplaySize(config.width * 0.05, config.width * 0.05).setVisible(true); // Change the texture to a new one
+                        this.badlands.uiManager.skillIcon2.setTexture(`icon_${blessing.iconName}`).setDisplaySize(config.width * 0.05, config.width * 0.05).setVisible(true); // Change the texture to a new one
                     }
                     
                     this.avatar.showStats(); // Display the updated player stats for debugging
 
                     // Conditional update of variable in the main scene
-                    if (!this.stageManager.stageStart) {
-                        this.stageManager.stageStart = true; // Update the variable in the main scene
+                    if (!this.badlands.stageStart) {
+                        this.badlands.stageStart = true; // Update the variable in the main scene
                     }
                     this.scene.stop(); // Close the pause menu
                     this.scene.resume('Badlands'); // Resume the game scene
@@ -178,10 +175,6 @@ class BlessingsScreen extends Phaser.Scene {
             box.add(typeText); // Add the type text to the box
             box.add(rarityText); // Add the rarity text to the box
         });
-    }
-
-    update() {
-        // Update logic if needed (e.g., handle blessing effect)
     }
 
     // Blessing selection function based on type, category, and rarity

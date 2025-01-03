@@ -59,6 +59,7 @@ export default class LoadingScreen extends Phaser.Scene {
                     { type: 'sound', key: 'backgroundMusic7', path: 'assets/music/placeholder_StayCrunchy.mp3' },
                     { type: 'sound', key: 'backgroundMusic8', path: 'assets/music/placeholder_XylemUp.mp3' },
                     { type: 'spritesheet', key: 'terrainTileset', path: 'assets/images/world_tileset.png', frameConfig: {frameWidth: 16,frameHeight: 16} },
+                    { type: 'spritesheet', key: 'terrainTileset2', path: 'assets/images/ground_tileset.png', frameConfig: {frameWidth: 16,frameHeight: 16} },
                 ],
                 region1: [
                     { type: 'image', key: 'badlandsCactus', path: 'assets/images/badlands/cactus.png' },

@@ -1,29 +1,24 @@
 export default class ObstacleManager {
-    constructor(scene, stageManager) {
+    constructor(scene) {
         this.scene = scene;
-        this.stageManager = stageManager
-        this.obstacleGroups = this.stageManager.obstacleGroups
+        this.obstacleGroup = this.scene.physics.add.group()
 
-
-
+        // Register the update event for manager
+        this.scene.events.on('update', this.update, this);
 
     }
 
-
-
-    addObstacle(x, y, elevation = 'ground', texture = 'dTerrainPlaceholder', options = {}) {
-        const obstacle = this.scene.physics.add.sprite(x, y, texture).setOrigin(0, 1);
+    add(x, y, texture = 'dTerrainPlaceholder', options = {}) {
+        const obstacle = this.scene.physics.add.sprite(x, y, texture).setOrigin(0.5, 1);
 
         // Add Terrain to Terrain group in Stage Manager
-        this.obstacleGroups[elevation].add(obstacle);
+        this.obstacleGroup.add(obstacle);
 
         obstacle.setDepth(5)
         obstacle.body.setImmovable(true);
         obstacle.body.allowGravity = false;
-        obstacle.elevation = elevation; // Store platform type on the platform object for easy identification
 
-
-        obstacle.setScale(Phaser.Math.FloatBetween(1.5,2))
+        obstacle.setScale(Phaser.Math.FloatBetween(0.75,1))
 
         // Scale and adjust physics 
         obstacle.setSize(obstacle.width, obstacle.height * 0.8);
@@ -40,28 +35,31 @@ export default class ObstacleManager {
     }
 
     update() {
-        Object.keys(this.obstacleGroups).forEach(elevation => {
-            const group = this.obstacleGroups[elevation];
 
-            group.getChildren().forEach(obstacle => {
-                obstacle.x -= this.stageManager.baseSpeed;
-
-
+            this.obstacleGroup.getChildren().forEach(obstacle => {
+                obstacle.x -= this.scene.baseSpeed;
 
                 if (obstacle.x < -obstacle.displayWidth){
                     obstacle.destroy();
                     //console.log(`Destroying ${obstacle.elevation} terrain`);
-                } else {
-                    
-
                 }
             });
-        });
+        
 
     }
 
-    obstacleCollision(avatar, obstacle){
+    addColliders(){
+        // Add a collider for each loot group with the player
+           this.scene.physics.add.overlap(
+               this.scene.avatarManager.sprite, 
+               this.obstacleGroup, 
+               (sprite, obstacle) => this.handleAvatarCollisions(this.scene.avatarManager, obstacle),
+               null,
+               this
+           ); 
+    }
 
+       handleAvatarCollisions(avatar, loot){
         // Call the avatar's takeHit function if a collision occurs
         avatar.takeHit();
         //console.log('Avatar collided with Obstacle')
@@ -79,6 +77,7 @@ export default class ObstacleManager {
         // } else {
         //     // If stop effect, stop the avatar
         //     avatar.sprite.setVelocityX(0);
-        // }
-    }
+        // } 
+       }
+
 }

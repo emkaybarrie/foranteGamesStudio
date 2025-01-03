@@ -14,9 +14,6 @@ const preload = (scene) => {
     scene.load.image('titleScreen2b', 'assets/images/titleScreens/titleScreen_02aFixed2.png');
     scene.load.image('titleScreen2c', 'assets/images/titleScreens/titleScreen_02bFixed.png');
 
-
-    
-
     scene.load.image('prologue', 'assets/images/MainMenu/prologue.png');
     scene.load.image('story0', 'assets/images/MainMenu/story.png');
     scene.load.image('story1', 'assets/images/MainMenu/story_01.png');
@@ -43,10 +40,20 @@ const preload = (scene) => {
 
     scene.load.image('avatarIcon1', 'assets/avatars/1/icons/avatarIcon_01.png')
 
+    // Lyelle
+    // Norelle
+
+    // Music 
+    //scene.load.audio('music_Hub', 'assets/music/hub.mp3')
+    scene.load.audio('music_mainMenu', 'assets/music/mainMenu.mp3')
+    //scene.load.audio('music_prologue', 'assets/music/prologue.mp3')
+
     //Stub
 
     scene.load.image('nightborne_archer_projectile', 'assets/enemies/region1/nightborne_archer_projectile.png')
     scene.load.image('avatar1_projectile', 'assets/avatars/1/animations/arrow.png')
+
+    scene.load.image('majorRewardShrine', 'assets/majorRewardShrine_Processed.png')
 
 
 };

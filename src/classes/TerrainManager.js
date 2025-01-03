@@ -1,21 +1,26 @@
-
+import { config } from "../config.js";
 export default class TerrainManager {
-    constructor(scene, stageManager) {
+    constructor(scene) {
 
         // Initialize stage elements here
         this.scene = scene; // Reference to the Phaser scene
-        this.stageManager = stageManager
-        this.terrainGroups = this.stageManager.terrainGroups
-        this.stageConfig = this.stageManager.stageConfig
+        this.terrainGroupsPhysics = {
+            ground: this.scene.physics.add.staticGroup(),
+            low: this.scene.physics.add.staticGroup(),
+            medium: this.scene.physics.add.staticGroup(),
+            high: this.scene.physics.add.staticGroup()
+        };
 
-        // Chaos Factor Settings
+        this.terrainGroupsTilesprites = this.scene.add.group()
+        this.stageConfig = this.scene.stageConfig
+
+        // Chaos Factor Settings - Determine variance for terrain generation
         this.chaosFactorSettings = {
-            ground: { chaosLowerBound: 0.975, chaosUpperBound: 1.025},
+            ground: { chaosLowerBound: 0.95, chaosUpperBound: 1.15},
             low: { chaosLowerBound: 0.95, chaosUpperBound: 1.05 },
             medium: { chaosLowerBound: 0.90, chaosUpperBound: 1.075 },
             high: { chaosLowerBound: 0.85, chaosUpperBound: 1.10 }
         };
-
 
         // Elevation Settings
         this.elevationSettings = {
@@ -31,7 +36,7 @@ export default class TerrainManager {
             short: { baseWidth: this.scene.scale.width * 0.5 },
             standard: { baseWidth: this.scene.scale.width * 1 },
             far: { baseWidth: this.scene.scale.width * 1.5 },
-            max: { baseWidth: this.scene.scale.width * 1.75}
+            max: { baseWidth: this.scene.scale.width * 2}
         };
 
         // Transition Gap Settings
@@ -42,419 +47,936 @@ export default class TerrainManager {
             high: { baseWidth: this.scene.scale.height * 0.55 }
         };
 
-
+        // Register the update event for manager
+        this.scene.events.on('update', this.updateTerrainPosition, this);
     }
 
-    generateTerrainSequence(lastTerrainEnd = this.scene.scale.width, elevation = 'ground', numberOfTerrainSegments = 5){
+    addColliders() {
+        // Add a collider for each terrain group with the player
+        Object.values(this.terrainGroupsPhysics).forEach(terrain => {
+            // Avatar
+            this.scene.physics.add.collider(
+                this.scene.avatarManager.sprite,
+                terrain, 
+                (sprite, terrainSegment) => this.handleAvatarCollisions(this.scene.avatarManager, terrainSegment),
+                null, 
+                this
+            );
+            // Friendly Projectiles
+            this.scene.physics.add.collider(this.scene.friendlyProjectileGroup, terrain, (projectile, terrain) => {
+                projectile.destroy()
+            });
+        });
 
-        var targetStartX = 0      
+        // Add a collider for each enenmy group with the terrain group
+        Object.values(this.terrainGroupsPhysics).forEach(terrainGroup => {
+            this.scene.physics.add.collider(
+                this.scene.enemyManager.enemyGroup,
+                terrainGroup,
+                (enemy, terrain) => {
+                    //console.log('Collision detected between terrain and enemy');
+                }
+            );
+        });
 
-        for (let i = 1; i <= numberOfTerrainSegments; i++){
+        // Object.keys(this.terrainGroupsPhysics).forEach(terrainElevationGroup => {
+        //     // Ensure the corresponding key exists in both groups
+        //         this.scene.physics.add.collider(
+        //             this.scene.enemyManager.enemyGroup,
+        //             this.terrainGroupsPhysics[terrainElevationGroup],
+        //             (enemy, terrain) => {
+        //             // Handle collision logic here
+                   
+        //             }
+        //         );
+        
+        // });
 
-            const chaosLowerBound = this.chaosFactorSettings[elevation].chaosLowerBound
-            const chaosUpperBound = this.chaosFactorSettings[elevation].chaosUpperBound
+    
+    }
 
-            targetStartX = lastTerrainEnd + (this.transitionGapSettings[elevation].baseWidth * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound));
+        handleAvatarCollisions(avatar, terrain){
 
-            const distanceSelections = {
-                1: 'short',
-                2: 'standard',
-                3: 'far',
+            if(terrain.type == 'slope'){
+                if(avatar.mode == 1){
+
+                // Reduce speed when moving up
+                if (Math.abs(avatar.sprite.body.velocity.x) > 0) {
+                    avatar.sprite.setVelocityX(avatar.sprite.body.velocity.x * 0.35);
+                }
+
+                // Optional: Increase vertical position slightly to simulate smoother movement
+                avatar.sprite.y -= 1; // Small adjustment upwards
+
+                // Add sliding effect
+                if (avatar.sprite.body.velocity.x === 0) {
+                    avatar.sprite.setVelocityY(100); // Small downward velocity to simulate sliding
+                    if(terrain.direction == 'upRight'){
+                        avatar.sprite.x -= 2.5
+                        avatar.sprite.y += 2
+                    } else {
+                        avatar.sprite.x += 2.5
+                        avatar.sprite.y += 2
+                    }
+                    
+                }
+                } else if (avatar.mode == 0) {
+                    if(terrain.yDirection == 'up'){
+                        avatar.sprite.y -= 1; // Small adjustment upwards
+                        if(avatar.traversalSpeedModifier > 50){
+                            avatar.traversalSpeedModifier -= 0.5
+                        }
+                    } else if (terrain.yDirection == 'down'){
+                        avatar.sprite.y += 2; // Small adjustment upwards
+                        if(avatar.traversalSpeedModifier < 300){
+                        avatar.traversalSpeedModifier += 7.5
+                        }
+                    }
+                    
+                }
             }
 
-            const terrainType = {
-                0: null,
-                1: 'normal',
-                2: 'platform'
+            if (terrain.type == 'wall'){
+                if(avatar.mode == 0){
+                avatar.sprite.x -= this.scene.baseSpeed
+                avatar.sprite.setVelocityX(0)
+
+                }
             }
 
-            if(Phaser.Math.FloatBetween(0, 100) < 65 || elevation == 'ground' || i == numberOfTerrainSegments){
-                const generatedTerrain = this.generateTerrain(targetStartX, elevation, distanceSelections[Phaser.Math.Between(1, 3)], terrainType[Phaser.Math.Between(0, 0)])
-                generatedTerrain.id = i
-                if (i === numberOfTerrainSegments){
-                    generatedTerrain.isSequenceEnd = true
-                    // this.scene.tweens.add({
-                    //     targets: generatedTerrain,  // The terrain to animate
-                    //     alpha: {from: 1, to: 0.5},
-                    //     //tint: { from: 0xFFFFFF, to: 0xFFFF00 },  // Change color to yellow (glowing effect)
-                    //     //displayHeight: generatedTerrain.displayHeight * 1.01, // Increase height by 1%
-                    //     yoyo: true,                 // Return to the starting position
-                    //     repeat: -1,                 // Repeat infinitely
-                    //     ease: 'Sine.easeInOut',     // Smooth easing for natural motion
-                    //     duration: 500               // Time in milliseconds for one up-and-down cycle
-                    // });
+        }
+    
+    generateTerrain(x, elevation = 'ground', slopeConfig = this.generateTerrainConfig(this.scene.scale.width, this.scene.scale.height * 0.65)) { 
+        // Tile indices for flat, sloped, and fill terrain
+        const tileIndices = {
+            flat: { ground: 1 },
+            slope: {
+                up: { ground: 3 },
+                down: { ground: 4 },
+            },
+            wall: {
+                up: { ground: 5 },  // Wall facing left (up)
+                down: { ground: 7 }, // Wall facing right (down)
+            },
+            fill: { ground: 6 }, // Tile to fill gaps below slopes
+            edges: {
+                left: { ground: 0 },
+                right: { ground: 2 },
+            }
+        };
+    
+        // Elevation Y-position based on input
+        const elevationOffsets = { 
+            ground: this.scene.scale.height, 
+            low: this.scene.scale.height * 0.75, 
+            high: this.scene.scale.height * 0.5 };
+        const baseY = elevationOffsets[elevation] || this.scene.scale.height;
+    
+        // Scaling and tile dimensions
+        const sourceTileWidth = 16;
+        const sourceTileHeight = 16;
+        const desiredTileSize = 16;
+        const scaleFactorX = desiredTileSize / sourceTileWidth;
+        const scaleFactorY = desiredTileSize / sourceTileHeight;
+    
+        // Define terrain group
+        const terrainGroup_Local = this.scene.add.group();
+
+        // Tiles to Create on batch
+        let tilesToCreate = [];
+        // Physics Bodies to  Create on batch
+        let physicsBodies = []
+        // Objects to populate Terrain with on batch
+        let terrainObjects = []
+
+        // Track position for stitching terrain
+        let currentX = x;
+        let currentY = baseY;
+
+        // Track Terrain Width
+        let terrainStartX = x
+        let terrainEndX = x
+    
+        let previousSegment = null; // Track the previous segment for handling transitions
+
+        // Main Slope Config section
+        slopeConfig.forEach(segment => {
+            const { type, length, yDirection, xDirection, populationConfig } = segment;
+
+            //console.log("Next Tile: " + type)
+    
+            if (type === 'flat') {
+                // Check if the previous segment was an upward slope
+                if (previousSegment && previousSegment.type === 'slope' && previousSegment.yDirection === 'up') {
+                    // If the previous segment was an upward slope, shift the first flat tile down by 1
+                    currentY += desiredTileSize;
+                }
+    
+                // Handle transition from an upward wall (left) to flat (add left edge tile)
+                if (previousSegment && previousSegment.type === 'wall' && previousSegment.yDirection === 'up') {
+                    const edgeTile = this.scene.add.tileSprite(
+                        currentX - desiredTileSize,
+                        currentY,
+                        desiredTileSize,
+                        desiredTileSize,
+                        'terrainTileset2',
+                        tileIndices.edges.left[elevation]
+                    )
+                        .setOrigin(0, 1)
+                        .setScale(scaleFactorX, scaleFactorY);
+                        terrainGroup_Local.add(edgeTile)
+
+                    // Create Physics Body for Segment
+                    
+                    const terrainPhysicsBodySegment = this.terrainGroupsPhysics[elevation].create(currentX, currentY)
+                    terrainPhysicsBodySegment.setOrigin(1, 1)
+                    terrainPhysicsBodySegment.displayWidth = desiredTileSize
+                    terrainPhysicsBodySegment.displayHeight = desiredTileSize
+                    terrainPhysicsBodySegment.body.setSize(desiredTileSize, desiredTileSize)
+                    terrainPhysicsBodySegment.setImmovable(true)
+                    terrainPhysicsBodySegment.body.allowGravity = false
+                    terrainPhysicsBodySegment.body.checkCollision.down = false
+                    terrainPhysicsBodySegment.setVisible(false)
+                    //terrainPhysicsBodySegment.body.updateFromGameObject()
+
+                    terrainPhysicsBodySegment.type = 'edge'
+
+
+                }
+
+                let segmentStart = currentX
+    
+                // Create flat segment
+                for (let i = 0; i < Math.round(length / desiredTileSize); i++) {
+                    tilesToCreate.push({
+                        x: currentX,
+                        y: currentY,
+                        xSize: desiredTileSize,
+                        ySize: desiredTileSize,
+                        texture: 'terrainTileset2',
+                        frame: tileIndices.flat[elevation],
+                        originX: 0,
+                        originY: 1,
+                        scaleX: scaleFactorX,
+                        scaleY: scaleFactorY,
+                        tileType: 'flat',
+                    });
+
+                    // Fill the gap below the flat tile until we reach baseY
+                    const fillStartY = currentY + desiredTileSize;
+                    const fillEndY = baseY;
+
+                    const fillYSize = (fillEndY - fillStartY)
+
+                    tilesToCreate.push({
+                        x: currentX,
+                        y: fillStartY - desiredTileSize,
+                        xSize: desiredTileSize,
+                        ySize: fillYSize + desiredTileSize,
+                        texture: 'terrainTileset2',
+                        frame: tileIndices.fill[elevation],
+                        originX: 0,
+                        originY: 0,
+                        scaleX: scaleFactorX,
+                        scaleY: scaleFactorY,
+                        tileType: 'fill',
+                    });
+
+                    currentX += desiredTileSize;
+                }
+
+        
+                // Create Physics Body for Segment
+                let segmentWidth = Math.round((length / desiredTileSize) * desiredTileSize)
+
+                physicsBodies.push({
+                    x: segmentStart,
+                    y: currentY - desiredTileSize,
+                    width: segmentWidth,
+                    height: desiredTileSize,
+                    originX: 0,
+                    originY: 0,
+                    bodyType: 'flat'
+                });
+
+                // Create Population Data for Segment
+                if(populationConfig && populationConfig.length > 0){
+                    // // Get bounds for segment
+                     let boundsMin = segmentStart + segmentWidth * 0.15
+                     let boundsMax = segmentStart + segmentWidth * 0.85
+
+                    // Number of random items to pick
+                    const numItemsToPick = Phaser.Math.Between(0, Math.max(1, populationConfig.length - 2)); // Replace with the desired number of items
+
+                    // Shuffle the populationConfig array to randomize order
+                    const shuffledConfig = Phaser.Utils.Array.Shuffle([...populationConfig]);
+
+                    // Take the first numItemsToPick items from the shuffled array
+                    const selectedItems = shuffledConfig.slice(0, Math.min(numItemsToPick, shuffledConfig.length));
+
+                    // For each selected item, add it to terrainObjects
+                    selectedItems.forEach(configItem => {
+                        let xPlacement = Phaser.Math.FloatBetween(boundsMin, boundsMax);
+                        let topOfBody = currentY - desiredTileSize;
+
+                        // Set X and Y based on segment
+                        terrainObjects.push({
+                            x: xPlacement,
+                            y: topOfBody,
+                            type: configItem
+                        });
+                    });
+
+
+                }
+                
+            } else if (type === 'slope') {
+                // Calculate step size for slope
+                //const stepX = desiredTileSize;
+                //const stepY = direction === 'upRight' ? -desiredTileSize : desiredTileSize;
+    
+                // Adjust position for upwards slope to ensure seamless connection
+                if (yDirection === 'up') {
+                    currentY -= desiredTileSize;
+                }
+
+                let segmentStart = currentX
+                let segmentStartY = currentY
+    
+                // Generate sloped tiles
+                for (let i = 0; i < Math.round(length / desiredTileSize); i++) {
+                    tilesToCreate.push({
+                        x: currentX,
+                        y: currentY,
+                        xSize: desiredTileSize,
+                        ySize: desiredTileSize,
+                        texture: 'terrainTileset2',
+                        frame: tileIndices.slope[yDirection][elevation],
+                        originX: 0,
+                        originY: 1,
+                        scaleX: scaleFactorX,
+                        scaleY: scaleFactorY,
+                        tileType: 'slope',
+                    });
+
+                    // Fill the gap below the flat tile until we reach baseY
+                    const fillStartY = currentY;
+                    const fillEndY = baseY;
+
+                    const fillYSize = (fillEndY - fillStartY)
+
+                    tilesToCreate.push({
+                        x: currentX,
+                        y: fillStartY,
+                        xSize: desiredTileSize,
+                        ySize: fillYSize,
+                        texture: 'terrainTileset2',
+                        frame: tileIndices.fill[elevation],
+                        originX: 0,
+                        originY: 0,
+                        scaleX: scaleFactorX,
+                        scaleY: scaleFactorY,
+                        tileType: 'fill',
+                    });
+
+                    // Update position for next slope tile
+                    currentX += desiredTileSize;
+                    currentY += yDirection === 'up' ? -desiredTileSize : desiredTileSize;
+                }
+
+                // Create Physics Body for 
+                
+                let stepWidth = 2
+                let stepHeight = 2
+                let numSteps = Math.round((Math.round(length / desiredTileSize) * desiredTileSize) / stepWidth )
+                let originX = 0
+                let originY = 0
+
+                if(yDirection == 'down'){
+                    stepHeight *= -1
+                    segmentStartY -= desiredTileSize
+                    originX = 1
+                } 
+            
+                // for (let i = 0; i < numSteps; i++){
+                //     const x = segmentStart + i * stepWidth
+                //     const y = segmentStartY - i * stepHeight
+                //     const terrainPhysicsBodySegment = this.terrainGroupsPhysics[elevation].create(x, y, null)
+                //     terrainPhysicsBodySegment.setOrigin(originX, originY)
+                //     terrainPhysicsBodySegment.displayWidth = stepWidth
+                //     terrainPhysicsBodySegment.displayHeight = stepHeight
+                //     terrainPhysicsBodySegment.body.setSize(stepWidth, stepHeight)
+                //     terrainPhysicsBodySegment.setImmovable(true)
+                //     terrainPhysicsBodySegment.body.allowGravity = false
+                //     terrainPhysicsBodySegment.body.checkCollision.down = false
+
+                //     terrainPhysicsBodySegment.setVisible(false)
+
+                //     // Tag Physics Body 
+                //     terrainPhysicsBodySegment.type = type
+                //     terrainPhysicsBodySegment.direction = yDirection
+                // }
+
+                for (let i = 0; i < numSteps; i++) {
+                    physicsBodies.push({
+                        x: segmentStart + i * stepWidth,
+                        y: segmentStartY - i * stepHeight,
+                        width: stepWidth,
+                        height: stepHeight,
+                        originX: originX,
+                        originY: originY,
+                        bodyType: type,
+                        yDirection: yDirection
+                    });
+                }
+                
+                
+            } else if (type === 'wall') {
+                // Handle transition to a down wall from flat (add right edge tile)
+                if (previousSegment && previousSegment.type === 'flat' && type === 'wall' && yDirection == 'down') {
+                    const edgeTile = this.scene.add.tileSprite(
+                        currentX,
+                        currentY,
+                        desiredTileSize,
+                        desiredTileSize,
+                        'terrainTileset2',
+                        tileIndices.edges.right[elevation]
+                    )
+                        .setOrigin(0, 1)
+                        .setScale(scaleFactorX, scaleFactorY);
+                        terrainGroup_Local.add(edgeTile)
+
+                    // Create Physics Body for Segment
+                    
+                    const terrainPhysicsBodySegment = this.terrainGroupsPhysics[elevation].create(currentX, currentY, null)
+                    terrainPhysicsBodySegment.setOrigin(0, 1)
+                    terrainPhysicsBodySegment.displayWidth = desiredTileSize
+                    terrainPhysicsBodySegment.displayHeight = desiredTileSize
+                    terrainPhysicsBodySegment.body.setSize(desiredTileSize, desiredTileSize)
+                    terrainPhysicsBodySegment.setImmovable(true)
+                    terrainPhysicsBodySegment.body.allowGravity = false
+                    terrainPhysicsBodySegment.body.checkCollision.down = false
+                    terrainPhysicsBodySegment.setVisible(false)
+
+                    //terrainPhysicsBodySegment.body.updateFromGameObject()
+
+                    terrainPhysicsBodySegment.type = 'edge'
+                }
+    
+                // Handle transition to a up wall from flat (add fill tile)
+                if (previousSegment && previousSegment.type === 'flat' && type === 'wall' && yDirection == 'up') {
+                    const fillTile = this.scene.add.tileSprite(
+                        currentX,
+                        currentY,
+                        desiredTileSize,
+                        desiredTileSize,
+                        'terrainTileset2',
+                        tileIndices.fill[elevation]
+                    )
+                        .setOrigin(0, 1)
+                        .setScale(scaleFactorX, scaleFactorY);
+                        terrainGroup_Local.add(fillTile)
+                        
+
+                }
+
+                // Handle transition to a up wall from slope (add wall tile)
+                if (previousSegment && previousSegment.type === 'slope' && previousSegment.yDirection === 'up' && type === 'wall' && yDirection === 'up') {
+                    const fillWallTile = this.scene.add.tileSprite(
+                        currentX,
+                        currentY,
+                        desiredTileSize,
+                        desiredTileSize,
+                        'terrainTileset2',
+                        tileIndices.wall[yDirection][elevation]
+                    )
+                        .setOrigin(0, 1)
+                        .setScale(scaleFactorX, scaleFactorY)
+                        .setData('tileType', 'wall'); // Tag as wall tile;
+                        terrainGroup_Local.add(fillWallTile)
+                }
+
+                // Handle transition to a up wall from slope (add wall tile)
+                if (previousSegment && previousSegment.type === 'slope' && previousSegment.yDirection === 'down' && type === 'wall' && yDirection === 'down') {
+                    // If the previous segment was a downwards slope, shift the first wall tile left by 1
+                    currentX -= desiredTileSize;
+                    // If the previous segment was a downwards slope, shift the first flat tile up by 1
+                    currentY -= desiredTileSize;
+                }
+
+                // Handle wall direction and generate the wall (up or down)
+                const wallHeight = length;
+    
+                // Track the lowest Y of the wall tiles
+                let lowestWallY = currentY;
+    
+                // Adjust the wall direction and Y position
+                if (yDirection === 'up') {
+                    //currentY = desiredTileSize;  // Move up for the wall
+                } else if (yDirection === 'down') {
+                    currentY += desiredTileSize;  // Move down for the wall
+                }
+
+                let segmentStart = currentX
+                let segmentStartY = currentY
+    
+                // Generate the wall tiles
+
+                for (let i = 0; i < Math.round(wallHeight / desiredTileSize); i++) {
+    
+                    tilesToCreate.push({
+                        x: currentX,
+                        y: currentY,
+                        xSize: desiredTileSize,
+                        ySize: desiredTileSize,
+                        texture: 'terrainTileset2',
+                        frame: tileIndices.wall[yDirection][elevation],
+                        originX: 0,
+                        originY: 1,
+                        scaleX: scaleFactorX,
+                        scaleY: scaleFactorY,
+                        tileType: 'wall',
+                    });
+
+                    // Fill the gap below the flat tile until we reach baseY
+                    const fillStartY = currentY;
+                    const fillEndY = baseY;
+
+                    const fillYSize = (fillEndY - fillStartY)
+
+                    tilesToCreate.push({
+                        x: currentX,
+                        y: fillStartY,
+                        xSize: desiredTileSize,
+                        ySize: fillYSize,
+                        texture: 'terrainTileset2',
+                        frame: tileIndices.fill[elevation],
+                        originX: 0,
+                        originY: 0,
+                        scaleX: scaleFactorX,
+                        scaleY: scaleFactorY,
+                        tileType: 'fill',
+                    });                    
+
+                    // Track the lowest Y of the wall tiles
+                    lowestWallY = Math.max(lowestWallY, currentY);
+    
+                    // Update Y position for next wall tile (either up or down)
+                    if (yDirection === 'up') {
+                        currentY -= desiredTileSize;  // Move up for the wall
+                    } else if (yDirection === 'down') {
+                        currentY += desiredTileSize;  // Move down for the wall
+                    }
+                    
+                }
+
+                // Update the X position after generating the wall
+                currentX += desiredTileSize;
+    
+
+                // Physics Body
+
+                // Create Physics Body for Segment
+                let segmentHeight = Math.round(length / desiredTileSize) * desiredTileSize
+                let originX = 0
+                let originY = 0
+
+                if(yDirection == 'up'){
+                    originY = 1
                 } 
 
-            lastTerrainEnd = generatedTerrain.x + generatedTerrain.displayWidth
-            } else {
-                lastTerrainEnd = Math.max(lastTerrainEnd + this.scene.scale.width, this.scene.scale.width)
-                console.log('Skipped Generation - new terrain to be generated at: ' + lastTerrainEnd)
-            }
+                // Issue - When using this method, collision doesnt work for some reason
+                // physicsBodies.push({
+                //     x: segmentStart,
+                //     y: segmentStartY,
+                //     width: desiredTileSize,
+                //     height: segmentHeight,
+                //     originX: originX,
+                //     originY: originY,
+                //     bodyType: type
+                // });
 
-            
-
-            
-        }
-        
-
-    }
-
-    generateTerrain(
-        x, 
-        elevation = 'ground', 
-        distance = null, // Determined based on chance if null
-        terrainType = null, // Determined based on chance if null
-        useTopRow = true, 
-        textureMatchStage = true, 
-        textureOverride = null, 
-        populateTerrain = true
-    ) {
-        // Define terrain type chances based on elevation
-        const terrainTypeChancesByElevation = {
-            ground: { normal: 95, platform: 5 },  
-            low: { normal: 90, platform: 10 },   
-            medium: { normal: 70, platform: 30 }, 
-            high: { normal: 55, platform: 45 }    
-        };
+                const terrainPhysicsBodySegment = this.terrainGroupsPhysics[elevation].create(segmentStart, segmentStartY)
+                terrainPhysicsBodySegment.setOrigin(originX, originY)
+                terrainPhysicsBodySegment.displayHeight = segmentHeight
+                terrainPhysicsBodySegment.displayWidth = desiredTileSize
+                terrainPhysicsBodySegment.body.setSize(desiredTileSize, segmentHeight)
+                terrainPhysicsBodySegment.setImmovable(true)
+                terrainPhysicsBodySegment.body.allowGravity = false
+                terrainPhysicsBodySegment.body.checkCollision.down = false
+                terrainPhysicsBodySegment.setVisible(false)
+                terrainPhysicsBodySegment.type = 'wall'
     
-        // Define distance chances based on elevation
-        const distanceChancesByElevation = {
-            ground: { short: 10, standard: 60, far: 30 },   
-            low: { short: 30, standard: 50, far: 10 },      
-            medium: { short: 50, standard: 30, far: 20 },   
-            high: { short: 75, standard: 20, far: 5 }      
-        };
-    
-        // Define rarity chances
-        const rarityChances = {
-            common: 70,   // 70% chance
-            uncommon: 20, // 20% chance
-            rare: 10      // 10% chance
-        };
-    
-        // Determine distance if not provided
-        if (!distance) {
-            const distanceChances = distanceChancesByElevation[elevation] || { standard: 100 }; // Default to 100% standard
-            const randomValue = Phaser.Math.FloatBetween(0, 100);
-            let accumulatedChance = 0;
-    
-            for (const [dist, chance] of Object.entries(distanceChances)) {
-                accumulatedChance += chance;
-                if (randomValue <= accumulatedChance) {
-                    distance = dist;
-                    break;
-                }
-            }
-        }
-    
-        // Determine terrain type if not provided
-        if (!terrainType) {
-            const terrainTypeChances = terrainTypeChancesByElevation[elevation] || { normal: 100 }; // Default to 100% normal
-            const randomValue = Phaser.Math.FloatBetween(0, 100);
-            let accumulatedChance = 0;
-    
-            for (const [type, chance] of Object.entries(terrainTypeChances)) {
-                accumulatedChance += chance;
-                if (randomValue <= accumulatedChance) {
-                    terrainType = type;
-                    break;
-                }
-            }
-        }
-    
-        // Determine terrain rarity
-        const rarityRoll = Phaser.Math.FloatBetween(0, 100);
-        let terrainRarity = 'common'; // Default rarity
-        let accumulatedRarityChance = 0;
-    
-        for (const [rarity, chance] of Object.entries(rarityChances)) {
-            accumulatedRarityChance += chance;
-            if (rarityRoll <= accumulatedRarityChance) {
-                terrainRarity = rarity;
-                break;
-            }
-        }
-
-        // Define terrain tiles for each region
-        // const terrainTilesByRegion = {
-        //     1: { ground: 16, low: 20, medium: 16, high: 20 },
-        //     2: { ground: 18, low: 18, medium: 18, high: 18 },
-        //     3: { ground: 30, low: 32, medium: 34, high: 36 },
-        //     // Add more regions as needed
-        // };
-
-        // const terrainTopRowTilesByRegion = {
-        //     1: { ground: 0, low: 0, medium: 0, high: 0 },
-        //     2: { ground: 18, low: 18, medium: 18, high: 18 },
-        //     3: { ground: 30, low: 32, medium: 34, high: 36 },
-        //     // Add more regions as needed
-        // };
-
-        // // Get terrain tiles based on the current region
-        // const terrainTiles = terrainTilesByRegion[this.scene.region] || terrainTilesByRegion[1]; // Default to region 1 if undefined
-        // const topRowTiles = terrainTopRowTilesByRegion[this.scene.region] || terrainTilesByRegion[1]; // Default to region 1 if undefined
-        
-        // Define which tile index corresponds to which terrain type
-        const terrainTiles = {
-            ground: 16,  // Main body tile index
-            low: 18,
-            medium: 20,
-            high: 22
-        };
-
-    
-        const topRowTiles = {
-            ground: 0,  // Top row tile index for ground
-            low: 2,
-            medium: 4,
-            high: 6
-        };
-    
-        // Define platform thickness bounds for each elevation
-        const platformThicknessSettings = {
-            ground: { min: 64, max: 128 },
-            low: { min: 48, max: 96 },
-            medium: { min: 32, max: 64 },
-            high: { min: 16, max: 48 }
-        };
-    
-        // Get the correct tile based on terrain type
-        const tileIndex = terrainTiles[elevation] || 0; 
-        const topTileIndex = topRowTiles.hasOwnProperty(elevation) && topRowTiles[elevation] !== undefined ? topRowTiles[elevation] : tileIndex;
-    
-        // Chaos bounds
-        const chaosLowerBound = this.chaosFactorSettings[elevation].chaosLowerBound;
-        const chaosUpperBound = this.chaosFactorSettings[elevation].chaosUpperBound;
-    
-        // Determine texture
-        let texture = null;
-        const desiredTileSize = 64;
-        let scaleFactorX = 1;
-        let scaleFactorY = 1;
-    
-        if (textureMatchStage) {
-            texture = this.scene.textures.get('terrainTileSet');
-            const frame = texture.get('frame' + tileIndex);
-    
-            if (!frame) {
-                console.error("Tile index is out of bounds or the texture was not correctly loaded.");
-                return;
-            }
-    
-            const tileWidth = frame.width;
-            const tileHeight = frame.height;
-            scaleFactorX = desiredTileSize / tileWidth;
-            scaleFactorY = desiredTileSize / tileHeight;
-    
-            if (desiredTileSize < tileWidth) {
-                scaleFactorX = 1;
-                scaleFactorY = 1;
-            }
-        } else {
-            texture = textureOverride || `${elevation}_default`;
-            const textureImage = this.scene.textures.get(texture);
-            const textureWidth = textureImage.getSourceImage().width;
-            const textureHeight = textureImage.getSourceImage().height;
-    
-            scaleFactorX = desiredTileSize / textureWidth;
-            scaleFactorY = desiredTileSize / textureHeight;
-    
-            if (desiredTileSize < textureWidth) {
-                scaleFactorX = 1;
-                scaleFactorY = 1;
-            }
-        }
-    
-        // Calculate terrain dimensions
-        const terrainElevation = this.elevationSettings[elevation].baseHeight;
-        const terrainDistance = this.distanceSettings[distance].baseWidth;
-        const terrainWidth = terrainDistance * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound);
-    
-        let terrainHeight = terrainElevation * Phaser.Math.FloatBetween(chaosLowerBound, chaosUpperBound);
-        let yPosition = this.scene.scale.height; // Normal terrain is rooted to the screen bottom
-    
-        if (terrainType === 'platform') {
-            // For platforms, constrain the thickness and height
-            const thicknessBounds = platformThicknessSettings[elevation] || { min: 16, max: 64 };
-            const platformThickness = Phaser.Math.Between(thicknessBounds.min, thicknessBounds.max);
-            terrainHeight = platformThickness;
-    
-            // Adjust Y position so the top edge aligns with normal terrain
-            const maxHeightOffset = this.scene.scale.height - (terrainElevation * chaosUpperBound);
-            const minHeightOffset = this.scene.scale.height - (terrainElevation * chaosLowerBound);
-            const platformTopY = Phaser.Math.FloatBetween(minHeightOffset, maxHeightOffset);
-    
-            yPosition = platformTopY + terrainHeight / 2; // Center platform around the Y value
-        }
-    
-        // Create the TileSprite for the main body
-        const tileSprite = this.scene.add.tileSprite(x, yPosition, terrainWidth, terrainHeight, 'terrainTileset', tileIndex).setOrigin(0, 1);
-        tileSprite.setTileScale(scaleFactorX, scaleFactorY);
-        tileSprite.setDisplaySize(terrainWidth, terrainHeight);
-
-        let topTileSprite = null
-    
-       if(useTopRow){
-        // Create the TileSprite for the top row
-        topTileSprite = this.scene.add.tileSprite(x, yPosition - terrainHeight + (desiredTileSize / 2), terrainWidth, desiredTileSize / 2, 'terrainTileset', topTileIndex).setOrigin(0, 1);
-        topTileSprite.setTileScale(scaleFactorX, scaleFactorY);
-        topTileSprite.setDisplaySize(terrainWidth, desiredTileSize / 2);
-       }
-    
-        // Create the physics body
-        const physicsBody = this.scene.physics.add.staticImage(x, yPosition).setOrigin(0, 1);
-        physicsBody.displayWidth = terrainWidth;
-        physicsBody.displayHeight = terrainHeight;
-        physicsBody.body.setSize(terrainWidth, terrainHeight);
-    
-        // Link TileSprite and physics body
-        physicsBody.setData('tileSprite', tileSprite);
-        tileSprite.setData('physicsBody', physicsBody);
-
-        if(useTopRow){
-        physicsBody.setData('topTileSprite', topTileSprite);
-        topTileSprite.setData('physicsBody', physicsBody);
-        }
-    
-        if (!this.terrainGroups[elevation]) {
-            console.error(`Group for elevation '${elevation}' not initialized.`);
-        } else {
-            this.terrainGroups[elevation].add(physicsBody);
-        }
-    
-        // Set depth for visual layering
-        const depthMap = { ground: 5, low: 4, medium: 3, high: 2 };
-        physicsBody.setDepth(depthMap[elevation] || 1);
-        tileSprite.setDepth(depthMap[elevation] || 1);
-        if(useTopRow){
-        topTileSprite.setDepth(depthMap[elevation] || 1);
-        }
-    
-        physicsBody.body.allowGravity = false;
-        physicsBody.body.checkCollision.down = false;
-        physicsBody.body.checkCollision.left = false;
-        physicsBody.body.checkCollision.right = false;
-    
-        // Additional properties
-        physicsBody.elevation = elevation;
-        physicsBody.rarity = terrainRarity; // Assign rarity to the terrain
-        physicsBody.distance = distance;   // Assign distance to the terrain
-        physicsBody.isSequenceEnd = false;
-        physicsBody.triggeredNewSequence = false;
-        physicsBody.hasTopTileSprite = useTopRow
-    
-        // Apply visual pipeline
-        tileSprite.setPipeline('GlowPipeline');
-    
-        if (populateTerrain) {
-            const terrainBounds = physicsBody.getBounds();
-            
-            if (Phaser.Math.FloatBetween(0, 100) < 65) {
-                this.stageManager.obstacleManager.addObstacle(
-                    terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
-                    terrainBounds.top,
-                    elevation
-                );
-            }
-
-            this.stageManager.lootManager.addLoot(
-                terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
-                terrainBounds.top,
-                elevation
-            );
-    
-            const enemiesToSpawn = Phaser.Math.Between(1, 3);
-
-                    // Rarity stub
-                    // Predefined rarity chances
-                    const rarityChances = {
-                        rare: 5,     // 5% chance for 'rare'
-                        uncommon: 15, // 15% chance for 'uncommon'
-                        common: 80    // 70% chance for 'common' (default)
-                    };
-                    const rand = Phaser.Math.FloatBetween(0, 100);  // Get a random number between 0 and 100
-
-                    // Check for rare, uncommon, or common based on the predefined chance ranges
-                    if (rand < rarityChances.rare) {
-                        this.enemyRarity = 'rare';
-                    } else if (rand < rarityChances.rare + rarityChances.uncommon) {
-                        this.enemyRarity =  'uncommon';
-                    } else {
-                        this.enemyRarity =  'common'; // Default if no other rarity is picked
-                    }
-
-            for (let i = 0; i < enemiesToSpawn; i++) {
-                if (Phaser.Math.FloatBetween(0, 100) < 35) {
-                    this.stageManager.enemyManager.addEnemy(
-                        terrainBounds.x + Phaser.Math.FloatBetween(0.1, 0.9) * terrainBounds.width,
-                        terrainBounds.top,
-                        elevation,
-                        'region1',
-                        'stage1',
-                        this.enemyRarity
-                    );
-                }
-            }
-        }
-
-    
-        return physicsBody;
-    }
-    
-    
-    update(time, delta){
-
-        Object.keys(this.terrainGroups).forEach(elevation => {
-            const group = this.terrainGroups[elevation];
-
-            group.getChildren().forEach(terrain => {
-                // Move the physics body
-                terrain.x -= this.stageManager.baseSpeed;
-    
-
-                // Reposition and refresh the static body
-                terrain.setPosition(terrain.x, terrain.y); 
-                terrain.body.updateFromGameObject();
-            
-                    // Update the linked tileSprite
-                    const tileSprite = terrain.getData('tileSprite');
-                    const topTileSprite = terrain.getData('topTileSprite');
-                    
-                    if (tileSprite) {
-                        tileSprite.x = terrain.x
-                       // topTileSprite.x = terrain.x
-                    }
-
-                    if (topTileSprite){
-                        topTileSprite.x = terrain.x
-                    }
-                    
-
-
-                    // Handle sequence generation
-                    if (terrain.isSequenceEnd && terrain.x < this.scene.scale.width && !terrain.triggeredNewSequence) {
-                        //console.log('New Sequence being generated at: ' + terrain.x )
-                        terrain.triggeredNewSequence = true;
                 
-                        this.generateTerrainSequence(terrain.x + terrain.displayWidth, elevation, Phaser.Math.Between(1, 7));
-                    }
-            
-                    // Cleanup off-screen terrain
-                    if (terrain.x < -terrain.displayWidth) {
-                        //console.log('Terrain destroyed at: '+ terrain.x )
-                        terrain.destroy(); // Destroy physics body
-                        if (tileSprite) {
-                            tileSprite.destroy(); // Destroy visual sprite
-                        }
+            }
 
-                        if (topTileSprite){
-                            topTileSprite.destroy()
-                        }
+            // Update previous segment
+            previousSegment = segment;
+  
+        });
+
+        // Once iteration is complete, batch-create all the tiles in one go
+        tilesToCreate.forEach(tileData => {
+            const tile = this.scene.add.tileSprite(tileData.x, tileData.y, tileData.xSize, tileData.ySize, tileData.texture, tileData.frame)
+                .setOrigin(tileData.originX, tileData.originY)
+                .setScale(tileData.scaleX, tileData.scaleY)
+                .setData('tileType', tileData.tileType);
+            terrainGroup_Local.add(tile);
+        });
+
+        // Batch-create all physics bodies in one go
+        physicsBodies.forEach(bodyData => {
+            const terrainSegment = this.terrainGroupsPhysics[elevation].create(bodyData.x, bodyData.y);
+            terrainSegment.setOrigin(bodyData.originX, bodyData.originY); // Align bottom-left corner
+            terrainSegment.displayWidth = bodyData.width;
+            terrainSegment.displayHeight = bodyData.height;
+            terrainSegment.body.setSize(bodyData.width, bodyData.height);
+            terrainSegment.setImmovable(true);
+            terrainSegment.body.allowGravity = false;
+            terrainSegment.body.checkCollision.down = false
+            terrainSegment.setVisible(false);
+            terrainSegment.type = bodyData.bodyType
+            terrainSegment.yDirection = bodyData.yDirection
+        });
+
+        // Batch-create all terrain objects in one go
+        terrainObjects.forEach(objectPlacementData => {
+                this.scene[`${objectPlacementData.type}Manager`].add(
+                    objectPlacementData.x,
+                    objectPlacementData.y
+                )     
+        });
+        
+        // Add depth and return the physics body
+        const depthMap = { ground: 5, low: 4, high: 2 };
+        const depth = depthMap[elevation] || 1;
+        terrainGroup_Local.setDepth(depth)
+
+        //
+
+        terrainGroup_Local.children.iterate(sprite => {
+            terrainEndX += sprite.width;
+        });
+
+        // Assuming you have a group named terrainGroup_Local
+        const firstChild = terrainGroup_Local.getFirst(true);
+        firstChild.terrainStart = true
+        // Assuming you have a group named terrainGroup_Local
+        const lastChild = terrainGroup_Local.getLast(true);
+        lastChild.terrainEnd = true
+
+        let terrainGroupWidth = lastChild.x + lastChild.width - terrainStartX
+
+        terrainGroup_Local.terrainGroupWidth = terrainGroupWidth
+        
+        this.terrainGroupsTilesprites.add(terrainGroup_Local)
+        // Return the terrain group
+        return terrainGroup_Local;
+    }
+
+    generateTerrainConfig(maxLandWidth, maxLandHeight){
+        let availableLandWidth = maxLandWidth
+        const heightBufferZone = this.scene.scale.height * 0.1
+        const absoluteMaxHeight = this.scene.scale.height - heightBufferZone
+        const maximumLandHeight = Math.min(maxLandHeight, absoluteMaxHeight)
+        let availableLandHeight = maximumLandHeight
+
+        // Initialise config packet
+        const terrainConfig = []
+        const tileSize = 16
+        const header_footerWidth = 80
+
+        // Mappings for terrain generation - based on previous segment
+        const typeMappings = {
+            flat: ['slope', 'wall'],
+            slope: ['flat'], 
+            wall: ['flat'], 
+        };
+        const yDirections = ['up', 'down'];
+
+        // Max and min length constraints for the segments
+            const minSegmentLength = 64; // minimum length of each segment
+            const maxSegmentLength = 320; // maximum length of each segment
+            const maxHeightChange_Wall_Up = 125; // maximum allowed height change for slopes or walls
+
+        // Create terrain header
+        //console.log('Generating config for terrain header...')
+            // Wall
+            let type = 'wall'
+            let length = 32
+            let yDirection = 'up'
+            let xDirection = 'left'
+            let populationConfig = null
+
+            // Push to config
+            terrainConfig.push({ type, length, yDirection, xDirection});
+
+            // Update available land space
+            availableLandHeight -= length 
+            availableLandWidth -= tileSize 
+
+            // Flat
+            type = 'flat'
+            length = header_footerWidth - tileSize
+            xDirection = null
+            yDirection = null
+
+            // Push header to config
+            terrainConfig.push({ type, length, yDirection, xDirection });
+            
+            // Update available land space
+            availableLandHeight -= tileSize
+            availableLandWidth -= length
+
+        // Generate remaining terrain based on algo and parameters
+        //console.log('Generating config for terrain body...')
+
+            while (availableLandWidth > header_footerWidth){
+            //console.log('Available Terrain Width: ' + availableLandWidth)
+            //console.log('Available Terrain Height: ' + availableLandHeight)
+            //console.log('Generating terrain segment...')
+            // Generation Logic
+            // Confirm last segment
+            let previousSegment = terrainConfig.length > 0 ? terrainConfig[terrainConfig.length - 1] : null
+            // Select next segment type
+            type = typeMappings[previousSegment.type][Math.floor(Math.random() * typeMappings[previousSegment.type].length)];
+            // Set segment direction parameters
+            yDirection = null
+            xDirection = null
+                // Set Y Direction based on available land height space
+                if(type != 'flat'){
+                    yDirection = yDirections[Math.floor(Math.random() * yDirections.length)]
+                    // Override if up/down limit reached
+                    if(availableLandHeight >= maximumLandHeight - tileSize * 3) yDirection = 'up'
+                    if(availableLandHeight <= 0) yDirection = 'down'
+                }
+                // Set X Direction for wall based on y Direction
+                if (type == 'wall'){
+                    xDirection = yDirection == 'up'? 'left' : 'right'
+                }
+
+            // Set length based on available land width/height space
+                // Initialise contraints and set based on type
+                let minLengthContraint = tileSize
+                let maxLengthConstraint = tileSize
+                // Flat
+                if(type == 'flat'){
+                    minLengthContraint = Math.min(minSegmentLength, availableLandWidth)
+                    maxLengthConstraint = Math.min(maxSegmentLength, availableLandWidth)
+                }
+                // Wall
+                if(type == 'wall'){
+                    if(yDirection == 'up'){
+                        minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandHeight), tileSize)
+                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandHeight), tileSize)
+                        maxLengthConstraint = Math.min(maxLengthConstraint, maxHeightChange_Wall_Up)
+                    } else if (yDirection == 'down'){
+                        minLengthContraint = Math.max(Math.min(minSegmentLength, maxLandHeight - availableLandHeight),tileSize)
+                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, maxLandHeight - availableLandHeight - tileSize * 5), tileSize)
                     }
+                    
+                }
+                // Slope
+                if(type == 'slope'){
+                    if(yDirection == 'up'){
+                        minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandWidth, availableLandHeight), tileSize)
+                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandHeight, availableLandHeight), tileSize)
+                    } else if (yDirection == 'down'){
+                        minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandWidth, maxLandHeight - availableLandHeight ), tileSize)
+                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandHeight, maxLandHeight - availableLandHeight - tileSize * 5), tileSize)
+                    }
+                }
+
+            length = Phaser.Math.Between(minLengthContraint, maxLengthConstraint)
+
+            // Set Terrain Objects that can be populated
+                // Add Population Logic
+            populationConfig = ['obstacle', 'loot', 'enemy']
+            
+            // Push data to config
+                //console.log(`Pushing ${type} to terrain config`)
+            terrainConfig.push({ type, length, yDirection, xDirection, populationConfig });
+            
+            // Update available land space
+            if(yDirection == 'up'){
+                availableLandHeight -= type != 'flat'? length : tileSize
+            } else if (yDirection == 'down') {
+                availableLandHeight += type != 'flat'? length : tileSize
+            } 
+            availableLandWidth -= type != 'wall'? length: tileSize
+            }
+        
+        // Create terrain footer
+        //console.log('Generating config for terrain footer...')
+            // Flat
+            type = 'flat'
+            length = header_footerWidth - tileSize
+            xDirection = null
+            yDirection = null
+
+            // Push header to config
+            //console.log(`Pushing ${type} to terrain config`)
+            terrainConfig.push({ type, length, yDirection, xDirection });
+
+            // Update available land space
+            availableLandHeight -= tileSize
+            availableLandWidth -= length
+
+            // Wall
+            type = 'wall'
+            length = 32
+            yDirection = 'down'
+            xDirection = 'right'
+
+            // Push to config
+            //console.log(`Pushing ${type} to terrain config`)
+            terrainConfig.push({ type, length, yDirection, xDirection});
+
+            // Update available land space
+            availableLandHeight -= length 
+            availableLandWidth -= tileSize 
+
+            console.log('Terrain Config Generated successfully', terrainConfig)
+            return terrainConfig
+            
+    }
+
+    updateTerrainPosition() {
+        let repositionSpeed = this.scene.baseSpeed
+        // Move all terrain physics objects and update
+        Object.values(this.terrainGroupsPhysics).forEach(terrainGroup => {
+            terrainGroup.children.iterate((object) => {
+                if(object){
+                object.x -= repositionSpeed; // Move each container
+
+
+                if (object.body) {
+                    object.body.updateFromGameObject();
+                }
+
+                if(object){
+                if (object.x < -this.scene.scale.width * 0.5) {
+                    object.destroy() 
+                    //console.log('Physics object destroyed')
+                }
+                }
+            }
+             
             });
+        });
+
+        // Move all terrain tilesprite objects
+        this.terrainGroupsTilesprites.getChildren().forEach(tileGroup => {
+
+                tileGroup.getChildren().forEach(tileSprite => {
+
+                if(tileSprite){
+                    // Move each TileSprite to the left
+                    tileSprite.x -= repositionSpeed;  // Adjust the value (-1) for the speed you want
+            
+                    if(tileSprite){
+                    // Geenerate new terrain
+                    if (tileSprite.terrainEnd && tileSprite.x + tileSprite.width < this.scene.scale.width && !tileGroup.generateNewTerrain) {
+                        tileGroup.generateNewTerrain = true
+                        this.generateTerrain((this.scene.scale.width + this.scene.scale.width * 0.125) *
+                                Phaser.Math.FloatBetween(
+                                    this.chaosFactorSettings.ground.chaosLowerBound,
+                                    this.chaosFactorSettings.ground.chaosUpperBound
+                                ),
+                                'ground'
+                        );
+                    }
+
+                    // Destroy
+                    if (tileSprite.x < -tileSprite.width - this.scene.scale.width * 0.1 ) {
+                        tileSprite.destroy() 
+                        //console.log('Tilesprite destroyed')
+                    }
+
+                    }
+                }
+            });
+        });
+
+    }
+
+    generateStartTerrain(){
+        // Start Zone Set Up
+        this.generateTerrain(0, 'ground', [
+            { type: 'flat', length: config.width * 0.25},                 
+            { type: 'slope', length: config.height * 0.05, yDirection: 'up'},  
+            { type: 'flat', length: config.width * 0.05},                 
+            { type: 'slope', length: config.height * 0.05, yDirection: 'up' }, 
+            { type: 'flat', length: config.width * 0.15},                
+            { type: 'wall', length: config.height * 0.05, yDirection: 'up' },  
+            { type: 'flat', length: config.width * 0.1},                 
+            { type: 'wall', length: config.height * 0.05, yDirection: 'up' }, 
+            { type: 'flat', length: config.width * 0.1},
+            { type: 'slope', length: config.height * 0.1, yDirection: 'up' },
+            { type: 'flat', length: config.width * 0.2}, 
+            // Switch to Mode 1
+            { type: 'flat', length: config.width * 0.35},    
+            { type: 'wall', length: config.height * 0.1, yDirection: 'down' },
+            { type: 'flat', length: config.width * 0.1},
+            { type: 'slope', length: config.height * 0.1, yDirection: 'down' },
+            { type: 'flat', length: config.width * 0.4},    
+            { type: 'wall', length: config.height * 0.05, yDirection: 'down' },                  
+        ]);
+
+        const starterMajorReward = this.scene.add.image(config.width * 0.9, (config.height * 0.69) - (config.width * 0.1), 'majorRewardShrine')
+        .setOrigin(0.5, 1)
+        .setDisplaySize(config.width * 0.1,config.width * 0.1)
+        .setDepth(5);
+        const unactivatedShrineEffect = this.scene.add.sprite(starterMajorReward.x - (starterMajorReward.displayWidth * 0.27), starterMajorReward.y - (starterMajorReward.displayHeight * 0.875))
+        unactivatedShrineEffect.setDepth(5).setAlpha(0.5)
+        unactivatedShrineEffect.anims.play('animation_MajorReward');  // Start the animation created earlier
+
+        // Add check in the update method
+        this.scene.events.on('update', () => {
+            if (this.scene.avatarManager.sprite.x >= starterMajorReward.x && !this.scene.stageStart) { 
+            this.scene.scene.pause(); // Pause this scene
+            this.scene.scene.launch('BlessingsScreen', 
+                { 
+                mainScene: this.scene, 
+                avatar: this.scene.avatarManager, 
+                blessingsConfig:{numOptions: 3, type: 'skill', category: 'random', maxRarity: 'uncommon'} }); // Launch the pause menu scene
+            this.scene.scene.bringToTop('BlessingsScreen');
+                
+            } else if (this.scene.stageStart && !this.scene.starterBlessingSelected){
+                this.scene.starterBlessingSelected = true
+                this.scene.stageProgressionActive = true
+
+                this.scene.cameraManager.mainCamera.flash(500, 48, 25, 52)
+                unactivatedShrineEffect.destroy()
+
+                this.scene.avatarManager.mode = 0
+
+                // Register the update event for the scene
+                this.scene.events.on('update', () => {
+                    if(this.scene.avatarManager.sprite.x >= this.scene.avatarManager.xRepositionUpperBound){
+                        this.scene.avatarManager.sprite.x -= 2.5
+                    }
+                    if(starterMajorReward.x + starterMajorReward.displayWidth / 2 > 0){
+                        starterMajorReward.x -= this.scene.baseSpeed
+                    } else {
+                        starterMajorReward.destroy()
+                        this.scene.messageBox.destroy()
+                        this.scene.message.destroy()
+                    }
+                });
+
+
+                
+ 
+            }
         });
     }
 
 
+  
 
 }
+
+
+
+
