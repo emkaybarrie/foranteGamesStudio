@@ -147,7 +147,7 @@ export default class TerrainManager {
 
         }
     
-    generateTerrain(x, elevation = 'ground', slopeConfig = this.generateTerrainConfig(this.scene.scale.width * Phaser.Math.Between(1, 2), this.scene.scale.height * 0.65)) { 
+    generateTerrain(x, elevation = 'ground', slopeConfig = this.generateTerrainConfig(this.scene.scale.width * Phaser.Math.Between(1, 2), this.scene.scale.height * 0.6)) { 
         // Tile indices for flat, sloped, and fill terrain
         const tileIndices = {
             flat: { ground: 1 },
