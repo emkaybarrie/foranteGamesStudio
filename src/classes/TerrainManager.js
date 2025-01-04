@@ -909,7 +909,7 @@ export default class TerrainManager {
             { type: 'wall', length: config.height * 0.1, yDirection: 'down' },
             { type: 'flat', length: config.width * 0.1},
             { type: 'slope', length: config.height * 0.1, yDirection: 'down' },
-            { type: 'flat', length: config.width * 0.4},    
+            { type: 'flat', length: config.width * 0.45},    
             { type: 'wall', length: config.height * 0.05, yDirection: 'down' },                  
         ]
 
