@@ -16,7 +16,7 @@ export default class TerrainManager {
 
         // Chaos Factor Settings - Determine variance for terrain generation
         this.chaosFactorSettings = {
-            ground: { chaosLowerBound: 0.95, chaosUpperBound: 1.15},
+            ground: { chaosLowerBound: 0.95, chaosUpperBound: 1.05},
             low: { chaosLowerBound: 0.95, chaosUpperBound: 1.05 },
             medium: { chaosLowerBound: 0.90, chaosUpperBound: 1.075 },
             high: { chaosLowerBound: 0.85, chaosUpperBound: 1.10 }
@@ -124,12 +124,13 @@ export default class TerrainManager {
                     if(terrain.yDirection == 'up'){
                         avatar.sprite.y -= 1; // Small adjustment upwards
                         if(avatar.traversalSpeedModifier > 50){
-                            avatar.traversalSpeedModifier -= 0.5
+                            avatar.traversalSpeedModifier -= 0.35
                         }
                     } else if (terrain.yDirection == 'down'){
                         avatar.sprite.y += 2; // Small adjustment upwards
+                        avatar.sprite.setVelocityY(200)
                         if(avatar.traversalSpeedModifier < 300){
-                        avatar.traversalSpeedModifier += 7.5
+                        avatar.traversalSpeedModifier *= 1.05
                         }
                     }
                     
@@ -146,7 +147,7 @@ export default class TerrainManager {
 
         }
     
-    generateTerrain(x, elevation = 'ground', slopeConfig = this.generateTerrainConfig(this.scene.scale.width, this.scene.scale.height * 0.65)) { 
+    generateTerrain(x, elevation = 'ground', slopeConfig = this.generateTerrainConfig(this.scene.scale.width * Phaser.Math.Between(1, 2), this.scene.scale.height * 0.65)) { 
         // Tile indices for flat, sloped, and fill terrain
         const tileIndices = {
             flat: { ground: 1 },
@@ -302,11 +303,11 @@ export default class TerrainManager {
                 // Create Population Data for Segment
                 if(populationConfig && populationConfig.length > 0){
                     // // Get bounds for segment
-                     let boundsMin = segmentStart + segmentWidth * 0.15
-                     let boundsMax = segmentStart + segmentWidth * 0.85
+                     let boundsMin = segmentStart + segmentWidth * 0.2
+                     let boundsMax = segmentStart + segmentWidth * 0.8
 
                     // Number of random items to pick
-                    const numItemsToPick = Phaser.Math.Between(0, Math.max(1, populationConfig.length - 2)); // Replace with the desired number of items
+                    const numItemsToPick = Phaser.Math.Between(Phaser.Math.Between(0,1), Math.max(1, populationConfig.length - 2)); // Replace with the desired number of items
 
                     // Shuffle the populationConfig array to randomize order
                     const shuffledConfig = Phaser.Utils.Array.Shuffle([...populationConfig]);
@@ -316,15 +317,17 @@ export default class TerrainManager {
 
                     // For each selected item, add it to terrainObjects
                     selectedItems.forEach(configItem => {
-                        let xPlacement = Phaser.Math.FloatBetween(boundsMin, boundsMax);
-                        let topOfBody = currentY - desiredTileSize;
+                        if (configItem != 'loot' && segmentWidth > config.width * 0.1 || configItem == 'loot'){
+                            let xPlacement = Phaser.Math.FloatBetween(boundsMin, boundsMax);
+                            let topOfBody = currentY - desiredTileSize;
 
-                        // Set X and Y based on segment
-                        terrainObjects.push({
-                            x: xPlacement,
-                            y: topOfBody,
-                            type: configItem
-                        });
+                            // Set X and Y based on segment
+                            terrainObjects.push({
+                                x: xPlacement,
+                                y: topOfBody,
+                                type: configItem
+                            });
+                        }
                     });
 
 
@@ -398,24 +401,6 @@ export default class TerrainManager {
                     originX = 1
                 } 
             
-                // for (let i = 0; i < numSteps; i++){
-                //     const x = segmentStart + i * stepWidth
-                //     const y = segmentStartY - i * stepHeight
-                //     const terrainPhysicsBodySegment = this.terrainGroupsPhysics[elevation].create(x, y, null)
-                //     terrainPhysicsBodySegment.setOrigin(originX, originY)
-                //     terrainPhysicsBodySegment.displayWidth = stepWidth
-                //     terrainPhysicsBodySegment.displayHeight = stepHeight
-                //     terrainPhysicsBodySegment.body.setSize(stepWidth, stepHeight)
-                //     terrainPhysicsBodySegment.setImmovable(true)
-                //     terrainPhysicsBodySegment.body.allowGravity = false
-                //     terrainPhysicsBodySegment.body.checkCollision.down = false
-
-                //     terrainPhysicsBodySegment.setVisible(false)
-
-                //     // Tag Physics Body 
-                //     terrainPhysicsBodySegment.type = type
-                //     terrainPhysicsBodySegment.direction = yDirection
-                // }
 
                 for (let i = 0; i < numSteps; i++) {
                     physicsBodies.push({
@@ -688,7 +673,7 @@ export default class TerrainManager {
 
         // Mappings for terrain generation - based on previous segment
         const typeMappings = {
-            flat: ['slope', 'wall'],
+            flat: ['slope','wall'],
             slope: ['flat'], 
             wall: ['flat'], 
         };
@@ -732,9 +717,6 @@ export default class TerrainManager {
         //console.log('Generating config for terrain body...')
 
             while (availableLandWidth > header_footerWidth){
-            //console.log('Available Terrain Width: ' + availableLandWidth)
-            //console.log('Available Terrain Height: ' + availableLandHeight)
-            //console.log('Generating terrain segment...')
             // Generation Logic
             // Confirm last segment
             let previousSegment = terrainConfig.length > 0 ? terrainConfig[terrainConfig.length - 1] : null
@@ -747,7 +729,7 @@ export default class TerrainManager {
                 if(type != 'flat'){
                     yDirection = yDirections[Math.floor(Math.random() * yDirections.length)]
                     // Override if up/down limit reached
-                    if(availableLandHeight >= maximumLandHeight - tileSize * 3) yDirection = 'up'
+                    if(availableLandHeight >= maximumLandHeight - minSegmentLength) yDirection = 'up'
                     if(availableLandHeight <= 0) yDirection = 'down'
                 }
                 // Set X Direction for wall based on y Direction
@@ -771,8 +753,8 @@ export default class TerrainManager {
                         maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandHeight), tileSize)
                         maxLengthConstraint = Math.min(maxLengthConstraint, maxHeightChange_Wall_Up)
                     } else if (yDirection == 'down'){
-                        minLengthContraint = Math.max(Math.min(minSegmentLength, maxLandHeight - availableLandHeight),tileSize)
-                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, maxLandHeight - availableLandHeight - tileSize * 5), tileSize)
+                        minLengthContraint = Math.max(Math.min(minSegmentLength, Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)),tileSize)
+                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)), tileSize)
                     }
                     
                 }
@@ -780,14 +762,19 @@ export default class TerrainManager {
                 if(type == 'slope'){
                     if(yDirection == 'up'){
                         minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandWidth, availableLandHeight), tileSize)
-                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandHeight, availableLandHeight), tileSize)
+                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandWidth, availableLandHeight), tileSize)
                     } else if (yDirection == 'down'){
-                        minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandWidth, maxLandHeight - availableLandHeight ), tileSize)
-                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandHeight, maxLandHeight - availableLandHeight - tileSize * 5), tileSize)
+                        minLengthContraint = Math.max(Math.min(minSegmentLength, Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)), tileSize)
+                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)), tileSize)
                     }
                 }
 
-            length = Phaser.Math.Between(minLengthContraint, maxLengthConstraint)
+            length = Phaser.Math.Between(minLengthContraint, maxLengthConstraint)   
+            
+            // Attempt to set length to shorter if low to avoid bug of generating downwards terrain
+            if (length > Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)  && (type == 'wall' || type == 'slope') && yDirection == 'down'){
+                length = tileSize
+            }
 
             // Set Terrain Objects that can be populated
                 // Add Population Logic
@@ -799,10 +786,12 @@ export default class TerrainManager {
             
             // Update available land space
             if(yDirection == 'up'){
-                availableLandHeight -= type != 'flat'? length : tileSize
+                availableLandHeight -= length//type != 'flat'? length : tileSize
             } else if (yDirection == 'down') {
-                availableLandHeight += type != 'flat'? length : tileSize
-            } 
+                availableLandHeight += length//type != 'flat'? length : tileSize
+            } else if (previousSegment.type == 'wall' && previousSegment.yDirection == 'up' && type == 'flat'){
+                availableLandHeight -= tileSize
+            }
             availableLandWidth -= type != 'wall'? length: tileSize
             }
         
@@ -902,7 +891,8 @@ export default class TerrainManager {
 
     generateStartTerrain(){
         // Start Zone Set Up
-        this.generateTerrain(0, 'ground', [
+
+        const startTerrainConfig = [
             { type: 'flat', length: config.width * 0.25},                 
             { type: 'slope', length: config.height * 0.05, yDirection: 'up'},  
             { type: 'flat', length: config.width * 0.05},                 
@@ -921,11 +911,25 @@ export default class TerrainManager {
             { type: 'slope', length: config.height * 0.1, yDirection: 'down' },
             { type: 'flat', length: config.width * 0.4},    
             { type: 'wall', length: config.height * 0.05, yDirection: 'down' },                  
-        ]);
+        ]
 
-        const starterMajorReward = this.scene.add.image(config.width * 0.9, (config.height * 0.69) - (config.width * 0.1), 'majorRewardShrine')
+        this.generateTerrain(0, 'ground', startTerrainConfig);
+
+        let totalHeight = 0
+
+        startTerrainConfig.forEach(segment => {
+            if (segment.yDirection === 'up' && segment.length) {
+                totalHeight += segment.length; // Accumulate height for upward segments
+            }
+        });
+
+        console.log(totalHeight)
+        const highestPoint = config.height - totalHeight
+        const starterMajorRewardSize = config.width * 0.1
+
+        const starterMajorReward = this.scene.add.image(config.width * 0.9, highestPoint - starterMajorRewardSize + 48, 'majorRewardShrine')
         .setOrigin(0.5, 1)
-        .setDisplaySize(config.width * 0.1,config.width * 0.1)
+        .setDisplaySize(starterMajorRewardSize, starterMajorRewardSize)
         .setDepth(5);
         const unactivatedShrineEffect = this.scene.add.sprite(starterMajorReward.x - (starterMajorReward.displayWidth * 0.27), starterMajorReward.y - (starterMajorReward.displayHeight * 0.875))
         unactivatedShrineEffect.setDepth(5).setAlpha(0.5)

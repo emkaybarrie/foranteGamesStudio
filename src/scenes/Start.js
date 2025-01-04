@@ -143,12 +143,12 @@ export default class Start extends Phaser.Scene {
 
     showUpdateLog() {
         // Create a background for the text box (optional)
-        this.textBoxBackground = this.add.rectangle(20, 20, 300, 120, 0x000000, 0.5)
+        this.updateLogBox = this.add.rectangle(config.width * 0.01, config.height * 0.01, config.width * 0.23, config.height * 0.1 , 0x000000, 0.5)
             .setOrigin(0, 0)
             .setStrokeStyle(2, 0xffffff); // Adds a white border
         
         // Create the text object
-        this.updateLog = this.add.text(30, 30, '', {
+        this.updateLog = this.add.text(this.updateLogBox.x + config.width * 0.005,this.updateLogBox.y + config.height * 0.005, '', {
             fontSize: '14px',
             fill: '#ffffff',
             wordWrap: { width: config.width * 0.25 },

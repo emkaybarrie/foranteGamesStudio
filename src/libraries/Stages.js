@@ -9,7 +9,7 @@ const stageLibrary = {
                             zoneId: 1,
                             sectorId: 1,
                             numberOfLayers: 9, 
-                            parallaxSpeeds: [1, 0.35, 0.9, 0.85, 0.65, 0.35, 0.1, 0.05, 0.01], 
+                            parallaxSpeeds: [0.2, 0.05, 0.15, 0.15, 0.1, 0.05, 0.025, 0.005, 0.001], 
                             otherInfo: {} 
                       },
                   }
@@ -34,6 +34,18 @@ const stageLibrary = {
                       },
                   }
               },
+              3: {
+                sectors: {
+                    1: {  name: 'Enarian Pass',
+                          regionId: 1,
+                          zoneId: 3,
+                          sectorId: 1,
+                          numberOfLayers: 4, 
+                          parallaxSpeeds: [0.025, 0.0125, 0.006, 0.005],  
+                          otherInfo: {} 
+                    },
+                }
+            },
           }
       },
       2: {
@@ -57,11 +69,11 @@ export function getStageConfigData(options = {}, stageLibraryData = stageLibrary
   const { regionId, zoneId, sectorId } = options;
 
   // Fetch available regions, zones, and sectors
-  const regions = Object.keys(stageLibrary.regions);
+  const regions = Object.keys(stageLibraryData.regions);
   const getRandom = (array) => array[Math.floor(Math.random() * array.length)];
 
   // Determine the target region
-  const region = regionId ? stageLibrary.regions[regionId] : stageLibrary.regions[getRandom(regions)];
+  const region = regionId ? stageLibraryData.regions[regionId] : stageLibraryData.regions[getRandom(regions)];
   if (!region) throw new Error(`Region ${regionId || 'random'} not found.`);
 
   const zones = Object.keys(region.zones);

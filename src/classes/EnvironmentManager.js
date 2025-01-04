@@ -18,6 +18,14 @@ export default class EnvironmentManager {
         this.layers.forEach(layer => layer.destroy());
         this.layers = [];
 
+        // Remove old textures to allow reloading
+        for (let layerNumber = 1; layerNumber <= numberOfLayers; layerNumber++) {
+            const textureKey = `stage_BGlayer_${layerNumber}`;
+            if (this.scene.textures.exists(textureKey)) {
+                this.scene.textures.remove(textureKey);
+            }
+        }
+
         // Calculate screen width and height to scale the images accordingly
         const { width, height } = this.scene.scale;
 
@@ -66,6 +74,10 @@ export default class EnvironmentManager {
     initiateParallaxEffect(parallaxSpeeds) {
         this.parallaxSpeeds = parallaxSpeeds.slice().reverse();
 
+        // Remove any existing update event to prevent stacking listeners
+        this.scene.events.off('update', this.manageEnvironment, this);
+
+
         // Register the update event for parallax scrolling
         this.scene.events.on('update', this.manageEnvironment, this);
     }
@@ -77,5 +89,6 @@ export default class EnvironmentManager {
             layer.tilePositionX += this.scene.baseSpeed * speedFactor;
         });
     }
+
 }
 

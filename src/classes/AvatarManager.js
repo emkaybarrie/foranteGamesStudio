@@ -12,7 +12,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.sprite.setScale(1)
 
         // Physics properties
-        this.sprite.setBounce(0.1); // Bounce effect
+        this.sprite.setBounce(0); // Bounce effect
         this.sprite.setCollideWorldBounds(false); 
         this.sprite.setMaxVelocity(500,2000)
         this.sprite.setDragX(2000); // Lower drag in air
@@ -225,7 +225,7 @@ export default class AvatarManager extends Phaser.Events.EventEmitter {
         this.movementSpeed_Air = Math.min(250 + (150  * ((this.adaptability - 100)/ 100)),650)
         this.repositionSpeed = Math.min(200 + (200  * ((this.adaptability - 100)/ 100)),450)
         this.repositionSpeedAir = Math.min(150 + (200  * ((this.adaptability - 100)/ 100)), 350)
-        this.traversalSpeed = Math.min(((this.movementSpeed * 0.01) + (5  * ((this.adaptability - 100)/ 100))), 20)
+        this.traversalSpeed = Math.min(((this.movementSpeed * 0.0125) + (5  * ((this.adaptability - 100)/ 100))), 20)
         this.jumpSpeed = Math.min(500 + (100 * ((this.adaptability - 100) / 100)),750)
         this.hangTimeSpeed =  Math.min(25 + (20 * ((this.adaptability - 100)/ 100)),50)
         this.hangTime = Math.min(150 + (150 * ((this.adaptability - 100) / 100)), 2000)

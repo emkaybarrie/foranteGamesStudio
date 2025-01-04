@@ -18,12 +18,12 @@ export default class ObstacleManager {
         obstacle.body.setImmovable(true);
         obstacle.body.allowGravity = false;
 
-        obstacle.setScale(Phaser.Math.FloatBetween(0.75,1))
+        obstacle.setScale(Phaser.Math.FloatBetween(0.75,1.25))
 
         // Scale and adjust physics 
         obstacle.setSize(obstacle.width, obstacle.height * 0.8);
          // Additional effects for appearance, like tint or rotation, if desired
-         obstacle.setTint(0xff0000); // Example red tint for visibility
+         //obstacle.setTint(0xff0000); // Example red tint for visibility
 
          // Set properties based on options
         obstacle.passThrough = options.passThrough || true;

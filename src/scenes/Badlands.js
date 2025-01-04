@@ -12,6 +12,8 @@ import CameraManager from '../classes/CameraManager.js';
 import UIManager from '../classes/UIManager.js';
 import { getStageConfigData } from '../libraries/Stages.js';
 
+const fontSizeScaling = config.width / 1920
+
 const musicList = {
     1:'142',
     2:'Blame Brett',
@@ -262,7 +264,7 @@ export default class Badlands extends Phaser.Scene {
         }, 1000);
 
         // Currently stubbed - Add function to get stageConfig when based on desired stage
-        this.stageConfig = getStageConfigData({regionId: 1, zoneId: 2})
+        this.stageConfig = getStageConfigData({regionId: 1, zoneId: this.stage})
 
         // Element Groups
 
@@ -324,13 +326,14 @@ export default class Badlands extends Phaser.Scene {
 
     showMessageBox() {
         // Create a background for the text box (optional)
-        this.messageBox = this.add.rectangle(config.width * 0.1, config.height * 0.3, config.width * 0.225, config.height * 0.35, 0x000000, 0.5)
+        this.messageBox = this.add.rectangle(config.width * 0.025, config.height * 0.3, config.width * 0.225, config.height * 0.2, 0x000000, 0.5)
             .setOrigin(0, 0)
             .setStrokeStyle(2, 0xffffff); // Adds a white border
         
         // Create the text object
-        this.message = this.add.text(this.messageBox.x + 10, this.messageBox.y + 10, '', {
-            fontSize: '14px',
+        const fontSize = 14 * fontSizeScaling
+        this.message = this.add.text(this.messageBox.x + config.width * 0.005, this.messageBox.y + config.height * 0.005, '', {
+            fontSize: fontSize,
             fill: '#ffffff',
             wordWrap: { width: config.width * 0.22 },
             lineSpacing: 8 // Adds spacing between lines
@@ -363,6 +366,23 @@ export default class Badlands extends Phaser.Scene {
         if(this.stageProgress > this.stageLength ){
             this.stage += 1
             this.stageProgress = 0
+
+            // Stub - stage length and speed
+            this.avatarManager.adaptability += 15
+            this.avatarManager.refreshStats()
+            this.stageLength *= 1.1
+
+
+            if(this.stage <= 3 ){
+                this.stageConfig = getStageConfigData({regionId: 1, zoneId: this.stage})
+                this.environmentManager.loadBackgroundTextures(
+                    this.stageConfig.regionId, 
+                    this.stageConfig.zoneId, 
+                    this.stageConfig.sectorId, 
+                    this.stageConfig.numberOfLayers, 
+                    this.stageConfig.parallaxSpeeds
+                )
+            }
         }
     }
 
@@ -412,6 +432,21 @@ export default class Badlands extends Phaser.Scene {
         this.score = 0
         this.stageProgress = 0
         this.stage = 1
+
+        this.stageConfig = getStageConfigData({regionId: 1, zoneId: this.stage})
+        this.environmentManager.loadBackgroundTextures(
+            this.stageConfig.regionId, 
+            this.stageConfig.zoneId, 
+            this.stageConfig.sectorId, 
+            this.stageConfig.numberOfLayers, 
+            this.stageConfig.parallaxSpeeds
+        )
+
+        // Stub
+        this.avatarManager.vitality = 100 + this.playerData.vitality
+        this.avatarManager.focus = 100 +this.playerData.focus
+        this.avatarManager.adaptability = 100 + this.playerData.adaptability
+        this.avatarManager.refreshStats()
 
         // Update the texts
         this.scoreText.setText(`Score: ${this.score}`);
