@@ -772,7 +772,7 @@ export default class TerrainManager {
             length = Phaser.Math.Between(minLengthContraint, maxLengthConstraint)   
             
             // Attempt to set length to shorter if low to avoid bug of generating downwards terrain
-            if (length > Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)  && (type == 'wall' || type == 'slope') && yDirection == 'down'){
+            if (length > Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength * 2.5)  && (type == 'wall' || type == 'slope') && yDirection == 'down'){
                 length = tileSize
             }
 
