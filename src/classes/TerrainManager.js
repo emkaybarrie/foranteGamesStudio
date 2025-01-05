@@ -900,6 +900,7 @@ export default class TerrainManager {
         function generateSegmentsForLandscape(landscapeKey = 'plain') {
             // Retrieve the landscape from the library
             landscape = getLandscapeData(landscapeKey);
+            landscapeLog.push(landscape)
         
             if (!landscape) {
                 console.error(`Landscape with key "${landscapeKey}" not found.`);
@@ -915,6 +916,9 @@ export default class TerrainManager {
             }
         
             const { baseWidth, baseHeight } = dimensionsData;
+
+            // Update active landscapeLog entry with segment series start index
+            landscapeLog[landscapeLog.length - 1].segementStartIndex = terrainDesign.length
         
             // Loop through numbered anchor points
             Object.keys(anchorPoints).forEach(pointKey => {
@@ -928,16 +932,13 @@ export default class TerrainManager {
                     segmentMax = {}
                 } = anchorPoint;
         
-                // Calculate available space for segment series (to anchor point)
-                let segmentSeries_AvailableSpace_Ahead = null
-                let segmentSeries_AvailableSpace_Up = null
-                let segmentSeries_AvailableSpace_Down = null
-                    segmentSeries_AvailableSpace_Ahead = baseWidth * xRelativeBound;
-                if (yDirection == 'up'){
-                    segmentSeries_AvailableSpace_Up = baseHeight * yRelativeBound;
-                } else if (yDirection == 'down'){
-                    segmentSeries_AvailableSpace_Down = baseHeight * yRelativeBound;
-                }
+                // Calculate targetX and Y values to anchor point for segment series
+                const anchorTargetX = baseWidth * xRelativeBound;
+                const anchorTargetY = baseHeight * yRelativeBound;
+
+                const segmentSeries_currentX = 0
+                const segmentSeries_currentY = 0
+                
         
                 // Retrieve or fallback to global segment constraints
                 const minSegments = {
@@ -951,58 +952,156 @@ export default class TerrainManager {
                     slope: segmentMax.slope,
                     wall: segmentMax.wall
                 };
+
+                // Placeholder for additional data to be passed to segment series generation
         
                 // Generate segments towards the anchor point
-                console.log(`Generating segments for anchor point ${pointKey}:`);
-                console.log(`Target X: ${targetX}, Target Y: ${targetY}, Direction: ${yDirection}`);
-                console.log(`Min Segments:`, minSegments);
-                console.log(`Max Segments:`, maxSegments);
-        
-                // Segment generation logic here
-                // For example, create random segments that meet constraints
-                // while connecting the current point to the target point
-                // (Implementation would depend on specific segment-generation rules)
-        
-                // Example placeholder for actual segment generation
-                const segments = [];
-                segments.push({
-                    type: "flat",
-                    startX: 0,
-                    startY: 0,
-                    endX: targetX,
-                    endY: targetY,
-                });
-        
-                console.log(`STUB - Generated segments:`, segments);
+                // console.log(`Generating segments for anchor point ${pointKey}:`);
+                // console.log(`Target X: ${anchorTargetX}, Target Y: ${anchorTargetY}, Direction: ${yDirection}`);
+                // console.log(`Min Segments:`, minSegments);
+                // console.log(`Max Segments:`, maxSegments);
+
+                // Pass data to segment generation function
+                generateSegmentSeries(anchorTargetX, anchorTargetY, yDirection, minSegments, maxSegments, segmentSeries_currentX, segmentSeries_currentY)
+
             });
+
+            // Update active landscapeLog entry with segment series last index
+            landscapeLog[landscapeLog.length - 1].segementEndIndex = terrainDesign.length - 1
         }
 
-        function addSegmentToDesign(segmentData){
-            // Add Segment Data to Design
-            terrainDesign.push(segmentData);
-            // Confirm New X and Y Positions for Next Segment (i.e segment end point)
-            currentXPosition += segmentData.type == ('flat' || 'slope') ? segmentData.length : 0;
-            currentYPosition += segmentData.yDirection ==  'down' ? segmentData.length : segmentData.yDirection == 'up'? -segmentData.length : 0;
-            // Log for Debugging
-            // console.log(
-            //     'Previous Segment: ',previousSegment,"\n",
-            //     'Adding Segment Type: ' + segmentData.type + "\n",
-            //     'Current X Position for Next Segment:  ' + currentXPosition + "\n",
-            //     'Current Y Position for Next Segment:  ' + currentYPosition
-            // )
-            // Refresh dynamic variables
-            updateGlobalDynamicVariables()
-            // Update Segment Data with Supplementary Data
-            segmentData.currentX = currentXPosition;
-            segmentData.currentY = currentYPosition;
-            segmentData.availableSpace_Ahead = availableSpace_Ahead 
-            segmentData.availableSpace_Up = availableSpace_Up 
-            segmentData.availableSpace_Down = availableSpace_Down 
-            segmentData.directionToBaselineHeight = directionToBaselineHeight 
-            segmentData.distanceToBaselineHeight = distanceToBaselineHeight 
-            // Update previousSegment variable 
-            previousSegment = terrainDesign.length > 0 ? terrainDesign[terrainDesign.length - 1] : null
-        }
+            function generateSegmentSeries(anchorTargetX, anchorTargetY, yDirection, minSegments = null, maxSegments = null, segmentSeries_currentX = 0, segmentSeries_currentY = 0){
+
+                function updateDistanceToTargetX(){
+                    segmentSeries_distanceToTargetX = anchorTargetX - segmentSeries_currentX
+                }
+
+                function updateDistanceToTargetY(){
+                    segmentSeries_distanceToTargetY = anchorTargetY - segmentSeries_currentY
+                }
+
+                console.log('Generating Segment Series...')
+
+                // Initialise Segment Series generation variables
+                let segmentSeries_distanceToTargetX = null
+                let segmentSeries_distanceToTargetY = null
+                let xTargetInScope = anchorTargetX > 0 ? true : false
+                let yTargetInScope = anchorTargetY > 0 ? true : false
+
+                // Set Wall up max length to avoid unclimbable walls
+                const maxHeightChange_Wall_Up = 125; // maximum allowed height change for slopes or walls
+
+                // Clear tileType
+                tileType = null
+
+                // Mappings for terrain generation - based on previous segment
+                const typeMappings = {
+                    flat: ['slope','wall'],
+                    slope: ['flat', 'slope'], 
+                    wall: ['flat', 'slope'], 
+                };  
+
+                // Set distances
+                updateDistanceToTargetX()
+                updateDistanceToTargetY()
+
+                console.log('Generating Segment...')
+                while ((!xTargetInScope || segmentSeries_distanceToTargetX > tileSize) && (!yTargetInScope || segmentSeries_distanceToTargetY > tileSize)){
+                    // Generation Logic
+                    // Select next segment type
+                    tileType = typeMappings[previousSegment.tileType][Math.floor(Math.random() * typeMappings[previousSegment.tileType].length)];
+                    // Override for flat section
+                    if (!yDirection){
+                        tileType = 'flat'
+                    }
+
+                    // Set length based on available land width/height space
+                        // Initialise contraints and set based on type
+                        let minLengthContraint = minSegments[tileType]
+                        let maxLengthConstraint = maxSegments[tileType]
+
+                        // Adjust min and max contraints based on available space
+                        // Flat
+                        if(tileType == 'flat'){
+                            minLengthContraint = Math.min(minLengthContraint, segmentSeries_distanceToTargetX)
+                            maxLengthConstraint = Math.min(maxLengthConstraint, segmentSeries_distanceToTargetX)
+                        }
+                        // Wall
+                        if(tileType == 'wall'){
+                            if(yDirection == 'up'){
+                                minLengthContraint = Math.max(Math.min(minLengthContraint, segmentSeries_distanceToTargetY), tileSize)
+                                maxLengthConstraint = Math.max(Math.min(maxLengthConstraint, segmentSeries_distanceToTargetY, maxHeightChange_Wall_Up), tileSize)
+                            } else if (yDirection == 'down'){
+                                minLengthContraint = Math.max(Math.min(minLengthContraint, segmentSeries_distanceToTargetY),tileSize)
+                                maxLengthConstraint = Math.max(Math.min(maxLengthConstraint, segmentSeries_distanceToTargetY), tileSize)
+                            } 
+                        }
+                        // Slope
+                        if(tileType == 'slope'){
+                                minLengthContraint = Math.max(Math.min(minLengthContraint, segmentSeries_distanceToTargetY, segmentSeries_distanceToTargetX), tileSize)
+                                maxLengthConstraint = Math.max(Math.min(maxLengthConstraint, segmentSeries_distanceToTargetY, segmentSeries_distanceToTargetX), tileSize)
+                        }
+
+                    length = Phaser.Math.Between(minLengthContraint, maxLengthConstraint) 
+                    // Set additional metadata
+                    let linkedLandscape = landscape.name
+
+                    // Package in segment object
+                    segment = {
+                        tileType: tileType,
+                        length: length,
+                        yDirection: yDirection,
+                        linkedLandscape: linkedLandscape
+                    }
+
+                    // Update New X and Y Positions for Next Segment (i.e segment end point)
+                    segmentSeries_currentX += segment.tileType == 'flat' ? length : segment.tileType == 'slope' ? length : 0;
+                    segmentSeries_currentY += segment.tileType != 'flat' ? length : 0;
+                    // Update segment series variables
+                    updateDistanceToTargetX()
+                    updateDistanceToTargetY()
+
+                    // Override yDirection for flat
+                    segment.yDirection = segment.tileType == 'flat' ? null : yDirection
+                    // Add to terrainDesign
+                    addSegmentToDesign(segment)
+
+                }
+
+
+                console.log('Segment Series successfully generated for ' + landscape.name)
+                
+                
+                
+
+            }
+
+                function addSegmentToDesign(segmentData){
+                    // Add Segment Data to Design
+                    terrainDesign.push(segmentData);
+                    // Confirm New X and Y Positions for Next Segment (i.e segment end point)
+                    currentXPosition += segmentData.tileType == 'flat' ? segmentData.length : segmentData.tileType == 'slope' ? segmentData.length : 0;
+                    currentYPosition += segmentData.yDirection ==  'down' ? segmentData.length : segmentData.yDirection == 'up'? -segmentData.length : 0;
+                    // Log for Debugging
+                    // console.log(
+                    //     'Previous Segment: ',previousSegment,"\n",
+                    //     'Adding Segment Type: ' + segmentData.tileType + "\n",
+                    //     'Current X Position for Next Segment:  ' + currentXPosition + "\n",
+                    //     'Current Y Position for Next Segment:  ' + currentYPosition
+                    // )
+                    // Refresh dynamic variables
+                    updateGlobalDynamicVariables()
+                    // Update Segment Data with Supplementary Data
+                    segmentData.currentX = currentXPosition;
+                    segmentData.currentY = currentYPosition;
+                    segmentData.availableSpace_Ahead = availableSpace_Ahead 
+                    segmentData.availableSpace_Up = availableSpace_Up 
+                    segmentData.availableSpace_Down = availableSpace_Down 
+                    segmentData.directionToBaselineHeight = directionToBaselineHeight 
+                    segmentData.distanceToBaselineHeight = distanceToBaselineHeight 
+                    // Update previousSegment variable 
+                    previousSegment = terrainDesign.length > 0 ? terrainDesign[terrainDesign.length - 1] : null
+                }
         
 
         // Default Config
@@ -1030,7 +1129,7 @@ export default class TerrainManager {
         const xBound = config.width
         const yBound = config.height
         const yBoundBuffer = yBound * 0.05
-        const baselineHeight = config.height * 0.5
+        const baselineHeight = config.height * 0.25
 
         const terrainDesign = []
         const landscapeLog = []
@@ -1048,14 +1147,14 @@ export default class TerrainManager {
                         yRelativeBound: 0,
                         yDirection: null,
                         segmentMin: {
-                            flat: 5,
-                            slope: 10,
-                            wall: 3,
+                            flat: config.width * 0.5,
+                            slope: tileSize,
+                            wall: tileSize,
                         },
                         segmentMax: {
-                            flat: 15,
-                            slope: 25,
-                            wall: 8,
+                            flat: config.width * 0.5,
+                            slope: tileSize,
+                            wall: tileSize,
                         },
                     },
                 },
@@ -1067,36 +1166,51 @@ export default class TerrainManager {
             hill: {
                 name: "Hill",
                 dimensionsData: {
-                    baseWidth: 1000,
-                    baseHeight: 800,
+                    baseWidth: config.width * 0.35,
+                    baseHeight: config.height * 0.35,
                 },
                 anchorPoints: {
                     1: {
-                        xRelativeBound: 0.2, // 20% of baseWidth
+                        xRelativeBound: 0.4, // 20% of baseWidth
                         yRelativeBound: 0.9, // 90% of baseHeight
                         yDirection: "up",
                         segmentMin: {
-                            flat: 5,
-                            slope: 10,
-                            wall: 3,
+                            flat: tileSize,
+                            slope: tileSize * 4,
+                            wall: tileSize,
                         },
                         segmentMax: {
-                            flat: 15,
-                            slope: 25,
-                            wall: 8,
+                            flat: tileSize * 2,
+                            slope: config.width * 0.5,
+                            wall: tileSize * 2,
                         },
                     },
                     2: {
-                        xRelativeBound: 0.8, // 80% of baseWidth
-                        yRelativeBound: 0.5, // 50% of baseHeight
-                        yDirection: "down",
+                        xRelativeBound: 0.2, 
+                        yRelativeBound: 0,
+                        yDirection: null,
                         segmentMin: {
-                            flat: 3,
+                            flat: config.width * 0.35 * 0.2,
                             slope: 8,
                         },
                         segmentMax: {
-                            flat: 12,
+                            flat: config.width * 0.35 * 0.2,
                             slope: 20,
+                        },
+                    },
+                    3: {
+                        xRelativeBound: 0.4, 
+                        yRelativeBound: 0.9, 
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: tileSize,
+                            slope: tileSize * 4,
+                            wall: tileSize,
+                        },
+                        segmentMax: {
+                            flat: tileSize * 2,
+                            slope: config.width * 0.5,
+                            wall: tileSize * 2,
                         },
                     },
                 },
@@ -1334,7 +1448,6 @@ export default class TerrainManager {
         // Initialise terrain design data points
         let segment = null
         let previousSegment = null
-
         let tileType = null
         let length = null
         let yDirection = null
@@ -1346,10 +1459,10 @@ export default class TerrainManager {
 
         if(createTerrainHeader){
 
-            //console.log('Generating terrain header...')
+            console.log('Generating terrain header...')
             // Wall
             segment = {
-                type: 'wall',
+                tileType: 'wall',
                 length: distanceToBaselineHeight,
                 yDirection: directionToBaselineHeight
             }
@@ -1358,7 +1471,7 @@ export default class TerrainManager {
             
             // Flat
             segment = {
-                type: 'flat',
+                tileType: 'flat',
                 length: availableSpace_Ahead * 0.05,
                 yDirection: null
             }
@@ -1371,22 +1484,16 @@ export default class TerrainManager {
         2) Terrain Body
             Generate main body of land masses
         */
-            //console.log('Generating terrain body...')
+            console.log('Generating terrain body...')
 
             // Select Landscape type
             const selectedLandscape = selectRandomLandscapeType()
-            console.log(selectedLandscape)
 
-            // 
-            generateSegmentsForLandscape('plain')
-
-            // Get first target anchor point based on landscape - 
-
-            // Generate segments in loop until point reached
+            // Generate segment series for selected landscape
+            generateSegmentsForLandscape('hill')     // Stub  for testing
+            generateSegmentsForLandscape('hill')     // Stub  for testing
             
-            // Add to Landscape Log
-            
-            //
+            console.log('Final landscape log: ', landscapeLog)
 
         /* 
         3) Terrain Footer
@@ -1395,11 +1502,11 @@ export default class TerrainManager {
 
         if(createTerrainFooter){
 
-            //console.log('Generating terrain footer...')
+            console.log('Generating terrain footer...')
 
             // Flat
             segment = {
-                type: 'flat',
+                tileType: 'flat',
                 length: availableSpace_Ahead,
                 yDirection: null
             }
@@ -1408,7 +1515,7 @@ export default class TerrainManager {
 
             // Wall
             segment = {
-                type: 'wall',
+                tileType: 'wall',
                 length: availableSpace_Down,
                 yDirection: 'down'
             }
@@ -1423,95 +1530,11 @@ export default class TerrainManager {
         return terrainDesign
 
         // Old Code
-        // Mappings for terrain generation - based on previous segment
-        const typeMappings = {
-            flat: ['slope','wall'],
-            slope: ['flat'], 
-            wall: ['flat'], 
-        };
-
-        // Max and min length constraints for the segments
-            const minSegmentLength = 64; // minimum length of each segment
-            const maxSegmentLength = 320; // maximum length of each segment
-            const maxHeightChange_Wall_Up = 125; // maximum allowed height change for slopes or walls
-
-        //console.log('Generating config for terrain body...')
-
-            while (availableLandWidth > header_footerWidth){
-            // Generation Logic
-
-            // Select next segment type
-            type = typeMappings[previousSegment.type][Math.floor(Math.random() * typeMappings[previousSegment.type].length)];
-            // Set segment direction parameters
-                // Set Y Direction based on available land height space
-                if(type != 'flat'){
-                    yDirection = yDirections[Math.floor(Math.random() * yDirections.length)]
-                    // Override if up/down limit reached
-                    if(availableLandHeight >= maximumLandHeight - minSegmentLength) yDirection = 'up'
-                    if(availableLandHeight <= 0) yDirection = 'down'
-                }
-
-            // Set length based on available land width/height space
-                // Initialise contraints and set based on type
-                let minLengthContraint = tileSize
-                let maxLengthConstraint = tileSize
-                // Flat
-                if(type == 'flat'){
-                    minLengthContraint = Math.min(minSegmentLength, availableLandWidth)
-                    maxLengthConstraint = Math.min(maxSegmentLength, availableLandWidth)
-                }
-                // Wall
-                if(type == 'wall'){
-                    if(yDirection == 'up'){
-                        minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandHeight), tileSize)
-                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandHeight), tileSize)
-                        maxLengthConstraint = Math.min(maxLengthConstraint, maxHeightChange_Wall_Up)
-                    } else if (yDirection == 'down'){
-                        minLengthContraint = Math.max(Math.min(minSegmentLength, Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)),tileSize)
-                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)), tileSize)
-                    }
-                    
-                }
-                // Slope
-                if(type == 'slope'){
-                    if(yDirection == 'up'){
-                        minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandWidth, availableLandHeight), tileSize)
-                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandWidth, availableLandHeight), tileSize)
-                    } else if (yDirection == 'down'){
-                        minLengthContraint = Math.max(Math.min(minSegmentLength, Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)), tileSize)
-                        maxLengthConstraint = Math.max(Math.min(maxSegmentLength, Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength)), tileSize)
-                    }
-                }
-
-            length = Phaser.Math.Between(minLengthContraint, maxLengthConstraint)   
-            
-            // Attempt to set length to shorter if low to avoid bug of generating downwards terrain
-            if (length > Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength * 2.5)  && (type == 'wall' || type == 'slope') && yDirection == 'down'){
-                length = tileSize
-            }
 
             // Set Terrain Objects that can be populated
                 // Add Population Logic
-            populationConfig = ['obstacle', 'loot', 'enemy']
+            populationConfig = ['obstacle', 'loot', 'enemy']  
             
-            // Update available land space
-            if (previousSegment.type == 'wall' && previousSegment.yDirection == 'up' && type == 'flat'){
-                availableLandHeight -= tileSize
-            }
-
-            }
-        
-
-
-
-
-            
-            
-    }
-
-    // To be updated once design/map creation includes edge tiles and cases
-    generateTerrainMap(terrainDesign){
-
     }
 
     generateStartTerrain(){
