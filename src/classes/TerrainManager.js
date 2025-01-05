@@ -832,11 +832,11 @@ export default class TerrainManager {
                     availableSpace_Up = currentYPosition - yBoundBuffer
                     availableSpace_Down = (yBound - tileSize) - currentYPosition
                     
-                    console.log(
-                        'Available Space Ahead:  ' + availableSpace_Ahead + "\n",
-                        'Available Space Up:  ' + availableSpace_Up + "\n",
-                        'Available Space Down:  ' + availableSpace_Down
-                    )
+                    // console.log(
+                    //     'Available Space Ahead:  ' + availableSpace_Ahead + "\n",
+                    //     'Available Space Up:  ' + availableSpace_Up + "\n",
+                    //     'Available Space Down:  ' + availableSpace_Down
+                    // )
                 
             }
 
@@ -844,11 +844,138 @@ export default class TerrainManager {
                     directionToBaselineHeight = currentYPosition > baselineHeight ? 'up' : (currentYPosition < baselineHeight ? 'down' : null);
                     distanceToBaselineHeight = Math.abs(currentYPosition - baselineHeight)
 
-                    console.log(
-                        'Direction to Baseline Height:  ' + directionToBaselineHeight + "\n",
-                        'Distance to Baseline Height:  ' + distanceToBaselineHeight
-                    )
+                    // console.log(
+                    //     'Direction to Baseline Height:  ' + directionToBaselineHeight + "\n",
+                    //     'Distance to Baseline Height:  ' + distanceToBaselineHeight
+                    // )
             }
+
+        function selectRandomLandscapeType(previousType = null) {
+            const landscapeTypes = Object.keys(landscapeConfig);
+        
+            // Step 1: Calculate weighted probabilities for each type
+            const weightedTypes = landscapeTypes.map(type => {
+                const baseWeight = landscapeConfig[type].chanceToOccur; // Base weight from landscapeConfig
+                const constraints = landscapeLibrary[type]?.dimensionsData || {}; // Constraints from library
+                let weight = baseWeight;
+        
+                // Apply dynamic modifiers
+                if (type === previousType) {
+                    weight *= 0.5; // Repetition penalty
+                }
+        
+                if (constraints.baseHeight && availableSpace_Up > constraints.baseHeight) {
+                    weight *= 0.1; // Reduce weight if space above is insufficient
+                }
+        
+                if (constraints.baseWidth && availableSpace_Ahead > constraints.baseWidth) {
+                    weight *= 0.2; // Reduce weight if space ahead is insufficient
+                }
+        
+                return { type, weight };
+            });
+        
+            // Step 2: Normalize weights to calculate probabilities
+            const totalWeight = weightedTypes.reduce((sum, entry) => sum + entry.weight, 0);
+        
+            if (totalWeight === 0) {
+                throw new Error("No valid landscape types available based on current constraints!");
+            }
+        
+            // Step 3: Perform random selection
+            let random = Math.random() * totalWeight;
+        
+            for (const entry of weightedTypes) {
+                random -= entry.weight;
+                if (random <= 0) {
+                    return entry.type; // Return the selected landscape type
+                }
+            }
+        }
+
+        function getLandscapeData(landscapeKey = 'plain'){
+            return landscapeLibrary[landscapeKey];
+        }
+
+        function generateSegmentsForLandscape(landscapeKey = 'plain') {
+            // Retrieve the landscape from the library
+            landscape = getLandscapeData(landscapeKey);
+        
+            if (!landscape) {
+                console.error(`Landscape with key "${landscapeKey}" not found.`);
+                return;
+            }
+        
+            const { dimensionsData, anchorPoints } = landscape;
+        
+            // Ensure dimensionsData exists
+            if (!dimensionsData || !anchorPoints) {
+                console.error(`Missing required data for landscape "${landscapeKey}".`);
+                return;
+            }
+        
+            const { baseWidth, baseHeight } = dimensionsData;
+        
+            // Loop through numbered anchor points
+            Object.keys(anchorPoints).forEach(pointKey => {
+                const anchorPoint = anchorPoints[pointKey];
+        
+                const {
+                    xRelativeBound,
+                    yRelativeBound,
+                    yDirection,
+                    segmentMin = {},
+                    segmentMax = {}
+                } = anchorPoint;
+        
+                // Calculate available space for segment series (to anchor point)
+                let segmentSeries_AvailableSpace_Ahead = null
+                let segmentSeries_AvailableSpace_Up = null
+                let segmentSeries_AvailableSpace_Down = null
+                    segmentSeries_AvailableSpace_Ahead = baseWidth * xRelativeBound;
+                if (yDirection == 'up'){
+                    segmentSeries_AvailableSpace_Up = baseHeight * yRelativeBound;
+                } else if (yDirection == 'down'){
+                    segmentSeries_AvailableSpace_Down = baseHeight * yRelativeBound;
+                }
+        
+                // Retrieve or fallback to global segment constraints
+                const minSegments = {
+                    flat: segmentMin.flat, 
+                    slope: segmentMin.slope,
+                    wall: segmentMin.wall
+                };
+        
+                const maxSegments = {
+                    flat: segmentMax.flat, 
+                    slope: segmentMax.slope,
+                    wall: segmentMax.wall
+                };
+        
+                // Generate segments towards the anchor point
+                console.log(`Generating segments for anchor point ${pointKey}:`);
+                console.log(`Target X: ${targetX}, Target Y: ${targetY}, Direction: ${yDirection}`);
+                console.log(`Min Segments:`, minSegments);
+                console.log(`Max Segments:`, maxSegments);
+        
+                // Segment generation logic here
+                // For example, create random segments that meet constraints
+                // while connecting the current point to the target point
+                // (Implementation would depend on specific segment-generation rules)
+        
+                // Example placeholder for actual segment generation
+                const segments = [];
+                segments.push({
+                    type: "flat",
+                    startX: 0,
+                    startY: 0,
+                    endX: targetX,
+                    endY: targetY,
+                });
+        
+                console.log(`STUB - Generated segments:`, segments);
+            });
+        }
 
         function addSegmentToDesign(segmentData){
             // Add Segment Data to Design
@@ -857,12 +984,12 @@ export default class TerrainManager {
             currentXPosition += segmentData.type == ('flat' || 'slope') ? segmentData.length : 0;
             currentYPosition += segmentData.yDirection ==  'down' ? segmentData.length : segmentData.yDirection == 'up'? -segmentData.length : 0;
             // Log for Debugging
-            console.log(
-                'Previous Segment: ',previousSegment,"\n",
-                'Adding Segment Type: ' + segmentData.type + "\n",
-                'Current X Position for Next Segment:  ' + currentXPosition + "\n",
-                'Current Y Position for Next Segment:  ' + currentYPosition
-            )
+            // console.log(
+            //     'Previous Segment: ',previousSegment,"\n",
+            //     'Adding Segment Type: ' + segmentData.type + "\n",
+            //     'Current X Position for Next Segment:  ' + currentXPosition + "\n",
+            //     'Current Y Position for Next Segment:  ' + currentYPosition
+            // )
             // Refresh dynamic variables
             updateGlobalDynamicVariables()
             // Update Segment Data with Supplementary Data
@@ -876,6 +1003,7 @@ export default class TerrainManager {
             // Update previousSegment variable 
             previousSegment = terrainDesign.length > 0 ? terrainDesign[terrainDesign.length - 1] : null
         }
+        
 
         // Default Config
         const designConfig = {
@@ -887,14 +1015,303 @@ export default class TerrainManager {
             terraceCount: 4, // Creates stepped height levels
         };
 
+        const landscapeConfig = {
+            plain: { chanceToOccur: 2.0},
+            hill: { chanceToOccur: 1.0},
+            pit: { chanceToOccur: 0.8},
+            mountain: { chanceToOccur: 0.5},
+            valley: { chanceToOccur: 0.5},
+            plateau: { chanceToOccur: 0.1},
+            quarry: { chanceToOccur: 0.25},
+        }
+
         // Initialise Global Constant Variables
         const tileSize = 16
         const xBound = config.width
         const yBound = config.height
         const yBoundBuffer = yBound * 0.05
+        const baselineHeight = config.height * 0.5
 
         const terrainDesign = []
-        const baselineHeight = config.height * 0.5
+        const landscapeLog = []
+
+        const landscapeLibrary = {
+            plain: {
+                name: "Plain",
+                dimensionsData: {
+                    baseWidth: config.width * 0.5,
+                    baseHeight: 0,
+                },
+                anchorPoints: {
+                    1: {
+                        xRelativeBound: 1, // 20% of baseWidth
+                        yRelativeBound: 0,
+                        yDirection: null,
+                        segmentMin: {
+                            flat: 5,
+                            slope: 10,
+                            wall: 3,
+                        },
+                        segmentMax: {
+                            flat: 15,
+                            slope: 25,
+                            wall: 8,
+                        },
+                    },
+                },
+                additionalData: {
+                    biomeType: "rocky",
+                    difficultyLevel: "hard",
+                },
+            },
+            hill: {
+                name: "Hill",
+                dimensionsData: {
+                    baseWidth: 1000,
+                    baseHeight: 800,
+                },
+                anchorPoints: {
+                    1: {
+                        xRelativeBound: 0.2, // 20% of baseWidth
+                        yRelativeBound: 0.9, // 90% of baseHeight
+                        yDirection: "up",
+                        segmentMin: {
+                            flat: 5,
+                            slope: 10,
+                            wall: 3,
+                        },
+                        segmentMax: {
+                            flat: 15,
+                            slope: 25,
+                            wall: 8,
+                        },
+                    },
+                    2: {
+                        xRelativeBound: 0.8, // 80% of baseWidth
+                        yRelativeBound: 0.5, // 50% of baseHeight
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: 3,
+                            slope: 8,
+                        },
+                        segmentMax: {
+                            flat: 12,
+                            slope: 20,
+                        },
+                    },
+                },
+                additionalData: {
+                    biomeType: "rocky",
+                    difficultyLevel: "hard",
+                },
+            },
+            pit: {
+                name: "Pit",
+                dimensionsData: {
+                    baseWidth: 1000,
+                    baseHeight: 800,
+                },
+                anchorPoints: {
+                    1: {
+                        xRelativeBound: 0.2, // 20% of baseWidth
+                        yRelativeBound: 0.9, // 90% of baseHeight
+                        yDirection: "up",
+                        segmentMin: {
+                            flat: 5,
+                            slope: 10,
+                            wall: 3,
+                        },
+                        segmentMax: {
+                            flat: 15,
+                            slope: 25,
+                            wall: 8,
+                        },
+                    },
+                    2: {
+                        xRelativeBound: 0.8, // 80% of baseWidth
+                        yRelativeBound: 0.5, // 50% of baseHeight
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: 3,
+                            slope: 8,
+                        },
+                        segmentMax: {
+                            flat: 12,
+                            slope: 20,
+                        },
+                    },
+                },
+                additionalData: {
+                    biomeType: "rocky",
+                    difficultyLevel: "hard",
+                },
+            },
+            mountain: {
+                name: "Mountain",
+                dimensionsData: {
+                    baseWidth: 1000,
+                    baseHeight: 800,
+                },
+                anchorPoints: {
+                    1: {
+                        xRelativeBound: 0.2, // 20% of baseWidth
+                        yRelativeBound: 0.9, // 90% of baseHeight
+                        yDirection: "up",
+                        segmentMin: {
+                            flat: 5,
+                            slope: 10,
+                            wall: 3,
+                        },
+                        segmentMax: {
+                            flat: 15,
+                            slope: 25,
+                            wall: 8,
+                        },
+                    },
+                    2: {
+                        xRelativeBound: 0.8, // 80% of baseWidth
+                        yRelativeBound: 0.5, // 50% of baseHeight
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: 3,
+                            slope: 8,
+                        },
+                        segmentMax: {
+                            flat: 12,
+                            slope: 20,
+                        },
+                    },
+                },
+                additionalData: {
+                    biomeType: "rocky",
+                    difficultyLevel: "hard",
+                },
+            },
+            valley: {
+                name: "Valley",
+                dimensionsData: {
+                    baseWidth: 1500,
+                    baseHeight: 600,
+                },
+                anchorPoints: {
+                    1: {
+                        xRelativeBound: 0.1,
+                        yRelativeBound: 0.8,
+                        yDirection: "up",
+                        segmentMin: {
+                            flat: 8,
+                            slope: 4,
+                        },
+                        segmentMax: {
+                            flat: 20,
+                            slope: 10,
+                        },
+                    },
+                    2: {
+                        xRelativeBound: 0.9,
+                        yRelativeBound: 0.3,
+                        yDirection: "null",
+                        segmentMin: {
+                            flat: 5,
+                            slope: 6,
+                        },
+                        segmentMax: {
+                            flat: 15,
+                            slope: 12,
+                        },
+                    },
+                },
+                additionalData: {
+                    biomeType: "plains",
+                    difficultyLevel: "medium",
+                },
+            },
+            plateau: {
+                name: "Plateau",
+                dimensionsData: {
+                    baseWidth: 1000,
+                    baseHeight: 800,
+                },
+                anchorPoints: {
+                    1: {
+                        xRelativeBound: 0.2, // 20% of baseWidth
+                        yRelativeBound: 0.9, // 90% of baseHeight
+                        yDirection: "up",
+                        segmentMin: {
+                            flat: 5,
+                            slope: 10,
+                            wall: 3,
+                        },
+                        segmentMax: {
+                            flat: 15,
+                            slope: 25,
+                            wall: 8,
+                        },
+                    },
+                    2: {
+                        xRelativeBound: 0.8, // 80% of baseWidth
+                        yRelativeBound: 0.5, // 50% of baseHeight
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: 3,
+                            slope: 8,
+                        },
+                        segmentMax: {
+                            flat: 12,
+                            slope: 20,
+                        },
+                    },
+                },
+                additionalData: {
+                    biomeType: "rocky",
+                    difficultyLevel: "hard",
+                },
+            },
+            quarry: {
+                name: "Quarry",
+                dimensionsData: {
+                    baseWidth: 1000,
+                    baseHeight: 800,
+                },
+                anchorPoints: {
+                    1: {
+                        xRelativeBound: 0.2, // 20% of baseWidth
+                        yRelativeBound: 0.9, // 90% of baseHeight
+                        yDirection: "up",
+                        segmentMin: {
+                            flat: 5,
+                            slope: 10,
+                            wall: 3,
+                        },
+                        segmentMax: {
+                            flat: 15,
+                            slope: 25,
+                            wall: 8,
+                        },
+                    },
+                    2: {
+                        xRelativeBound: 0.8, // 80% of baseWidth
+                        yRelativeBound: 0.5, // 50% of baseHeight
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: 3,
+                            slope: 8,
+                        },
+                        segmentMax: {
+                            flat: 12,
+                            slope: 20,
+                        },
+                    },
+                },
+                additionalData: {
+                    biomeType: "rocky",
+                    difficultyLevel: "hard",
+                },
+            },
+            
+        };
+        
+        
 
         // Initialise Global Dynamic Variables
         let currentXPosition = 0
@@ -909,6 +1326,10 @@ export default class TerrainManager {
 
         // Initialise Generative Ruleset
         // TBC
+
+        // Initialise landscape log data
+        let landscape = null
+        let previousLandscape = null
 
         // Initialise terrain design data points
         let segment = null
@@ -950,8 +1371,22 @@ export default class TerrainManager {
         2) Terrain Body
             Generate main body of land masses
         */
-
             //console.log('Generating terrain body...')
+
+            // Select Landscape type
+            const selectedLandscape = selectRandomLandscapeType()
+            console.log(selectedLandscape)
+
+            // 
+            generateSegmentsForLandscape('plain')
+
+            // Get first target anchor point based on landscape - 
+
+            // Generate segments in loop until point reached
+            
+            // Add to Landscape Log
+            
+            //
 
         /* 
         3) Terrain Footer
@@ -988,32 +1423,18 @@ export default class TerrainManager {
         return terrainDesign
 
         // Old Code
-        
-
-        let availableLandWidth = maxLandWidth
-        const heightBufferZone = this.scene.scale.height * 0.1
-        const absoluteMaxHeight = this.scene.scale.height - heightBufferZone
-        const maximumLandHeight = Math.min(maxLandHeight, absoluteMaxHeight)
-        let availableLandHeight = maximumLandHeight
-
-        // Initialise config packet
-        const header_footerWidth = 80
-
         // Mappings for terrain generation - based on previous segment
         const typeMappings = {
             flat: ['slope','wall'],
             slope: ['flat'], 
             wall: ['flat'], 
         };
-        const yDirections = ['up', 'down'];
 
         // Max and min length constraints for the segments
             const minSegmentLength = 64; // minimum length of each segment
             const maxSegmentLength = 320; // maximum length of each segment
             const maxHeightChange_Wall_Up = 125; // maximum allowed height change for slopes or walls
 
-
-        // Generate remaining terrain based on algo and parameters
         //console.log('Generating config for terrain body...')
 
             while (availableLandWidth > header_footerWidth){
@@ -1022,18 +1443,12 @@ export default class TerrainManager {
             // Select next segment type
             type = typeMappings[previousSegment.type][Math.floor(Math.random() * typeMappings[previousSegment.type].length)];
             // Set segment direction parameters
-            yDirection = null
-            xDirection = null
                 // Set Y Direction based on available land height space
                 if(type != 'flat'){
                     yDirection = yDirections[Math.floor(Math.random() * yDirections.length)]
                     // Override if up/down limit reached
                     if(availableLandHeight >= maximumLandHeight - minSegmentLength) yDirection = 'up'
                     if(availableLandHeight <= 0) yDirection = 'down'
-                }
-                // Set X Direction for wall based on y Direction
-                if (type == 'wall'){
-                    xDirection = yDirection == 'up'? 'left' : 'right'
                 }
 
             // Set length based on available land width/height space
@@ -1079,19 +1494,11 @@ export default class TerrainManager {
                 // Add Population Logic
             populationConfig = ['obstacle', 'loot', 'enemy']
             
-            // Push data to config
-                //console.log(`Pushing ${type} to terrain config`)
-            terrainConfig.push({ type, length, yDirection, xDirection, populationConfig });
-            
             // Update available land space
-            if(yDirection == 'up'){
-                availableLandHeight -= length//type != 'flat'? length : tileSize
-            } else if (yDirection == 'down') {
-                availableLandHeight += length//type != 'flat'? length : tileSize
-            } else if (previousSegment.type == 'wall' && previousSegment.yDirection == 'up' && type == 'flat'){
+            if (previousSegment.type == 'wall' && previousSegment.yDirection == 'up' && type == 'flat'){
                 availableLandHeight -= tileSize
             }
-            availableLandWidth -= type != 'wall'? length: tileSize
+
             }
         
 
