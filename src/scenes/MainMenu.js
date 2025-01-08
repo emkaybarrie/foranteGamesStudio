@@ -23,7 +23,7 @@ export default class MainMenu extends Phaser.Scene {
       const titleText = this.add.image(this.scale.width * 0.5, this.scale.height * 0.35,'titleScreenText4').setOrigin(0.5).setScale(0.75)
 
       // Menu items (these can be dynamically added or retrieved)
-      const menuItems = ['Start Game', 'Quick Play', 'Wiki', 'MyFi', 'Options', 'Credits', 'Exit'];
+      const menuItems = ['Start Game', 'Quick Play', 'Test Sandbox'];
       this.menuText = [];
 
       // Create menu text objects
@@ -78,7 +78,7 @@ export default class MainMenu extends Phaser.Scene {
       }
 
       // Keyboard navigation: Use the up and down arrow keys to navigate
-      let selectedIndex = 1;
+      let selectedIndex = 2;
       this.menuText[selectedIndex].setStyle({ color: '#ffcc00' });  // Highlight the first item initially
 
       this.input.keyboard.on('keydown-UP', () => {
@@ -144,6 +144,18 @@ export default class MainMenu extends Phaser.Scene {
                 playerData: this.playerData
               });
               break;
+          case 2:
+            this.scene.start('LoadingScreen', {
+              targetScene: 'Sandbox',
+              category: 'badlands',
+              assets: [
+                  //{ type: 'image', key: 'terrain', path: 'assets/terrain.png' },
+                  //{ type: 'spritesheet', key: 'enemy', path: 'assets/enemy_spritesheet.png', frameConfig: { frameWidth: 64, frameHeight: 64 } }
+              ],
+              region: 1,
+              playerData: this.playerData
+            });
+            break;
           case 5:  // Exit
               console.log('Exiting game...');
               // Add logic for quitting the game or going back to main menu

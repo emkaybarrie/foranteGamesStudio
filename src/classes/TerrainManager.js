@@ -86,7 +86,7 @@ export default class TerrainManager {
 
         handleAvatarCollisions(avatar, terrain){
 
-            if(terrain.type == 'slope'){
+            if(terrain.tileType == 'slope'){
                 if(avatar.mode == 1){
 
                 // Reduce speed when moving up
@@ -126,7 +126,7 @@ export default class TerrainManager {
                 }
             }
 
-            if (terrain.type == 'wall'){
+            if (terrain.tileType == 'wall'){
                 if(avatar.mode == 0){
                 avatar.sprite.x -= this.scene.baseSpeed
                 avatar.sprite.setVelocityX(0)
@@ -193,19 +193,19 @@ export default class TerrainManager {
 
         // Generate terrain map for object creation - to move ot seperate function
         terrainDesign.forEach(segment => {
-            const { type, length, yDirection, xDirection, populationConfig } = segment;
+            const { tileType, length, yDirection, xDirection, populationConfig } = segment;
 
             //console.log("Next Tile: " + type)
     
-            if (type === 'flat') {
+            if (tileType === 'flat') {
                 // Check if the previous segment was an upward slope
-                if (previousSegment && previousSegment.type === 'slope' && previousSegment.yDirection === 'up') {
+                if (previousSegment && previousSegment.tileType === 'slope' && previousSegment.yDirection === 'up') {
                     // If the previous segment was an upward slope, shift the first flat tile down by 1
                     currentY += desiredTileSize;
                 }
     
                 // Handle transition from an upward wall (left) to flat (add left edge tile)
-                if (previousSegment && previousSegment.type === 'wall' && previousSegment.yDirection === 'up') {
+                if (previousSegment && previousSegment.tileType === 'wall' && previousSegment.yDirection === 'up') {
                     const edgeTile = this.scene.add.tileSprite(
                         currentX - desiredTileSize,
                         currentY,
@@ -231,7 +231,7 @@ export default class TerrainManager {
                     terrainPhysicsBodySegment.setVisible(false)
                     //terrainPhysicsBodySegment.body.updateFromGameObject()
 
-                    terrainPhysicsBodySegment.type = 'edge'
+                    terrainPhysicsBodySegment.tileType = 'edge'
 
 
                 }
@@ -324,7 +324,7 @@ export default class TerrainManager {
 
                 }
                 
-            } else if (type === 'slope') {
+            } else if (tileType === 'slope') {
                 // Calculate step size for slope
                 //const stepX = desiredTileSize;
                 //const stepY = direction === 'upRight' ? -desiredTileSize : desiredTileSize;
@@ -401,15 +401,15 @@ export default class TerrainManager {
                         height: stepHeight,
                         originX: originX,
                         originY: originY,
-                        bodyType: type,
+                        bodyType: tileType,
                         yDirection: yDirection
                     });
                 }
                 
                 
-            } else if (type === 'wall') {
+            } else if (tileType === 'wall') {
                 // Handle transition to a down wall from flat (add right edge tile)
-                if (previousSegment && previousSegment.type === 'flat' && type === 'wall' && yDirection == 'down') {
+                if (previousSegment && previousSegment.tileType === 'flat' && tileType === 'wall' && yDirection == 'down') {
                     const edgeTile = this.scene.add.tileSprite(
                         currentX,
                         currentY,
@@ -434,11 +434,11 @@ export default class TerrainManager {
                     terrainPhysicsBodySegment.body.checkCollision.down = false
                     terrainPhysicsBodySegment.setVisible(false)
 
-                    terrainPhysicsBodySegment.type = 'edge'
+                    terrainPhysicsBodySegment.tileType = 'edge'
                 }
     
                 // Handle transition to a up wall from flat (add fill tile)
-                if (previousSegment && previousSegment.type === 'flat' && type === 'wall' && yDirection == 'up') {
+                if (previousSegment && previousSegment.tileType === 'flat' && tileType === 'wall' && yDirection == 'up') {
                     const fillTile = this.scene.add.tileSprite(
                         currentX,
                         currentY,
@@ -455,7 +455,7 @@ export default class TerrainManager {
                 }
 
                 // Handle transition to a up wall from slope (add wall tile)
-                if (previousSegment && previousSegment.type === 'slope' && previousSegment.yDirection === 'up' && type === 'wall' && yDirection === 'up') {
+                if (previousSegment && previousSegment.tileType === 'slope' && previousSegment.yDirection === 'up' && tileType === 'wall' && yDirection === 'up') {
                     const fillWallTile = this.scene.add.tileSprite(
                         currentX,
                         currentY,
@@ -471,7 +471,7 @@ export default class TerrainManager {
                 }
 
                 // Handle transition to a up wall from slope (add wall tile)
-                if (previousSegment && previousSegment.type === 'slope' && previousSegment.yDirection === 'down' && type === 'wall' && yDirection === 'down') {
+                if (previousSegment && previousSegment.tileType === 'slope' && previousSegment.yDirection === 'down' && tileType === 'wall' && yDirection === 'down') {
                     // If the previous segment was a downwards slope, shift the first wall tile left by 1
                     currentX -= desiredTileSize;
                     // If the previous segment was a downwards slope, shift the first flat tile up by 1
@@ -567,7 +567,7 @@ export default class TerrainManager {
                 //     height: segmentHeight,
                 //     originX: originX,
                 //     originY: originY,
-                //     bodyType: type
+                //     bodyType: tileType
                 // });
 
                 const terrainPhysicsBodySegment = this.terrainGroupsPhysics[elevation].create(segmentStart, segmentStartY)
@@ -579,7 +579,7 @@ export default class TerrainManager {
                 terrainPhysicsBodySegment.body.allowGravity = false
                 terrainPhysicsBodySegment.body.checkCollision.down = false
                 terrainPhysicsBodySegment.setVisible(false)
-                terrainPhysicsBodySegment.type = 'wall'
+                terrainPhysicsBodySegment.tileType = 'wall'
     
                 
             }
@@ -609,7 +609,7 @@ export default class TerrainManager {
             terrainSegment.body.allowGravity = false;
             terrainSegment.body.checkCollision.down = false
             terrainSegment.setVisible(false);
-            terrainSegment.type = bodyData.bodyType
+            terrainSegment.tileType = bodyData.bodyType
             terrainSegment.yDirection = bodyData.yDirection
         });
 
@@ -672,27 +672,27 @@ export default class TerrainManager {
         // Create terrain header
         //console.log('Generating config for terrain header...')
             // Wall
-            let type = 'wall'
+            let tileType = 'wall'
             let length = 32
             let yDirection = 'up'
             let xDirection = 'left'
             let populationConfig = null
 
             // Push to config
-            terrainConfig.push({ type, length, yDirection, xDirection});
+            terrainConfig.push({ tileType, length, yDirection, xDirection});
 
             // Update available land space
             availableLandHeight -= length 
             availableLandWidth -= tileSize 
 
             // Flat
-            type = 'flat'
+            tileType = 'flat'
             length = header_footerWidth - tileSize
             xDirection = null
             yDirection = null
 
             // Push header to config
-            terrainConfig.push({ type, length, yDirection, xDirection });
+            terrainConfig.push({ tileType, length, yDirection, xDirection });
             
             // Update available land space
             availableLandHeight -= tileSize
@@ -706,19 +706,19 @@ export default class TerrainManager {
             // Confirm last segment
             let previousSegment = terrainConfig.length > 0 ? terrainConfig[terrainConfig.length - 1] : null
             // Select next segment type
-            type = typeMappings[previousSegment.type][Math.floor(Math.random() * typeMappings[previousSegment.type].length)];
+            tileType = typeMappings[previousSegment.tileType][Math.floor(Math.random() * typeMappings[previousSegment.tileType].length)];
             // Set segment direction parameters
             yDirection = null
             xDirection = null
                 // Set Y Direction based on available land height space
-                if(type != 'flat'){
+                if(tileType != 'flat'){
                     yDirection = yDirections[Math.floor(Math.random() * yDirections.length)]
                     // Override if up/down limit reached
                     if(availableLandHeight >= maximumLandHeight - minSegmentLength) yDirection = 'up'
                     if(availableLandHeight <= 0) yDirection = 'down'
                 }
                 // Set X Direction for wall based on y Direction
-                if (type == 'wall'){
+                if (tileType == 'wall'){
                     xDirection = yDirection == 'up'? 'left' : 'right'
                 }
 
@@ -727,12 +727,12 @@ export default class TerrainManager {
                 let minLengthContraint = tileSize
                 let maxLengthConstraint = tileSize
                 // Flat
-                if(type == 'flat'){
+                if(tileType == 'flat'){
                     minLengthContraint = Math.min(minSegmentLength, availableLandWidth)
                     maxLengthConstraint = Math.min(maxSegmentLength, availableLandWidth)
                 }
                 // Wall
-                if(type == 'wall'){
+                if(tileType == 'wall'){
                     if(yDirection == 'up'){
                         minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandHeight), tileSize)
                         maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandHeight), tileSize)
@@ -744,7 +744,7 @@ export default class TerrainManager {
                     
                 }
                 // Slope
-                if(type == 'slope'){
+                if(tileType == 'slope'){
                     if(yDirection == 'up'){
                         minLengthContraint = Math.max(Math.min(minSegmentLength, availableLandWidth, availableLandHeight), tileSize)
                         maxLengthConstraint = Math.max(Math.min(maxSegmentLength, availableLandWidth, availableLandHeight), tileSize)
@@ -757,7 +757,7 @@ export default class TerrainManager {
             length = Phaser.Math.Between(minLengthContraint, maxLengthConstraint)   
             
             // Attempt to set length to shorter if low to avoid bug of generating downwards terrain
-            if (length > Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength * 2.5)  && (type == 'wall' || type == 'slope') && yDirection == 'down'){
+            if (length > Math.abs(maximumLandHeight - availableLandHeight - minSegmentLength * 2.5)  && (tileType == 'wall' || tileType == 'slope') && yDirection == 'down'){
                 length = tileSize
             }
 
@@ -766,45 +766,45 @@ export default class TerrainManager {
             populationConfig = ['obstacle', 'loot', 'enemy']
             
             // Push data to config
-                //console.log(`Pushing ${type} to terrain config`)
-            terrainConfig.push({ type, length, yDirection, xDirection, populationConfig });
+                //console.log(`Pushing ${tileType} to terrain config`)
+            terrainConfig.push({ tileType, length, yDirection, xDirection, populationConfig });
             
             // Update available land space
             if(yDirection == 'up'){
-                availableLandHeight -= length//type != 'flat'? length : tileSize
+                availableLandHeight -= length//tileType != 'flat'? length : tileSize
             } else if (yDirection == 'down') {
-                availableLandHeight += length//type != 'flat'? length : tileSize
-            } else if (previousSegment.type == 'wall' && previousSegment.yDirection == 'up' && type == 'flat'){
+                availableLandHeight += length//tileType != 'flat'? length : tileSize
+            } else if (previousSegment.tileType == 'wall' && previousSegment.yDirection == 'up' && tileType == 'flat'){
                 availableLandHeight -= tileSize
             }
-            availableLandWidth -= type != 'wall'? length: tileSize
+            availableLandWidth -= tileType != 'wall'? length: tileSize
             }
         
         // Create terrain footer
         //console.log('Generating config for terrain footer...')
             // Flat
-            type = 'flat'
+            tileType = 'flat'
             length = header_footerWidth - tileSize
             xDirection = null
             yDirection = null
 
             // Push header to config
-            //console.log(`Pushing ${type} to terrain config`)
-            terrainConfig.push({ type, length, yDirection, xDirection });
+            //console.log(`Pushing ${tileType} to terrain config`)
+            terrainConfig.push({ tileType, length, yDirection, xDirection });
 
             // Update available land space
             availableLandHeight -= tileSize
             availableLandWidth -= length
 
             // Wall
-            type = 'wall'
+            tileType = 'wall'
             length = 32
             yDirection = 'down'
             xDirection = 'right'
 
             // Push to config
-            //console.log(`Pushing ${type} to terrain config`)
-            terrainConfig.push({ type, length, yDirection, xDirection});
+            //console.log(`Pushing ${tileType} to terrain config`)
+            terrainConfig.push({ tileType, length, yDirection, xDirection});
 
             // Update available land space
             availableLandHeight -= length 
@@ -815,7 +815,7 @@ export default class TerrainManager {
             
     }
 
-    generateTerrainDesignV2(maxLandWidth, maxLandHeight){
+    generateTerrainDesignV2(maxLandWidth = config.width, maxLandHeight = config.height * 0.75){
 
         const createTerrainHeader = true
         const createTerrainFooter = true
@@ -859,6 +859,8 @@ export default class TerrainManager {
                 const constraints = landscapeLibrary[type]?.dimensionsData || {}; // Constraints from library
                 let weight = baseWeight;
         
+                console.log('Previous Type: ' + previousType)
+                previousType = previousType == null ? previousType : previousType.toLowerCase()
                 // Apply dynamic modifiers
                 if (type === previousType) {
                     weight *= 0.5; // Repetition penalty
@@ -901,6 +903,7 @@ export default class TerrainManager {
             // Retrieve the landscape from the library
             landscape = getLandscapeData(landscapeKey);
             landscapeLog.push(landscape)
+            previousLandscape = landscape.name
         
             if (!landscape) {
                 console.error(`Landscape with key "${landscapeKey}" not found.`);
@@ -1115,13 +1118,13 @@ export default class TerrainManager {
         };
 
         const landscapeConfig = {
-            plain: { chanceToOccur: 2.0},
+            plain: { chanceToOccur: 1.0},
             hill: { chanceToOccur: 1.0},
-            pit: { chanceToOccur: 0.8},
-            mountain: { chanceToOccur: 0.5},
-            valley: { chanceToOccur: 0.5},
-            plateau: { chanceToOccur: 0.1},
-            quarry: { chanceToOccur: 0.25},
+            pit: { chanceToOccur: 0.5},
+            mountain: { chanceToOccur: 0.2},
+            valley: { chanceToOccur: 0.15},
+            plateau: { chanceToOccur: 0.65},
+            quarry: { chanceToOccur: 0.4},
         }
 
         // Initialise Global Constant Variables
@@ -1129,7 +1132,7 @@ export default class TerrainManager {
         const xBound = config.width
         const yBound = config.height
         const yBoundBuffer = yBound * 0.05
-        const baselineHeight = config.height * 0.25
+        const baselineHeight = config.height * 0.75
 
         const terrainDesign = []
         const landscapeLog = []
@@ -1138,7 +1141,7 @@ export default class TerrainManager {
             plain: {
                 name: "Plain",
                 dimensionsData: {
-                    baseWidth: config.width * 0.5,
+                    baseWidth: config.width * 0.2,
                     baseHeight: 0,
                 },
                 anchorPoints: {
@@ -1147,12 +1150,12 @@ export default class TerrainManager {
                         yRelativeBound: 0,
                         yDirection: null,
                         segmentMin: {
-                            flat: config.width * 0.5,
+                            flat: tileSize,
                             slope: tileSize,
                             wall: tileSize,
                         },
                         segmentMax: {
-                            flat: config.width * 0.5,
+                            flat: tileSize * 5,
                             slope: tileSize,
                             wall: tileSize,
                         },
@@ -1166,14 +1169,70 @@ export default class TerrainManager {
             hill: {
                 name: "Hill",
                 dimensionsData: {
-                    baseWidth: config.width * 0.35,
-                    baseHeight: config.height * 0.35,
+                    baseWidth: config.width * 0.15,
+                    baseHeight: config.height * 0.15,
                 },
                 anchorPoints: {
                     1: {
                         xRelativeBound: 0.4, // 20% of baseWidth
                         yRelativeBound: 0.9, // 90% of baseHeight
                         yDirection: "up",
+                        segmentMin: {
+                            flat: tileSize,
+                            slope: tileSize * 2,
+                            wall: tileSize,
+                        },
+                        segmentMax: {
+                            flat: tileSize * 2,
+                            slope: tileSize * 4,
+                            wall: tileSize * 2,
+                        },
+                    },
+                    2: {
+                        xRelativeBound: 0.2, 
+                        yRelativeBound: 0,
+                        yDirection: null,
+                        segmentMin: {
+                            flat: tileSize,
+                            slope: 8,
+                        },
+                        segmentMax: {
+                            flat: tileSize * 4,
+                            slope: 20,
+                        },
+                    },
+                    3: {
+                        xRelativeBound: 0.4, 
+                        yRelativeBound: 0.9, 
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: tileSize,
+                            slope: tileSize * 2,
+                            wall: tileSize,
+                        },
+                        segmentMax: {
+                            flat: tileSize * 2,
+                            slope: tileSize * 4,
+                            wall: tileSize * 2,
+                        },
+                    },
+                },
+                additionalData: {
+                    biomeType: "rocky",
+                    difficultyLevel: "hard",
+                },
+            },
+            pit: {
+                name: "Pit",
+                dimensionsData: {
+                    baseWidth: config.width * 0.15,
+                    baseHeight: config.height * 0.25,
+                },
+                anchorPoints: {
+                    1: {
+                        xRelativeBound: 0.4, // 20% of baseWidth
+                        yRelativeBound: 0.9, // 90% of baseHeight
+                        yDirection: "down",
                         segmentMin: {
                             flat: tileSize,
                             slope: tileSize * 4,
@@ -1201,7 +1260,7 @@ export default class TerrainManager {
                     3: {
                         xRelativeBound: 0.4, 
                         yRelativeBound: 0.9, 
-                        yDirection: "down",
+                        yDirection: "up",
                         segmentMin: {
                             flat: tileSize,
                             slope: tileSize * 4,
@@ -1219,80 +1278,54 @@ export default class TerrainManager {
                     difficultyLevel: "hard",
                 },
             },
-            pit: {
-                name: "Pit",
-                dimensionsData: {
-                    baseWidth: 1000,
-                    baseHeight: 800,
-                },
-                anchorPoints: {
-                    1: {
-                        xRelativeBound: 0.2, // 20% of baseWidth
-                        yRelativeBound: 0.9, // 90% of baseHeight
-                        yDirection: "up",
-                        segmentMin: {
-                            flat: 5,
-                            slope: 10,
-                            wall: 3,
-                        },
-                        segmentMax: {
-                            flat: 15,
-                            slope: 25,
-                            wall: 8,
-                        },
-                    },
-                    2: {
-                        xRelativeBound: 0.8, // 80% of baseWidth
-                        yRelativeBound: 0.5, // 50% of baseHeight
-                        yDirection: "down",
-                        segmentMin: {
-                            flat: 3,
-                            slope: 8,
-                        },
-                        segmentMax: {
-                            flat: 12,
-                            slope: 20,
-                        },
-                    },
-                },
-                additionalData: {
-                    biomeType: "rocky",
-                    difficultyLevel: "hard",
-                },
-            },
             mountain: {
                 name: "Mountain",
                 dimensionsData: {
-                    baseWidth: 1000,
-                    baseHeight: 800,
+                    baseWidth: config.width * 0.3,
+                    baseHeight: config.height * 0.85,
                 },
                 anchorPoints: {
                     1: {
-                        xRelativeBound: 0.2, // 20% of baseWidth
-                        yRelativeBound: 0.9, // 90% of baseHeight
+                        xRelativeBound: 0.45, // 20% of baseWidth
+                        yRelativeBound: 1, // 90% of baseHeight
                         yDirection: "up",
                         segmentMin: {
-                            flat: 5,
-                            slope: 10,
-                            wall: 3,
+                            flat: tileSize,
+                            slope: tileSize * 2,
+                            wall: tileSize * 2,
                         },
                         segmentMax: {
-                            flat: 15,
-                            slope: 25,
-                            wall: 8,
+                            flat: tileSize,
+                            slope: tileSize * 4,
+                            wall: tileSize * 4,
                         },
                     },
                     2: {
-                        xRelativeBound: 0.8, // 80% of baseWidth
-                        yRelativeBound: 0.5, // 50% of baseHeight
-                        yDirection: "down",
+                        xRelativeBound: 0.1, 
+                        yRelativeBound: 0,
+                        yDirection: null,
                         segmentMin: {
-                            flat: 3,
+                            flat: tileSize,
                             slope: 8,
                         },
                         segmentMax: {
-                            flat: 12,
+                            flat: tileSize * 2,
                             slope: 20,
+                        },
+                    },
+                    3: {
+                        xRelativeBound: 0.45, 
+                        yRelativeBound: 1, 
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: tileSize,
+                            slope: tileSize * 2,
+                            wall: tileSize * 2,
+                        },
+                        segmentMax: {
+                            flat: tileSize,
+                            slope: tileSize * 4,
+                            wall: tileSize * 4,
                         },
                     },
                 },
@@ -1304,75 +1337,107 @@ export default class TerrainManager {
             valley: {
                 name: "Valley",
                 dimensionsData: {
-                    baseWidth: 1500,
-                    baseHeight: 600,
+                    baseWidth: config.width * 0.2,
+                    baseHeight: config.height * 0.35,
                 },
                 anchorPoints: {
                     1: {
-                        xRelativeBound: 0.1,
-                        yRelativeBound: 0.8,
-                        yDirection: "up",
+                        xRelativeBound: 0.45, // 20% of baseWidth
+                        yRelativeBound: 0.9, // 90% of baseHeight
+                        yDirection: "down",
                         segmentMin: {
-                            flat: 8,
-                            slope: 4,
+                            flat: tileSize,
+                            slope: tileSize * 2,
+                            wall: tileSize * 2,
                         },
                         segmentMax: {
-                            flat: 20,
-                            slope: 10,
+                            flat: tileSize,
+                            slope: tileSize * 4,
+                            wall: tileSize * 4,
                         },
                     },
                     2: {
-                        xRelativeBound: 0.9,
-                        yRelativeBound: 0.3,
-                        yDirection: "null",
+                        xRelativeBound: 0.1, 
+                        yRelativeBound: 0,
+                        yDirection: null,
                         segmentMin: {
-                            flat: 5,
-                            slope: 6,
+                            flat: tileSize,
+                            slope: 8,
                         },
                         segmentMax: {
-                            flat: 15,
-                            slope: 12,
+                            flat: tileSize * 4,
+                            slope: 20,
+                        },
+                    },
+                    3: {
+                        xRelativeBound: 0.45, 
+                        yRelativeBound: 0.9, 
+                        yDirection: "up",
+                        segmentMin: {
+                            flat: tileSize,
+                            slope: tileSize * 2,
+                            wall: tileSize * 2,
+                        },
+                        segmentMax: {
+                            flat: tileSize,
+                            slope: tileSize * 4,
+                            wall: tileSize * 4,
                         },
                     },
                 },
                 additionalData: {
-                    biomeType: "plains",
-                    difficultyLevel: "medium",
+                    biomeType: "rocky",
+                    difficultyLevel: "hard",
                 },
             },
             plateau: {
                 name: "Plateau",
                 dimensionsData: {
-                    baseWidth: 1000,
-                    baseHeight: 800,
+                    baseWidth: config.width * 0.4,
+                    baseHeight: config.height * 0.4,
                 },
                 anchorPoints: {
                     1: {
-                        xRelativeBound: 0.2, // 20% of baseWidth
-                        yRelativeBound: 0.9, // 90% of baseHeight
+                        xRelativeBound: 0.15, // 20% of baseWidth
+                        yRelativeBound: 1, // 90% of baseHeight
                         yDirection: "up",
                         segmentMin: {
-                            flat: 5,
-                            slope: 10,
-                            wall: 3,
+                            flat: tileSize,
+                            slope: tileSize,
+                            wall: tileSize * 2,
                         },
                         segmentMax: {
-                            flat: 15,
-                            slope: 25,
-                            wall: 8,
+                            flat: tileSize,
+                            slope: tileSize,
+                            wall: tileSize * 4,
                         },
                     },
                     2: {
-                        xRelativeBound: 0.8, // 80% of baseWidth
-                        yRelativeBound: 0.5, // 50% of baseHeight
-                        yDirection: "down",
+                        xRelativeBound: 0.7, // 80% of baseWidth
+                        yRelativeBound: 0, // 50% of baseHeight
+                        yDirection: null,
                         segmentMin: {
-                            flat: 3,
+                            flat: tileSize,
                             slope: 8,
                         },
                         segmentMax: {
-                            flat: 12,
+                            flat: tileSize * 4,
                             slope: 20,
+                        },
+                    },
+                    3: {
+                        xRelativeBound: 0.15, // 20% of baseWidth
+                        yRelativeBound: 1, // 90% of baseHeight
+                        yDirection: "down",
+                        segmentMin: {
+                            flat: tileSize,
+                            slope: tileSize,
+                            wall: tileSize * 2,
+                        },
+                        segmentMax: {
+                            flat: tileSize,
+                            slope: tileSize,
+                            wall: tileSize * 4,
                         },
                     },
                 },
@@ -1384,36 +1449,51 @@ export default class TerrainManager {
             quarry: {
                 name: "Quarry",
                 dimensionsData: {
-                    baseWidth: 1000,
-                    baseHeight: 800,
+                    baseWidth: config.width * 0.4,
+                    baseHeight: config.height * 0.4,
                 },
                 anchorPoints: {
                     1: {
-                        xRelativeBound: 0.2, // 20% of baseWidth
-                        yRelativeBound: 0.9, // 90% of baseHeight
-                        yDirection: "up",
+                        xRelativeBound: 0.15, // 20% of baseWidth
+                        yRelativeBound: 1, // 90% of baseHeight
+                        yDirection: "down",
                         segmentMin: {
-                            flat: 5,
-                            slope: 10,
-                            wall: 3,
+                            flat: tileSize,
+                            slope: tileSize,
+                            wall: tileSize * 2,
                         },
                         segmentMax: {
-                            flat: 15,
-                            slope: 25,
-                            wall: 8,
+                            flat: tileSize,
+                            slope: tileSize,
+                            wall: tileSize * 4,
                         },
                     },
                     2: {
-                        xRelativeBound: 0.8, // 80% of baseWidth
-                        yRelativeBound: 0.5, // 50% of baseHeight
-                        yDirection: "down",
+                        xRelativeBound: 0.7, // 80% of baseWidth
+                        yRelativeBound: 0, // 50% of baseHeight
+                        yDirection: null,
                         segmentMin: {
-                            flat: 3,
+                            flat: tileSize,
                             slope: 8,
                         },
                         segmentMax: {
-                            flat: 12,
+                            flat: tileSize * 4,
                             slope: 20,
+                        },
+                    },
+                    3: {
+                        xRelativeBound: 0.15, // 20% of baseWidth
+                        yRelativeBound: 1, // 90% of baseHeight
+                        yDirection: "up",
+                        segmentMin: {
+                            flat: tileSize,
+                            slope: tileSize,
+                            wall: tileSize * 2,
+                        },
+                        segmentMax: {
+                            flat: tileSize,
+                            slope: tileSize,
+                            wall: tileSize * 4,
                         },
                     },
                 },
@@ -1424,8 +1504,6 @@ export default class TerrainManager {
             },
             
         };
-        
-        
 
         // Initialise Global Dynamic Variables
         let currentXPosition = 0
@@ -1487,11 +1565,22 @@ export default class TerrainManager {
             console.log('Generating terrain body...')
 
             // Select Landscape type
-            const selectedLandscape = selectRandomLandscapeType()
+            let selectedLandscape = selectRandomLandscapeType(previousLandscape)
 
             // Generate segment series for selected landscape
-            generateSegmentsForLandscape('hill')     // Stub  for testing
-            generateSegmentsForLandscape('hill')     // Stub  for testing
+            generateSegmentsForLandscape(selectedLandscape)  
+            selectedLandscape = selectRandomLandscapeType(previousLandscape)
+            generateSegmentsForLandscape(selectedLandscape)  
+            selectedLandscape = selectRandomLandscapeType(previousLandscape)
+            generateSegmentsForLandscape(selectedLandscape)  
+            selectedLandscape = selectRandomLandscapeType(previousLandscape)
+            generateSegmentsForLandscape(selectedLandscape)  
+            selectedLandscape = selectRandomLandscapeType(previousLandscape)
+
+  
+    
+
+
             
             console.log('Final landscape log: ', landscapeLog)
 
@@ -1541,24 +1630,24 @@ export default class TerrainManager {
         // Start Zone Set Up
 
         const startTerrainDesign = [
-            { type: 'flat', length: config.width * 0.25},                 
-            { type: 'slope', length: config.height * 0.05, yDirection: 'up'},  
-            { type: 'flat', length: config.width * 0.05},                 
-            { type: 'slope', length: config.height * 0.05, yDirection: 'up' }, 
-            { type: 'flat', length: config.width * 0.15},                
-            { type: 'wall', length: config.height * 0.05, yDirection: 'up' },  
-            { type: 'flat', length: config.width * 0.1},                 
-            { type: 'wall', length: config.height * 0.05, yDirection: 'up' }, 
-            { type: 'flat', length: config.width * 0.1},
-            { type: 'slope', length: config.height * 0.1, yDirection: 'up' },
-            { type: 'flat', length: config.width * 0.2}, 
+            { tileType: 'flat', length: config.width * 0.25},                 
+            { tileType: 'slope', length: config.height * 0.05, yDirection: 'up'},  
+            { tileType: 'flat', length: config.width * 0.05},                 
+            { tileType: 'slope', length: config.height * 0.05, yDirection: 'up' }, 
+            { tileType: 'flat', length: config.width * 0.15},                
+            { tileType: 'wall', length: config.height * 0.05, yDirection: 'up' },  
+            { tileType: 'flat', length: config.width * 0.1},                 
+            { tileType: 'wall', length: config.height * 0.05, yDirection: 'up' }, 
+            { tileType: 'flat', length: config.width * 0.1},
+            { tileType: 'slope', length: config.height * 0.1, yDirection: 'up' },
+            { tileType: 'flat', length: config.width * 0.2}, 
             // Switch to Mode 1
-            { type: 'flat', length: config.width * 0.35},    
-            { type: 'wall', length: config.height * 0.1, yDirection: 'down' },
-            { type: 'flat', length: config.width * 0.1},
-            { type: 'slope', length: config.height * 0.1, yDirection: 'down' },
-            { type: 'flat', length: config.width * 0.4},    
-            { type: 'wall', length: config.height * 0.05, yDirection: 'down' },                  
+            { tileType: 'flat', length: config.width * 0.35},    
+            { tileType: 'wall', length: config.height * 0.1, yDirection: 'down' },
+            { tileType: 'flat', length: config.width * 0.1},
+            { tileType: 'slope', length: config.height * 0.1, yDirection: 'down' },
+            { tileType: 'flat', length: config.width * 0.4},    
+            { tileType: 'wall', length: config.height * 0.05, yDirection: 'down' },                  
         ]
 
         this.generateTerrain(0, 'ground', startTerrainDesign);
@@ -1624,6 +1713,66 @@ export default class TerrainManager {
     }
 
     update() {
+        if(this.scene.sandbox){
+            let repositionSpeed = this.scene.baseSpeed
+        // Move all terrain physics objects and update
+        Object.values(this.terrainGroupsPhysics).forEach(terrainGroup => {
+            terrainGroup.children.iterate((object) => {
+                if(object){
+                object.x -= repositionSpeed; // Move each container
+
+
+                if (object.body) {
+                    object.body.updateFromGameObject();
+                }
+
+                if(object){
+                if (object.x < -this.scene.scale.width * 0.5) {
+                    object.destroy() 
+                    //console.log('Physics object destroyed')
+                }
+                }
+            }
+             
+            });
+        });
+
+        // Move all terrain tilesprite objects
+        this.terrainGroupsTilesprites.getChildren().forEach(tileGroup => {
+
+                tileGroup.getChildren().forEach(tileSprite => {
+
+                if(tileSprite){
+                    // Move each TileSprite to the left
+                    tileSprite.x -= repositionSpeed;  // Adjust the value (-1) for the speed you want
+            
+                    if(tileSprite){
+                    // Geenerate new terrain
+                    if (tileSprite.terrainEnd && tileSprite.x + tileSprite.width < this.scene.scale.width && !tileGroup.generateNewTerrain) {
+                        tileGroup.generateNewTerrain = true
+                        const terrainDesign = this.generateTerrainDesignV2()
+                        this.generateTerrain((this.scene.scale.width + this.scene.scale.width * 0.125) *
+                                Phaser.Math.FloatBetween(
+                                    this.chaosFactorSettings.ground.chaosLowerBound,
+                                    this.chaosFactorSettings.ground.chaosUpperBound
+                                ),
+                                'ground',
+                                terrainDesign
+                        );
+                    }
+
+                    // Destroy
+                    if (tileSprite.x < -tileSprite.width - this.scene.scale.width * 0.1 ) {
+                        tileSprite.destroy() 
+                        //console.log('Tilesprite destroyed')
+                    }
+
+                    }
+                }
+            });
+        });
+
+        } else {
         let repositionSpeed = this.scene.baseSpeed
         // Move all terrain physics objects and update
         Object.values(this.terrainGroupsPhysics).forEach(terrainGroup => {
@@ -1680,10 +1829,10 @@ export default class TerrainManager {
             });
         });
 
+        }
+
+
     }
-
-
-  
 
 }
 
