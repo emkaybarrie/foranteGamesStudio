@@ -10,7 +10,7 @@ export const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false,
+            debug: true,
             fps:120,
             gravity: {y: 2000 } // Adjust based on your game
         }
