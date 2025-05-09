@@ -146,7 +146,7 @@ export function renderDashboard(playerData) {
         : 'Balance: £0.00';
 
     const profilePic = document.getElementById('profile-picture');
-    profilePic.style.backgroundImage = "url('./myfi/assets/img/default-profile.png')";
+    profilePic.style.backgroundImage = "url('./assets/img/default-profile.png')";
 
     if (playerData.profilePictureUrl) {
         profilePic.style.backgroundImage = `url('${playerData.profilePictureUrl}')`;
