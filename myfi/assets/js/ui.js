@@ -146,7 +146,7 @@ export function renderDashboard(playerData) {
         : 'Balance: £0.00';
 
     const profilePic = document.getElementById('profile-picture');
-    profilePic.style.backgroundImage = "url('./assets/img/default-profile.png')";
+    profilePic.style.backgroundImage = "url('/assets/img/default-profile.png')";
 
     if (playerData.profilePictureUrl) {
         profilePic.style.backgroundImage = `url('${playerData.profilePictureUrl}')`;
@@ -172,7 +172,7 @@ function refreshDashboard(playerData) {
     // Profile Picture (fallback to default if missing)
     profilePic.style.backgroundImage = playerData.profilePictureUrl 
         ? `url('${playerData.profilePictureUrl}')`
-        : "url('./assets/img/default-profile.png')";
+        : "url('/assets/img/default-profile.png')";
 }
 
 

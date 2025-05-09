@@ -187,7 +187,7 @@ html, body {
     height: clamp(100px, 20vw, 175px);
     padding: auto;
     border-radius: 50%;
-    background: url('./assets/img/default-profile.png') no-repeat center center/cover;
+    background: url('/assets/img/default-profile.png') no-repeat center center/cover;
     margin-bottom: 25px;
     box-shadow: 0 0 8px #6200ea;
     background-color: #d8d8d8;
