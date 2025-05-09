@@ -1,0 +1,883 @@
+/* General Body Styling */
+/* Apply border-box globally */
+*, *::before, *::after {
+    box-sizing: border-box;
+  }
+  /* For debugging */
+
+  .debug-outline * {
+    outline: 1px solid red;
+  }
+
+/* Ensure the body and html elements take up the full viewport */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0px;
+    background: #121212;
+    color: #fff;
+    font-family: Inter, sans-serif;
+    overflow: auto;  /* Prevent scrolling */
+    
+}
+
+/* Tooltip container styling */
+.tooltip {
+    position: absolute;
+    background: linear-gradient(135deg, #6a11cb, #2575fc); /* Vibrant purple-blue gradient */
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;  /* Make tooltip non-interactive */
+    transition: opacity 0.4s ease-in-out;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    
+    
+    
+  }
+
+  /* Add glowing border effect (optional) */
+.tooltip.glow {
+    box-shadow: 0 0 10px rgba(102, 153, 255, 0.8);
+  }
+  
+  /* Arrow styling for tooltip */
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #2575fc;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    
+  }
+  
+  /* Tooltip visibility on hover */
+  .tooltip-visible {
+    opacity: 1;
+ 
+  }
+
+#dashboard-content {
+    display: grid;
+    flex-grow: 1;
+    grid-template-areas:
+        "hdr hdr hdr"
+        "profile hud metrics";
+    grid-template-columns: 450px 900px auto; /* Make metrics wider */
+    grid-template-rows: 50px 1fr; /* Header height auto, rest fills */
+    /* grid-template-rows: 10px auto 1fr; /* Header height auto, rest fills */
+    gap: 20px;
+    margin: 0px; /* Space around the dashboard */
+    padding: 10px; /* Space inside the container */
+    height: 100vh; /* Make the dashboard take full height of screen */
+
+    box-sizing: border-box; 
+
+
+}
+
+@media (max-width: 768px) {
+    #dashboard-content {
+        grid-template-columns: 1fr; /* Adjust the grid for smaller screens */
+        grid-template-areas:
+            "hdr"
+            "profile"
+            "hud"
+            "metrics";
+    }
+}
+
+/* Make sure elements within #dashboard-content don’t cause overflow */
+#profile, #hud, #metrics {
+    height: 100%; /* Ensure they take the full height of their container */
+    overflow: auto;  /* Prevent overflow within sections */
+    display: flex;  /* Ensures flexible resizing of children */
+    flex-direction: column;
+    padding: 10px;
+    gap: 32px;
+    background: #1e1e1e;
+    box-shadow: 0 0 8px #6200ea;
+    
+    
+    
+}
+
+#header {
+    grid-area: hdr;  /* Places this section in the "hdr" grid area */
+    display: flex;  /* Applies Flexbox to arrange the children */
+    justify-content: space-between;  /* Centers the children horizontally */
+    align-items: center;  /* Centers the children vertically */
+    width: 100%;  /* Ensures the header takes up the full available width */
+    gap: 32px;  /* Adds space between the child elements inside the header */
+}
+
+.glow-box {
+    position: relative;
+    flex-grow: 1; /* Allow it to grow and take as much space as possible */
+    background-color: #1e1e2f; /* dark background */
+    border: 2px solid #a855f7; /* purple border */
+    box-shadow: 0 0 12px 4px #a855f7; /* glowing effect */
+    color: white;
+    font-weight: 500;
+    z-index: 999;
+    text-align: center; /* Optional: center text inside glow box */
+}
+
+.section-header {
+    border: 2px solid #a855f7;
+    border-radius: 8px;
+    box-shadow: 0 0 10px 2px #a855f7;
+    padding: 10px;
+    background-color: #1e1e1e;
+    text-align: center;
+}
+
+#profile {
+    grid-area: profile;
+    /* align-items: stretch; */
+    
+    display: grid;
+    grid-template-rows: 40px 400px 1fr; /* header, upper, lower */
+    max-width: 100%; /* Prevent overflow beyond viewport */
+    max-height: 100%; /* or fixed height like 100vh if needed */
+ 
+}
+
+
+
+#profile-upper {
+    border: 2px solid #a855f7;
+    border-radius: 8px;
+    box-shadow: 0 0 10px 2px #a855f7;
+    background-color: #1e1e1e;
+
+    padding: 10px;
+    
+  }
+
+  .profile-upper-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap; /* ensures it stacks gracefully on small screens */
+  }
+
+  #profile-upper-row-left, #profile-upper-row-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    max-width: 150px;
+  }
+
+  #profile-picture {
+    width: clamp(100px, 20vw, 175px);
+    height: clamp(100px, 20vw, 175px);
+    padding: auto;
+    border-radius: 50%;
+    background: url('/path/to/default-profile.png') no-repeat center center/cover;
+    margin-bottom: 25px;
+    box-shadow: 0 0 8px #6200ea;
+    background-color: #d8d8d8;
+    background-size: cover;
+    background-position: center;
+    transition: all 0.3s ease-in-out;
+}
+
+#profile-picture:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px #a855f7;
+  }
+
+#alias-banner {
+    width: 175%;
+    text-align: center;
+    background: linear-gradient(90deg, #6200ea, #3700b3);
+    /* background: linear-gradient(135deg, #ff00cc, #3333ff); Vibrant background */
+    padding: 7.5px 0;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: bold;
+    animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px #6200ea;
+    }
+    to {
+        box-shadow: 0 0 20px #3700b3;
+    }
+}
+
+  #spending-persona {
+    color: rgb(17, 184, 81);                  /* Font color */
+                 /* Font size (adjust as needed) */
+    font-weight: bold;            /* Make text bold */
+    border-radius: 10px;          /* Rounded corners */
+    
+    text-align: center;           /* Optional: center the text */
+  }
+
+  #contributions-bar-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  #empower-level {
+    align-self: center; /* centers the button within the flex container */
+    font-size: 2rem; /* Adjust this value as needed */
+  }
+
+  #contributions-drain-btn {
+    align-self: center; /* centers the button within the flex container */
+    width: 50%;
+  }
+  
+
+#profile-lower {
+    border: 2px solid #a855f7;
+    border-radius: 8px;
+    box-shadow: 0 0 10px 2px #a855f7;
+    background-color: #1e1e1e;
+
+    display: grid;
+    grid-template-columns: 100px 1fr; /* left fixed, right flexible */
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    box-sizing: border-box; /* Ensures padding doesn't add to width */
+    padding: 10px;
+}
+
+  .profile-lower-left {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+    
+  }
+
+  #profile-lower-buttons {
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+ 
+}
+
+ #send-contribution-btn{
+    /* width: 100px; */
+    height: 50px;
+ }
+
+ #purchase-igc-btn{
+    /* width: 100px; */
+    height: 100px;
+ }
+
+  .profile-lower-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .profile-lower-right-glow-box {
+    padding: 20px;
+    background: #1e1e2f;
+    border-radius: 12px;
+    
+    box-shadow: 0 0 10px rgba(102, 153, 255, 0.8);
+  }
+
+  #enter-badlands-btn{
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    animation: pulse 4s infinite; /* Apply the pulse effect */
+  }
+
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+/* HUD section styling */
+
+
+.bar-wrapper {
+    margin-bottom: 15px;
+}
+
+.bar-label {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.bar-background {
+    position: relative;
+    background: #333;
+    border-radius: 8px;
+    height: 24px;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.4s ease;
+}
+
+.bar-fill.growth {
+    background: #d32f2f;
+}
+
+.bar-fill.wants {
+    background: #1976d2;
+}
+
+.bar-fill.needs {
+    background: #388e3c;
+}
+
+.bar-fill.purple-bar {
+    background: linear-gradient(180deg, #8a4fff 0%, #4e2c99 100%);
+    background-color: purple;
+    height: 100%;
+    transition: width 0.1s ease;
+    border-radius: 5px;
+}
+
+.bar-fill.glow-effect {
+    box-shadow: 0 0 8px 3px rgba(138, 79, 255, 0.7);
+    animation: pulseGlow 1.5s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    0% {
+        box-shadow: 0 0 8px 3px rgba(138, 79, 255, 0.7);
+    }
+    100% {
+        box-shadow: 0 0 15px 10px rgba(138, 79, 255, 0.7);
+    }
+}  
+
+#hud {
+    grid-area: hud;
+    display: grid;
+    grid-template-rows: 40px 400px 1fr; /* header, upper, lower */
+    max-width: 100%; /* Prevent overflow beyond viewport */
+    height: 100%; /* or fixed height like 100vh if needed */
+}
+
+
+#hud-upper {
+    border: 2px solid #a855f7;
+    border-radius: 8px;
+    box-shadow: 0 0 10px 2px #a855f7;
+    padding: 10px;
+    background-color: #1e1e1e;
+  }
+
+  #hud-upper-misc{
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* left fixed, right flexible */
+    box-sizing: border-box; /* Ensures padding doesn't add to width */
+    padding: 10px;
+  }
+
+  #hud-upper-misc-left{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    gap: 25px;
+  }
+
+  .special-icon{
+    width: 200%;
+    height: 100%;
+  }
+
+  #hud-upper-misc-right{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #hud-lower {
+    border: 2px solid #a855f7;
+    border-radius: 8px;
+    box-shadow: 0 0 10px 2px #a855f7;
+    padding: 10px;
+    background-color: #1e1e1e;
+  }
+
+ 
+/* Placeholder section for the right side */
+#metrics {
+    grid-area: metrics;
+    align-items: stretch;
+
+
+}
+
+
+#metrics-upper {
+    border: 2px solid #a855f7;
+    border-radius: 8px;
+    box-shadow: 0 0 10px 2px #a855f7;
+    padding: 10px;
+    background-color: #1e1e1e;
+  }
+
+  #chart-container {
+    background: #2a2a2a;
+    margin-top: 10px; /* Adds space below metrics-hdr if needed */
+    border: 2px solid #6200ea;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(98, 0, 234, 0.6);
+    padding: 16px;
+  }
+
+
+  #metrics-lower {
+    border: 2px solid #a855f7;
+    border-radius: 8px;
+    box-shadow: 0 0 10px 2px #a855f7;
+    padding: 10px;
+    background-color: #1e1e1e;
+  }
+
+
+#upper-metrics {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#lower-metrics {
+    flex: 1;
+    flex-grow: 1;
+    /* Later: Add anything you want here */
+}
+
+
+#discretionary-current-balance {
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+#current-balance {
+    font-size: 16px;
+    font-weight: 100;
+    margin-top: 5px;
+}
+
+
+
+/* Button Style for Manual Entry and Logout */
+.purple-btn {
+    background: linear-gradient(180deg, #8a4fff 0%, #4e2c99 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.purple-btn:hover {
+    background: linear-gradient(180deg, #4e2c99 0%, #8a4fff 100%);
+}
+
+.contributions-bar {
+    background: linear-gradient(180deg, #8a4fff 0%, #4e2c99 100%);
+    width: 0%; /* Start empty */
+    height: 20px;
+    border-radius: 8px;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Circle for stored days */
+
+.circle-badge {
+    position: absolute;
+    left: -20px; /* More space for the circles */
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    color: #000;
+    border-radius: 50%;
+    width: 35px; /* Increased size for better visibility */
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem; /* Larger font size */
+    font-weight: 700;
+    box-shadow: 0 0 4px #0004;
+    transition: all 0.3s ease-in-out;
+}
+
+.circle-badge:hover {
+    transform: translateY(-50%) scale(1.2); /* Slightly expand when hovered */
+    font-size: 1.2rem; /* Larger text when hovered */
+    box-shadow: 0 0 10px 4px rgba(138, 79, 255, 0.7); /* Glowing effect on hover */
+}
+
+/* Color-specific circles (for each bar) */
+.circle-badge.growth {
+    background: #d32f2f; /* Matching Growth bar */
+    color: white;
+}
+
+.circle-badge.wants {
+    background: #1976d2; /* Matching Wants bar */
+    color: white;
+}
+
+.circle-badge.needs {
+    background: #388e3c; /* Matching Needs bar */
+    color: white;
+}
+
+.circle-badge.purple-bar {
+    background: linear-gradient(180deg, #8a4fff 0%, #4e2c99 100%); /* Matching Purple bar */
+    color: white;
+}
+
+
+/* Action Buttons */
+.action-btn {
+    background: #6200ea;
+    border: none;
+    padding: 10px;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: #3700b3;
+}
+
+#action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-top: 15px;
+}
+
+
+
+/* Light/Dark mode styling */
+body.light-mode {
+    background: #f0f0f0;
+    color: #121212;
+}
+
+
+body.light-mode #profile {
+    background: #fff;
+}
+
+body.light-mode #hud,
+body.light-mode #metrics {
+    background: #65caca;
+}
+
+body.light-mode .bar-background {
+    background: #374164;
+}
+
+body.light-mode .purple-btn {
+    background: linear-gradient(180deg, #4e2c99 0%, #8a4fff 100%);
+}
+
+body.dark-mode {
+    background: #121212;
+    color: #fff;
+}
+
+#mode-toggle-btn {
+    background: #6200ea;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#mode-toggle-btn:hover {
+    background: #3700b3;
+}
+
+/* Modal styling - UNDER REVIEW*/
+/* Fade-in/out transition for modals */
+.modal {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+
+    position: fixed;
+    top: 0%;
+    left: 0%;
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+    
+}
+
+.modal.show {
+    display: block;
+    opacity: 1;
+}
+
+
+
+#modal.hidden {
+    visibility: hidden;
+    opacity: 0;
+}
+
+#modal-content {
+    background: #1e1e1e;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 300px;
+    text-align: center;
+}
+
+/*New and correct MODAL */
+/* Modal container */
+#picker-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    transition: opacity 0.3s ease;
+}
+
+/* Hide modal by default */
+#picker-modal.hidden {
+    display: none;
+}
+
+/* Modal content box */
+.modal-content {
+    background: #1e1e1e;
+    color: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 50vw;
+    max-width: 90vw;
+    box-shadow: 0 0 15px #6200ea;
+    text-align: center;
+}
+
+/* Input and buttons inside modal */
+#manual-link-input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    margin: 10px 0;
+    background-color: #2a2a2a;
+    color: white;
+}
+
+#open-picker-btn {
+    background: #8a4fff;
+    border: none;
+    padding: 10px 20px;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+#open-picker-btn:hover {
+    background: #4e2c99;
+}
+
+#preview-row2 {
+    background: #000000;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #8a4fff;
+    white-space: pre-wrap;
+}
+
+/* Marketing section in modal */
+#picker-marketing {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Fullscreen overlay */
+#picker-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  /* Modal content box */
+  .picker-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    padding: 24px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+  }
+  
+  /* Instructions block */
+  .picker-instructions h3, .picker-instructions p {
+    color: #333;  /* Set the text color to dark gray */
+  }
+  
+  .picker-instructions h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .picker-instructions p {
+    font-size: 1rem;
+    margin-top: 8px;
+  }
+  
+  /* Scrollable sheet list */
+  .picker-scrollable-list {
+    overflow-y: auto;
+    max-height: 300px;
+    padding-right: 8px;
+  }
+  
+  /* Purple button style */
+  .purple-button {
+    background: #8a4fff;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: left;
+  }
+  
+  .purple-button:hover {
+    background: #a780ff;
+  }
+  
+  /* Close ("X") button */
+  .picker-close-button {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #333;
+    cursor: pointer;
+  }
+
+  select {
+    padding: 10px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+  }
+  
+  #paymentDetails {
+    font-size: 14px;
+    color: #ccc;
+  }
+
+  /* Base styling for the glowing button */
+.glowing-button {
+    background-color: #6a0dad;  /* Purple background */
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 25px; /* Rounded corners */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  
+  /* Glowing effect on hover */
+  .glowing-button:hover {
+    box-shadow: 0 0 10px 5px rgba(106, 13, 173, 0.8);  /* Purple glow */
+    transform: scale(1.1); /* Slight grow effect */
+  }
+  
+  /* Optional - Add a stronger glow effect when the button is pressed */
+  .glowing-button:active {
+    box-shadow: 0 0 15px 5px rgba(106, 13, 173, 0.8); /* Stronger glow on click */
+  }
+
+
+
