@@ -172,7 +172,7 @@ function refreshDashboard(playerData) {
     // Profile Picture (fallback to default if missing)
     profilePic.style.backgroundImage = playerData.profilePictureUrl 
         ? `url('${playerData.profilePictureUrl}')`
-        : "url('/assets/img/default-profile.png')";
+        : "url('./assets/img/default-profile.png')";
 }
 
 
