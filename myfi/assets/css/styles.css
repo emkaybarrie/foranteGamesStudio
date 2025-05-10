@@ -72,6 +72,30 @@ html, body {
  
   }
 
+  .coming-soon {
+  position: relative;
+  opacity: 0.5; /* dims the content */
+  pointer-events: none; /* disables all interaction */
+  filter: grayscale(100%);
+}
+
+.coming-soon::after {
+  content: "Coming Soon";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
 
 #dashboard-content {
     display: grid;
@@ -98,7 +122,6 @@ html, body {
     padding: 1rem;
 
     overflow: auto;
-
     gap: 2rem;
     background: #1e1e1e;
     box-shadow: 0 0 8px #6200ea;
@@ -144,15 +167,16 @@ html, body {
 
 }
 
-
-
 #profile-upper {
     border: 2px solid #a855f7;
     border-radius: 8px;
     box-shadow: 0 0 10px 2px #a855f7;
     background-color: #1e1e1e;
-
     padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
     
   }
 
@@ -160,7 +184,7 @@ html, body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
     flex-wrap: wrap; /* ensures it stacks gracefully on small screens */
     width: 100%;
     max-width: 100%;
@@ -261,6 +285,7 @@ html, body {
     box-sizing: border-box; /* Ensures padding doesn't add to width */
     padding: 10px;
     overflow: auto;
+    gap: 1rem;
 }
 
   .profile-lower-left {
@@ -293,17 +318,25 @@ html, body {
  }
 
   .profile-lower-right {
-    display: flex;
+    display: grid;
+    grid-template-columns: 0.65fr 1fr; /* left fixed, right flexible */
+    grid-template-rows: auto 0.5fr; /* left fixed, right flexible */
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
   }
 
   .profile-lower-right-glow-box {
-    padding: 20px;
+    width: 100%;
+    padding: 5px;
     background: #1e1e2f;
     border-radius: 12px;
-    
     box-shadow: 0 0 10px rgba(102, 153, 255, 0.8);
+    display: grid;
+    grid-template-columns: 0.95fr;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
   #enter-badlands-btn{
