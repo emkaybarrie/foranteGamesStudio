@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Enter The Badlands
 document.addEventListener('DOMContentLoaded', () => {
     const enterBadlandsBtn = document.getElementById('enter-badlands-btn');
-    if (enterBadlandsBtn) enterBadlandsBtn.addEventListener('click', () => { window.open('https://emkaybarrie.github.io/theBadlands/', '_blank')});
+    if (enterBadlandsBtn) enterBadlandsBtn.addEventListener('click', () => { window.open('https://emkaybarrie.github.io/foranteGamesStudio/badlands/', '_blank')});
   });
 
   const paymentMethodSelect = document.getElementById('paymentMethod');
