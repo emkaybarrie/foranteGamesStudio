@@ -3,21 +3,28 @@
 *, *::before, *::after {
     box-sizing: border-box;
   }
+
+    /* Ensure the body and html elements take up the full viewport */
+html, body {
+
+    /* background: #121212; */
+    color: #fff;
+    font-family: Inter, sans-serif;
+
+
+    margin: 0;
+    padding: 0;
+    max-width: 100vw;
+    overflow-x: hidden;
+    
+}
   /* For debugging */
 
   .debug-outline * {
     outline: 1px solid red;
   }
 
-/* Ensure the body and html elements take up the full viewport */
-html, body {
-    height: 100%;
-    background: #121212;
-    color: #fff;
-    font-family: Inter, sans-serif;
-    overflow: auto;  /* Prevent scrolling */
-    
-}
+
 
 /* Tooltip container styling */
 .tooltip {
@@ -65,91 +72,39 @@ html, body {
  
   }
 
+
 #dashboard-content {
     display: grid;
-    flex-grow: 1;
+
     grid-template-areas:
         "hdr hdr hdr"
         "profile hud metrics";
-    grid-template-columns: 30vw 45vw auto; /* Make metrics wider */
+    grid-template-columns: 30% 45% 25%; /* Make metrics wider */
     grid-template-rows: 5vh auto; /* Header height auto, rest fills */
-    gap: 1.5rem;
-    width: 100vw;
-    height: 100vh; /* Make the dashboard take full height of screen */
-    box-sizing: border-box; 
-
-
-}
-
-
-
-@media (max-width: 768px) {
-    #dashboard-content {
-        display: flex;
-       flex-direction: column; /* Stack on mobile */
-
-       
-          
-    }
-
-    #profile, #hud {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  #profile-lower {
-    grid-template-columns: 1fr;
-  }
-
-  #hud-lower {
-    grid-template-columns: 1fr;
+    gap: 1rem;
     padding: 1rem;
-  }
+    width: 100%;
+    height: 100vh; /* Make the dashboard take full height of screen */
 
-  #hud-upper-misc {
-    grid-template-columns: 1fr;
-  }
 
-  #action-buttons-wants-container {
-    flex-direction: column;
-  }
 
-        
 }
-
-/* @media (max-width: 768px) {
-    #dashboard-content {
-        grid-template-columns: 1fr; 
-        grid-template-rows: 1.5vh 25vh 30vh auto; 
-        grid-template-areas:
-            "hdr"
-            "profile"
-            "hud"
-            "metrics";
-
-            gap: 2.5rem;
-          
-    }
-} */
-
 
 /* Make sure elements within #dashboard-content don’t cause overflow */
 #profile, #hud, #metrics {
+    display: grid;
+    grid-template-rows: auto 1fr auto; /* header, upper, lower */
     height: 100%; /* Ensure they take the full height of their container */
-    overflow: auto;  /* Prevent overflow within sections */
     padding: 1rem;
+
+    overflow: auto;
+
     gap: 2rem;
     background: #1e1e1e;
     box-shadow: 0 0 8px #6200ea;
 
-    display: grid;
-    grid-template-rows: 2.5vh 50vh auto; /* header, upper, lower */
-    max-width: 100%; /* Prevent overflow beyond viewport */
-    max-height: 100%; /* or fixed height like 100vh if needed */
-    
-    
-    
+
+   
 }
 
 #header {
@@ -157,8 +112,10 @@ html, body {
     display: flex;  /* Applies Flexbox to arrange the children */
     justify-content: space-between;  /* Centers the children horizontally */
     align-items: center;  /* Centers the children vertically */
-    width: 100%;  /* Ensures the header takes up the full available width */
-    gap: 2rem;  /* Adds space between the child elements inside the header */
+    width: 100%;
+    height: 100%; /* Ensure it fills the 8vh from grid row */
+    padding: 0 1rem;
+  
 }
 
 .glow-box {
@@ -205,6 +162,8 @@ html, body {
     align-items: center;
     gap: 20px;
     flex-wrap: wrap; /* ensures it stacks gracefully on small screens */
+    width: 100%;
+    max-width: 100%;
   }
 
   #profile-upper-row-left, #profile-upper-row-right {
@@ -214,12 +173,12 @@ html, body {
     justify-content: center;
     gap: 10px;
     max-width: 150px;
+    width: 100%;
   }
 
   #profile-picture {
     width: clamp(100px, 20vw, 175px);
     height: clamp(100px, 20vw, 175px);
-    padding: auto;
     border-radius: 50%;
     background: url('/assets/img/default-profile.png') no-repeat center center/cover;
     margin-bottom: 25px;
@@ -272,16 +231,18 @@ html, body {
     flex-direction: column;
     justify-content: center;
     margin-top: 20px;
+    width: 100%;
   }
 
   #empower-level {
     align-self: center; /* centers the button within the flex container */
-    font-size: 2rem; /* Adjust this value as needed */
+    font-size: clamp(1.2rem, 2vw, 2rem);
   }
 
   #contributions-drain-btn {
     align-self: center; /* centers the button within the flex container */
     width: 50%;
+    max-width: 100%;
   }
   
 
@@ -296,8 +257,10 @@ html, body {
     width: 100%;
     max-width: 100%;
     height: 100%;
+    min-height: 0;
     box-sizing: border-box; /* Ensures padding doesn't add to width */
     padding: 10px;
+    overflow: auto;
 }
 
   .profile-lower-left {
@@ -305,6 +268,7 @@ html, body {
     flex-direction: column;
     gap: 15px;
     justify-content: center;
+    width: 100%;
     
   }
 
@@ -313,16 +277,19 @@ html, body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    width: 100%;
 }
 
  #send-contribution-btn{
     /* width: 100px; */
     height: 50px;
+    max-width: 100%
  }
 
  #purchase-igc-btn{
     /* width: 100px; */
     height: 100px;
+    max-width: 100%
  }
 
   .profile-lower-right {
@@ -342,6 +309,7 @@ html, body {
   #enter-badlands-btn{
     background: linear-gradient(135deg, #6a11cb, #2575fc);
     animation: pulse 4s infinite; /* Apply the pulse effect */
+    max-width: 100%
   }
 
   @keyframes pulse {
@@ -433,7 +401,7 @@ html, body {
 
   #hud-upper-misc{
     display: grid;
-    grid-template-columns: 1fr 1fr; /* left fixed, right flexible */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     box-sizing: border-box; /* Ensures padding doesn't add to width */
     padding: 10px;
   }
@@ -449,8 +417,10 @@ html, body {
   }
 
   .special-icon{
-    width: 200%;
-    height: 100%;
+    width: clamp(50px, 15vw, 100px);
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
   }
 
   #hud-upper-misc-right{
@@ -473,8 +443,9 @@ html, body {
     width: 100%;
     max-width: 100%;
     height: 100%;
+    min-height: 0; /* allow to shrink */
     box-sizing: border-box; /* Ensures padding doesn't add to width */
-    padding: 25px;
+    padding: 0px;
   }
 
   #hud-lower-wants{
@@ -483,8 +454,10 @@ html, body {
     width: 100%;
     max-width: 100%;
     height: 100%;
+    min-height: 0; /* allow to shrink */
     box-sizing: border-box; /* Ensures padding doesn't add to width */
-    padding: 25px;
+    padding: 10px;
+    
   }
 
   #action-buttons-wants-container{
@@ -493,7 +466,7 @@ html, body {
     gap: 25px;
     width: 100%;
     margin-top: 15px;
-    justify-items: center;
+
     align-items: center;
   }
 
@@ -507,7 +480,7 @@ html, body {
     transition: background 0.3s ease;
     cursor: pointer;
 
-    width: auto;
+    width: clamp(auto, 20vw, auto);
     height: 175px;
   }
 
@@ -521,13 +494,14 @@ html, body {
     width: 100%;
     max-width: 100%;
     height: 100%;
+    min-height: 0; /* allow to shrink */
     box-sizing: border-box; /* Ensures padding doesn't add to width */
-    padding: 25px;
+    padding: 10px;
   }
 
   #action-buttons-needs-container{
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 25px;
     width: 100%;
     margin-top: 15px;
@@ -561,6 +535,7 @@ html, body {
 }
 
 
+
 #metrics-upper {
     border: 2px solid #a855f7;
     border-radius: 8px;
@@ -576,6 +551,9 @@ html, body {
     border-radius: 12px;
     box-shadow: 0 0 12px rgba(98, 0, 234, 0.6);
     padding: 16px;
+
+    max-width: 100%;
+  overflow-x: auto;
   }
 
 
@@ -590,17 +568,13 @@ html, body {
 
 #upper-metrics {
     display: flex;
-    flex: 1;
+
     flex-direction: column;
     gap: 10px;
     margin-bottom: 20px;
 }
 
-#lower-metrics {
-    flex: 1;
-    flex-grow: 1;
-    /* Later: Add anything you want here */
-}
+
 
 
 #discretionary-current-balance {
