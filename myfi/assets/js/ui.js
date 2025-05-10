@@ -138,12 +138,12 @@ export function renderDashboard(playerData) {
     const discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
     const discretionaryBalanceElement = document.getElementById('discretionary-current-balance');
     discretionaryBalanceElement.innerText = discretionaryData.availableResource_Total !== undefined
-        ? `Available Energy: £${discretionaryData.availableResource_Total.toFixed(2)}`
-        : 'Available Energy: £0.00';
+        ? `£${discretionaryData.availableResource_Total.toFixed(2)}`
+        : '£0.00';
     const balanceElement = document.getElementById('current-balance');
     balanceElement.innerText = playerData.financeSummary.currentBalance !== undefined
-        ? `Balance: £${playerData.financeSummary.currentBalance.toFixed(2)}`
-        : 'Balance: £0.00';
+        ? `£${playerData.financeSummary.currentBalance.toFixed(2)}`
+        : '£0.00';
 
     const profilePic = document.getElementById('profile-picture');
     profilePic.style.backgroundImage = "url('/assets/img/default-profile.png')";

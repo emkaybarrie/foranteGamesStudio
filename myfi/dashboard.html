@@ -131,22 +131,32 @@
 
         
             <div id="hud-lower">
-                <div id="hud-lower-focus">
-                    <div id="action-buttons">
-                        <button class="action-btn" data-category="wants" style="background-color: #33c3ff;">Action 1 - Wants</button>
-                        <button class="action-btn" data-category="wants" style="background-color: #33c3ff;">Action 2 - Wants</button>
+
+                <div id="hud-lower-needs">
+                    <div id="action-buttons-needs-container">
+                        <button class="action-button-needs" data-category="needs" >Action 1 - Needs</button>
+                        <button class="action-button-needs" data-category="needs" >Action 2 - Needs</button>
+                        <button class="action-button-needs" data-category="needs" >Action 3 - Needs</button>
+                        <button class="action-button-needs" data-category="needs" >Action 4 - Needs</button>
+                        <button class="action-button-needs" data-category="needs" >Action 5 - Needs</button>
+                        <button class="action-button-needs" data-category="needs" >Action 6 - Needs</button>
+                        <button class="action-button-needs" data-category="needs" >Action 7 - Needs</button>
+                    </div>
+                </div>
+
+                <div id="hud-lower-wants">
+                    <div id="action-buttons-wants-container">
+                        <button class="action-button-wants" data-category="wants" >Action 1 - Wants</button>
+                        <button class="action-button-wants" data-category="wants" >Action 2 - Wants</button>
+                        <button class="action-button-wants" data-category="wants" >Action 3 - Wants</button>
+                    
+                        
+      
                         
                     </div>
                 </div>
 
-                <div id="hud-lower-stamina">
-                    <div id="action-buttons">
-                        <button class="action-btn" data-category="needs" style="background-color: #0ba131;">Action 1 - Needs</button>
-                        <button class="action-btn" data-category="needs" style="background-color: #0ba131;">Action 2 - Needs</button>
-                        <button class="action-btn" data-category="needs" style="background-color: #0ba131;">Action 3 - Needs</button>
-                        <button class="action-btn" data-category="needs" style="background-color: #0ba131;">Action 4 - Needs</button>
-                    </div>
-                </div>
+                
                 
 
                 
@@ -155,8 +165,8 @@
 
         <!-- Metrics Section -->
         <div id="metrics">
-            <div id="metrics-hdr" class="section-header">Metrics</div>
-            <div id="metrics-upper">
+            <div id="metrics-hdr" class="section-header" >Metrics </div>
+            <div id="metrics-upper" >
                 <div id="chart-container">
                     <canvas id="metricsChart"></canvas>
                 </div>
