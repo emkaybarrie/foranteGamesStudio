@@ -18,175 +18,147 @@
     <script type="module" src="assets/js/dashboard.js"></script>
 
 
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/styles copy.css">
 </head>
 <body>
-    <div id="dashboard-content">
+    <div class="dashboard">
         <!-- Header Section -->
-        <header class="section" id="hdr">
+         <header class="hdr">
+            <div id="title">Welcome to MyFi</div>
+            <div id="news">Rolling Headline News Here</div>
+            <button id="mode-toggle-btn" class="hdr-btn">Toggle Mode</button>
+            <button id="logout-btn" class="hdr-btn">Logout</button>
+        </header>
 
-            <div id="glowing-box" class="glow-box">
-                <!-- Optional content -->
-                <p>Welcome to MyFi</p>
-            </div>
+        <div class="panel-container">
+            <!-- Profile Section -->
+             <div class="panel profile" id="profile">
+                <div class="profile-hdr">Profile</div>
+                <div class="sub-panel-container">
+                    <div class="sub-panel profile-upper">
+                        <div class="profile-upper-row">
+                            <div id="profile-upper-row-left">
+                                <div id="alias-banner"></div>
+                                <div id="profile-level">Lvl 10</div>
+                            </div>
+                            
+                            <div id="profile-picture"></div>
+                            
+                            <div id="profile-upper-row-right">
+                                <div id="glowing-box" class="profile-lower-right-glow-box">Avatar Stats: Vitality Focus Stamina </div>
+                                <div id="spending-persona">Rogue</div>
+                            </div>
         
-
-        </header>
-        <header class="section" id="hdr">
-            <div id="glowing-box" class="glow-box">
-                <!-- Optional content -->
-                <p>Rolling Headline News Here</p>
-            </div>
-
-        </header>
-
-        <header class="section" id="hdr">
-
-
-            <button id="mode-toggle-btn">Toggle Mode</button>
-            <button id="logout-btn" class="action-btn purple-btn">Logout</button>
-        </header>
-
-
-        <!-- Profile Section -->
-        <div class="section panel" id="profile">
-            <div id="profile-hdr" class="section-header">Profile</div>
-
-            <div id="profile-upper">
-                <div class="profile-upper-row">
-                    <div id="profile-upper-row-left">
-                        <div id="alias-banner"></div>
-                        <div id="profile-level">Lvl 10</div>
-                    </div>
-                    
-                    <div id="profile-picture"></div>
-                    
-                    <div id="profile-upper-row-right">
-                        <div id="glowing-box" class="profile-lower-right-glow-box">Avatar Stats: Vitality Focus Stamina </div>
-                        <div id="spending-persona">Rogue</div>
-                    </div>
-
-                </div>
-
-                <div id="contributions-bar-container" class="tooltip-target">
-                    <div id="empower-level">0</div>
-                    <div class="bar-wrapper">
-                        <div id="contributions-bar-label" class="bar-label">100%</div>
-                        <div class="bar-background">
-                            <div id="contributions-bar" class="bar-fill purple-bar"></div>
+                        </div>
+        
+                        <div id="contributions-bar-container" class="tooltip-target">
+                            <div id="empower-level">0</div>
+                            <div class="bar-wrapper">
+                                <div id="contributions-bar-label" class="bar-label">100%</div>
+                                <div class="bar-background">
+                                    <div id="contributions-bar" class="bar-fill purple-bar"></div>
+                                </div>
+                            </div>
+                            <button class="action-btn" id="contributions-drain-btn" data-category="contributionsCategory">Empower Avatar</button>
                         </div>
                     </div>
-                    <button class="action-btn" id="contributions-drain-btn" data-category="contributionsCategory">Empower Avatar</button>
-                </div>
-
-                
-            </div>
-
-            <div id="profile-lower">
-
-                <div class="profile-lower-left">
-                    <div id="profile-lower-buttons">
-                        <button class="action-btn" id="send-contribution-btn">Send Contribution</button>
-                        <button class="action-btn" id="purchase-igc-btn">Purchase IGC</button>
-                    </div>
-                </div>
-
-                <div class="profile-lower-right">
-                    
-                    
-                    <div id="glowing-box" class="profile-lower-right-glow-box">💎 IGC Stats</div>
-                    <div id="glowing-box" class="profile-lower-right-glow-box coming-soon-hover">Comms / Mini (Passive) Game / Promos </div>
-                    <div id="glowing-box" class="profile-lower-right-glow-box coming-soon-hover">Badlands Stats</div>
-                    <div id="glowing-box" class="profile-lower-right-glow-box">
-                        <!-- Optional content -->
-                        <button class="action-btn" id="enter-badlands-btn">Enter the Badlands</button>
-                    </div>
-                </div>
-                
-            </div>
-        </div>
-
-        <!-- HUD Section -->
-        <div class="section panel" id="hud">
-        <div id="hud-hdr" class="section-header">HUD</div>
-
-            <div id="hud-upper">
-                <button id="manual-entry-btn" class="action-btn purple-btn">Manual Entry</button>
-                <!-- Button to trigger the modal -->
-                <button id="link-sheet-btn" class="action-btn purple-btn">🔗 Link</button>
-                <button id="unlink-sheet-btn" class="action-btn purple-btn">❌ Unlink</button>
-                <button id="refresh-link-sheet-btn" class="action-btn purple-btn">🔄 Refresh</button>
-
-                <div id="upper-hud-vitals"></div>
-
-                <div id="hud-upper-misc">
-                    <div id="hud-upper-misc-left" class="tooltip-target coming-soon-hover">
-                        <button id="special" class="special-icon">💎 S1</button>
-                        <button id="special2" class="special-icon">💎 S2</button>
-                        <button id="special3" class="special-icon">💎 S3</button>
-                    </div>
-
-                    <div id="hud-upper-misc-right" class="tooltip-target">
-                        <div id="discretionary-current-balance"></div>
-                        <div id="current-balance"></div>
-                    </div>
-
-                </div>
-
-            </div>
-
+                    <div class="sub-panel profile-lower">
+                        <div class="profile-lower-left">
+                            <div id="profile-lower-buttons">
+                                <button class="action-btn" id="send-contribution-btn">Send Contribution</button>
+                                <button class="action-btn" id="purchase-igc-btn">Purchase IGC</button>
+                            </div>
+                        </div>
         
-            <div id="hud-lower" class="coming-soon-hover">
-
-                <div id="hud-lower-needs">
-                    <div id="action-buttons-needs-container">
-                        <button class="action-button-needs" data-category="needs" >Action 1 - Needs</button>
-                        <button class="action-button-needs" data-category="needs" >Action 2 - Needs</button>
-                        <button class="action-button-needs" data-category="needs" >Action 3 - Needs</button>
-                        <button class="action-button-needs" data-category="needs" >Action 4 - Needs</button>
-                        <button class="action-button-needs" data-category="needs" >Action 5 - Needs</button>
-                        <button class="action-button-needs" data-category="needs" >Action 6 - Needs</button>
-                        <button class="action-button-needs" data-category="needs" >Action 7 - Needs</button>
+                        <div class="profile-lower-right">
+                            
+                            
+                            <div id="glowing-box" class="profile-lower-right-glow-box">💎 IGC Stats</div>
+                            <div id="glowing-box" class="profile-lower-right-glow-box coming-soon-hover">Comms / Mini (Passive) Game / Promos </div>
+                            <div id="glowing-box" class="profile-lower-right-glow-box coming-soon-hover">Badlands Stats</div>
+                            <div id="glowing-box" class="profile-lower-right-glow-box">
+                                <!-- Optional content -->
+                                <button class="action-btn" id="enter-badlands-btn">Enter the Badlands</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div id="hud-lower-wants">
-                    <div id="action-buttons-wants-container">
-                        <button class="action-button-wants" data-category="wants" >Action 1 - Wants</button>
-                        <button class="action-button-wants" data-category="wants" >Action 2 - Wants</button>
-                        <button class="action-button-wants" data-category="wants" >Action 3 - Wants</button>
-                    
-                        
-      
-                        
+             </div>
+            <!-- HUD Section -->
+             <div class="panel hud" id="hud">
+                <div class="hud-hdr">HUD</div>
+                <div class="sub-panel-container">
+                    <div class="sub-panel hud-upper">
+                        <button id="manual-entry-btn" class="action-btn purple-btn">Manual Entry</button>
+                        <!-- Button to trigger the modal -->
+                        <button id="link-sheet-btn" class="action-btn purple-btn">🔗 Link</button>
+                        <button id="unlink-sheet-btn" class="action-btn purple-btn">❌ Unlink</button>
+                        <button id="refresh-link-sheet-btn" class="action-btn purple-btn">🔄 Refresh</button>
+        
+                        <div id="upper-hud-vitals"></div>
+        
+                        <div id="hud-upper-misc">
+                            <div id="hud-upper-misc-left" class="tooltip-target coming-soon-hover">
+                                <button id="special" class="special-icon">💎</button>
+                                <button id="special2" class="special-icon">💎</button>
+                                <button id="special3" class="special-icon">💎</button>
+                            </div>
+        
+                            <div id="hud-upper-misc-right" class="tooltip-target">
+                                <div id="discretionary-current-balance"></div>
+                                <div id="current-balance"></div>
+                            </div>
+        
+                        </div>
+        
+                    </div>
+                    <div class="sub-panel hud-lower">
+        
+                        <div id="hud-lower-needs">
+                            <div id="action-buttons-needs-container">
+                                <button class="action-button-needs" data-category="needs" >Action 1 - Needs</button>
+                                <button class="action-button-needs" data-category="needs" >Action 2 - Needs</button>
+                                <button class="action-button-needs" data-category="needs" >Action 3 - Needs</button>
+                                <button class="action-button-needs" data-category="needs" >Action 4 - Needs</button>
+                                <button class="action-button-needs" data-category="needs" >Action 5 - Needs</button>
+                                <button class="action-button-needs" data-category="needs" >Action 6 - Needs</button>
+                                <button class="action-button-needs" data-category="needs" >Action 7 - Needs</button>
+                            </div>
+                        </div>
+        
+                        <div id="hud-lower-wants">
+                            <div id="action-buttons-wants-container">
+                                <button class="action-button-wants" data-category="wants" >Action 1 - Wants</button>
+                                <button class="action-button-wants" data-category="wants" >Action 2 - Wants</button>
+                                <button class="action-button-wants" data-category="wants" >Action 3 - Wants</button>
+    
+                            </div>
+                        </div>
                     </div>
                 </div>
-
                 
-                
-
-                
-            </div>
-        </div>
-
-        <!-- Metrics Section -->
-        <div id="metrics panel" class="coming-soon-hover">
-            <div id="metrics-hdr" class="section-header" >Metrics </div>
-            <div id="metrics-upper" >
-                <div id="chart-container">
-                    <canvas id="metricsChart"></canvas>
+             </div>
+            <!-- Metrics Section -->
+            <div class="panel metrics coming-soon-hover" id="metrics">
+                <div class="metrics-hdr">Metrics</div>
+                <div class="sub-panel-container">
+                    <div id="sub-panel metrics-upper" >
+                        <div id="chart-container">
+                            <canvas id="metricsChart"></canvas>
+                        </div>
+        
+                        <div id="chart-container">
+                            <canvas id="metricsChart2"></canvas>
+                        </div>
+        
+                    </div>
+                    <div id="sub-panel metrics-lower">
+                        <div id="glowing-box" class="glow-box"></div>
+                        <div id="glowing-box" class="glow-box"></div>
+        
+                    </div>
                 </div>
-
-                <div id="chart-container">
-                    <canvas id="metricsChart2"></canvas>
-                </div>
-
-            </div>
-
-            <div id="metrics-lower">
-                <div id="glowing-box" class="glow-box"></div>
-                <div id="glowing-box" class="glow-box"></div>
-
+                
             </div>
         </div>
 
