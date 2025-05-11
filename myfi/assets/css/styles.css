@@ -287,7 +287,7 @@ html, body {
   width: clamp(75px, 10vw, 125px);
   height: clamp(75px, 10vw, 125px);
   border-radius: 50%;
-  background: url('/assets/img/default-profile.png') no-repeat center center/cover;
+  background: url('./assets/img/default-profile.png') no-repeat center center/cover;
   margin-bottom: 0.5rem;
   box-shadow: 0 0 8px #6200ea;
   background-color: #d8d8d8;
