@@ -2,22 +2,47 @@
 /* Apply border-box globally */
 /* === Base Reset === */
 *, *::before, *::after {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
   }
 
     /* Ensure the body and html elements take up the full viewport */
-html, body {
+  html, body {
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
 
-  margin: 0;
-  padding: 0;
-  max-width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  scroll-behavior: smooth;
-  font-family: Inter, sans-serif;
-  color: white;
-  background: #121212;
+    max-width: 100vw;
+    max-height: 100vh;
+    overflow: auto;
+    scroll-behavior: smooth;
     
+    color: #000;
+    background: #fff;
+      
+  }
+
+/* Variables for global use */
+:root {
+  --primary-color: #6200ea;
+  --secondary-color: #03dac6;
+  --font-size-base: 1rem;
+  --primary-text-color: #fff;
+
+  --header-background-colour: #262626; 
+
+  --panel-background-colour: #262626;
+  --panel-box-shadow: 0 0 8px #6200ea;
+
+  --sub-panel-background-colour: #262626;
+  --sub-panel-box-shadow:0 0 10px 2px #a855f7;
+
+  --button-background-colour:#6200ea;
+
+  --profile-size: clamp(4rem, 10vw, 10rem);
+
+  --spacing-unit: 8px
 }
   /* For debugging */
 
@@ -129,83 +154,69 @@ html, body {
 .dashboard {
   width: 100%;
   height: 100%; /* Full screen */
+
 }
 
 /* === Header Section Styling === */
 .hdr {
-  display: grid;
-  grid-template-columns: 20% 60% auto auto;
-  padding: 0.5rem 1rem;
-  background: #222;
+  color: var(--primary-text-color);
   text-align: center;
-  align-content: center;
-  font-size: 1rem;
-  max-height: 5vh;
+  background: var(--header-background-colour);
 }
-.hdr-btn {
-  background: #6200ea;
+
+
+.panel{
+  background: var(--panel-background-colour);
+  color: var(--primary-text-color);
+  box-shadow: var(--panel-box-shadow);
+}
+
+.sub-panel{
+  background: var(--sub-panel-background-colour);
+  box-shadow: var(--sub-panel-box-shadow);
+}
+
+.sub-panel-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly; /* or 'center', or 'flex-start' */
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+  padding: 0.25rem;
+  flex-grow: 1; /* Allow it to grow and take as much space as possible */
+  background-color: #1e1e2f; /* dark background */
+  border: 2px solid #a855f7; /* purple border */
+  box-shadow: 0 0 8px 2px #a855f7; /* glowing effect */
+
+}
+
+.button{
+  background: var(--button-background-colour);
+  color: var(--primary-text-color);
+  font-weight: bold; 
   border: none;
-  padding: 10px;
-  color: white;
-  font-weight: bold;
-  border-radius: 6px;
+
+  border-radius: 1rem;
   transition: background 0.3s ease;
   cursor: pointer;
-  max-height: 5vh;
- 
-}
-
-
-/* === Panel Container Desktop Grid === */
-/* Desktop Grid Layout (Default) */
-.panel-container {
-  display: grid;
-  grid-template-columns: 30% 40% auto; /* 3 panels for Profile, HUD, Metrics */
-  grid-gap: 1rem;
-  width: 100%;
-  /* height: 100%; */
-  height: calc(100% - 5%); /* Adjust based on total header height */
-  padding: 0.5rem;
-}
-
-/* === Panel Box === */
-.panel {
-  display: flex;
-  flex-direction: column;
-  
-  background: #2a2a2a;
-  border-radius: 8px;
   padding: 0.75rem;
-
-  overflow: auto;
-  
-  
-  gap: 1rem;
-
-  align-items: stretch;
-  justify-content: flex-start;
-
-  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); */
-  box-shadow: 0 0 8px #6200ea;
-  color: white;
 }
 
-.sub-panel-container{
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.button-special{
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: var(--primary-text-color);
+  font-weight: bold; 
+  border: none;
+
+  border-radius: 1rem;
+  transition: background 0.3s ease;
+  cursor: pointer;
+  padding: 0.75rem;
+  animation: pulse 4s infinite; /* Apply the pulse effect */
+
 }
 
-/* === Sub Panels on Desktop === */
-.sub-panel {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  align-content: center;
-  padding: 1rem;
-  border-radius: 8px;
-    box-shadow: 0 0 10px 2px #a855f7;
-    background-color: #1e1e1e;
-}
 
 .bar-wrapper {
   margin-bottom: 15px;
@@ -220,7 +231,7 @@ html, body {
   position: relative;
   background: #333;
   border-radius: 8px;
-  height: 24px;
+  height: 1.25rem;
 }
 
 .bar-fill {
@@ -264,7 +275,6 @@ html, body {
 }  
 
 /* Optional specific color per panel */
-.profile { background: #1e1e1e; }
 
 .profile-upper-row {
   display: flex;
@@ -284,8 +294,8 @@ html, body {
 }
 
 #profile-picture {
-  width: clamp(75px, 10vw, 125px);
-  height: clamp(75px, 10vw, 125px);
+  width: var(--profile-size);
+  height: var(--profile-size);
   border-radius: 50%;
   background: url('./assets/img/default-profile.png') no-repeat center center/cover;
   margin-bottom: 0.5rem;
@@ -352,6 +362,53 @@ html, body {
   width: 50%;
   max-width: 100%;
 }
+
+#avatar-image {
+  width: var(--profile-size);
+  height: var(--profile-size);
+  border-radius: 10%;
+  background: url('../img/avatar-image.png') no-repeat center center/cover;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 0 8px #6200ea;
+  background-color: #d8d8d8;
+  background-size: cover;
+  background-position: center;
+  transition: all 0.3s ease-in-out;
+  object-fit: cover;
+}
+
+#avatar-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  width: 60%; /* fills the sub-panel-section width */
+  box-shadow: 0 0 6px #6200ea;
+  color: white;
+  font-size: 0.75rem;
+}
+
+.avatar-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.3rem;
+}
+
+.stat-label {
+  font-weight: 600;
+  color: #aaa;
+}
+
+.stat-value {
+  font-weight: 700;
+  color: #fff;
+}
+
 
 .hud { background: #262626; }
 #hud-upper-misc{

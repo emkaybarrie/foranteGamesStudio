@@ -1,130 +1,12 @@
-/* General Body Styling */
-/* Apply border-box globally */
-/* === Base Reset === */
-*, *::before, *::after {
-    box-sizing: border-box;
+@import 'base.css';
+
+/* Desktop-specific overrides and styles */
+@media screen and (min-width: 1024px) {
+  body {
+    font-size: var(--font-size-base);
   }
 
-    /* Ensure the body and html elements take up the full viewport */
-html, body {
-
-  margin: 0;
-  padding: 0;
-  max-width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  scroll-behavior: smooth;
-  font-family: Inter, sans-serif;
-  color: white;
-  background: #121212;
-    
-}
-  /* For debugging */
-
-  .debug-outline * {
-    outline: 1px solid red;
-  }
-
-/* Tooltip container styling */
-.tooltip {
-    position: absolute;
-    background: linear-gradient(135deg, #6a11cb, #2575fc); /* Vibrant purple-blue gradient */
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    opacity: 0;
-    pointer-events: none;  /* Make tooltip non-interactive */
-    transition: opacity 0.4s ease-in-out;
-    z-index: 1000;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    
-    
-    
-  }
-
-  /* Add glowing border effect (optional) */
-.tooltip.glow {
-    box-shadow: 0 0 10px rgba(102, 153, 255, 0.8);
-  }
-  
-  /* Arrow styling for tooltip */
-  .tooltip::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 6px solid #2575fc;
-    bottom: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-
-    
-  }
-  
-  /* Tooltip visibility on hover */
-  .tooltip-visible {
-    opacity: 1;
-  }
-
-  .coming-soon {
-  position: relative;
-  opacity: 0.5; /* dims the content */
-  pointer-events: none; /* disables all interaction */
-  filter: grayscale(100%);
-}
-
-.coming-soon::after {
-  content: "🔒 Coming Soon";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 1rem;
-  text-align: center;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.coming-soon-hover {
-  position: relative;
-  opacity: 0.5;
-  filter: grayscale(100%);
-  cursor: not-allowed;
-}
-
-/* Tooltip on hover */
-.coming-soon-hover::after {
-  content: "🔒 Coming Soon";
-  position: absolute;
-  bottom: 50%; /* position above the container */
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  z-index: 99;
-}
-
-.coming-soon-hover:hover::after {
-  opacity: 1;
-}
-
-/* Base Styles */
+/* Desktop-specific styles here */
 
 .dashboard {
   width: 100%;
@@ -134,19 +16,16 @@ html, body {
 /* === Header Section Styling === */
 .hdr {
   display: grid;
-  grid-template-columns: 20% 60% auto auto;
+  grid-template-columns: 10% 80% auto auto;
   padding: 0.5rem 1rem;
-  background: #222;
-  text-align: center;
-  align-content: center;
+
+  
   font-size: 1rem;
-  max-height: 5vh;
+  
 }
 .hdr-btn {
-  background: #6200ea;
   border: none;
   padding: 10px;
-  color: white;
   font-weight: bold;
   border-radius: 6px;
   transition: background 0.3s ease;
@@ -173,7 +52,7 @@ html, body {
   display: flex;
   flex-direction: column;
   
-  background: #2a2a2a;
+  /* background: #2a2a2a; */
   border-radius: 8px;
   padding: 0.75rem;
 
@@ -204,7 +83,7 @@ html, body {
   padding: 1rem;
   border-radius: 8px;
     box-shadow: 0 0 10px 2px #a855f7;
-    background-color: #1e1e1e;
+    background-color: var(--background-color)
 }
 
 .bar-wrapper {
@@ -264,7 +143,7 @@ html, body {
 }  
 
 /* Optional specific color per panel */
-.profile { background: #1e1e1e; }
+
 
 .profile-upper-row {
   display: flex;
@@ -602,4 +481,4 @@ html, body {
 
 
 
-
+}
