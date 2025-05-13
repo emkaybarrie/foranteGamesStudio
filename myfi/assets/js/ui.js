@@ -385,9 +385,19 @@ function createDrainBar(resource, barElement, buttonElement, labelElement, sound
             const unitsEarned = Math.floor((resource.capAmount - resource.availableAmount) / (resource.capAmount * 0.195) );
 
             if (unitsEarned > empowerLevel) {
-                empowerLevel = unitsEarned;
-                const el = document.getElementById('empower-level');
-                el.textContent = empowerLevel;
+                 empowerLevel = unitsEarned;
+            //     const el = document.getElementById('empower-level');
+            //     el.textContent = empowerLevel;
+            // }
+
+            // Loop through all levels up to the new empower level
+            for (let i = 1; i <= empowerLevel; i++) {
+                const el = document.getElementById(`empower-level-${i}`);
+                if (el) {
+                    el.classList.add('empower-active');
+                    el.classList.remove('empower-inactive');
+                }
+            }
             }
 
             const percentage = (resource.availableAmount / resource.capAmount) * 100;
