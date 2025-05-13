@@ -185,7 +185,7 @@ export function renderAvatarStats(statData = null) {
         statData = {
                         health: 6,
                         mana: 3,
-                        stamina: 12, // 2 bonus blocks
+                        stamina: 11, // 2 bonus blocks
                     }
     }
   const container = document.getElementById('avatar-stats');
