@@ -33,9 +33,11 @@
   border: none;
   outline: none;
   background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  color: #2a005f; /* dark purple input text */
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
+
+
 
 #login-form input:focus,
 #signup-form input:focus {
