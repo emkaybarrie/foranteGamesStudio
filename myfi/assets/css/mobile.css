@@ -6,8 +6,8 @@
 @media (max-width: 768px) {
 
   :root {
-    --profile-size: clamp(5rem, 45svw, 50rem);
-    --avatar-size: clamp(5rem, 45vw, 50rem);
+    --profile-size: clamp(5rem, 40svw, 45rem);
+    --avatar-size: clamp(5rem, 40vw, 45rem);
   }
 
   .dashboard {
