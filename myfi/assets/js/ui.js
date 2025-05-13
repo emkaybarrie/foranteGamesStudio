@@ -1,5 +1,6 @@
 // ui.js
-
+import { auth, db } from './auth.js';
+import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { categories, subCategories, incomeCategory } from './config.js';
 import { getDiscretionaryData, getContributionData } from './calculations.js';
 
@@ -439,14 +440,66 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 });
 
+// Attribute Panel
 document.addEventListener('DOMContentLoaded', () => {
-  let remainingPoints = 10;
+    const user = JSON.parse(localStorage.getItem('user'));
+    const playerRef = doc(db, 'players', user.uid)
+
+  let remainingPoints = 0;
   const pointsDisplay = document.getElementById("points-remaining");
   const attributes = {
     resilience: 0,
     focus: 0,
     adaptability: 0
   };
+
+  loadAttributesFromPlayerData();
+
+  // Populate from Firestore
+    async function loadAttributesFromPlayerData() {
+    const snapshot = await getDoc(playerRef);
+    if (snapshot.exists()) {
+        const playerData = snapshot.data();
+        const attributeData = playerData.attributePoints || {};
+
+        remainingPoints = attributeData.unspent ?? 0;
+        attributes.resilience = attributeData.resilience ?? 0;
+        attributes.focus = attributeData.focus ?? 0;
+        attributes.adaptability = attributeData.adaptability ?? 0;
+
+        updateUI();
+    } else {
+        console.warn("No player data found.");
+    }
+    }
+
+
+    async function saveAttributesToFirestore(playerRef) {
+  const confirmed = confirm("Are you sure you want to lock in your choices? This cannot be undone.");
+  if (!confirmed) return;
+
+  try {
+    await setDoc(playerRef, {
+    attributePoints: {
+      unspent: remainingPoints,
+      resilience: attributes.resilience,
+      focus: attributes.focus,
+      adaptability: attributes.adaptability
+    }
+    }, { merge: true });
+
+    alert("Your attributes have been saved!");
+  } catch (err) {
+    console.error("Error saving to Firestore:", err);
+    alert("There was an error saving your choices.");
+  }
+}
+
+
+document.getElementById("save-attributes").addEventListener("click", () => {
+  saveAttributesToFirestore(playerRef);
+});
+
 
   function updateUI() {
     pointsDisplay.textContent = remainingPoints;
@@ -481,6 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateUI();
 });
+
+
 
 
 /* ========== Modal Helpers ========== */

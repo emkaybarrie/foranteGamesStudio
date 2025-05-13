@@ -91,9 +91,20 @@
   width: 100%;
   align-items: center;
   justify-content: center;
+  }
 
+  #empower-level-container {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
+  #profile-lower-top {
+
+  display: flex;
+  flex-direction: column;
+
+  
+}
   #profile-lower-bottom{
     display: flex;
     flex-direction: row;
