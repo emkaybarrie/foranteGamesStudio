@@ -172,6 +172,63 @@ export function renderDashboard(playerData) {
     }
 }
 
+/* ============ Profilel Renderer =========== */
+
+const avatarStatConfig = {
+  health: { color: '#e53935', glow: '#ff8a80' },
+  mana: { color: '#1e88e5', glow: '#82b1ff' },
+  stamina: { color: '#43a047', glow: '#b9f6ca' },
+};
+
+export function renderAvatarStats(statData = null) {
+    if(!statData){
+        statData = {
+                        health: 6,
+                        mana: 3,
+                        stamina: 12, // 2 bonus blocks
+                    }
+    }
+  const container = document.getElementById('avatar-stats');
+
+  const rows = container.querySelectorAll('.avatar-stat');
+
+  rows.forEach(row => {
+    
+    const stat = row.dataset.stat;
+    const value = statData[stat] || 0;
+    const blocksWrapper = row.querySelector('.stat-blocks');
+    blocksWrapper.innerHTML = ''; // Clear old blocks
+    console.log("Stat", stat)
+    const base = Math.min(value, 10); // standard max
+    const bonus = Math.max(value - 10, 0); // anything over 10
+
+    for (let i = 0; i < 10; i++) {
+      const block = document.createElement('div');
+      block.classList.add('block');
+      if (i < base) {
+        block.classList.add('filled');
+        block.style.backgroundColor = avatarStatConfig[stat].color;
+        block.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].glow}`;
+        block.style.animationDelay = `${i * 50}ms`;
+      }
+      blocksWrapper.appendChild(block);
+    }
+
+    // Add bonus blocks if needed
+    for (let i = 0; i < bonus; i++) {
+      const bonusBlock = document.createElement('div');
+      bonusBlock.classList.add('block', 'bonus');
+      bonusBlock.style.backgroundColor = 'gold';
+      bonusBlock.style.boxShadow = '0 0 6px gold';
+      bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
+      blocksWrapper.appendChild(bonusBlock);
+    }
+  });
+}
+
+
+
+
 /* ========== HUD Renderer ========== */
 
 // Refresh Dashboard UI with latest player data
@@ -488,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
     adaptability: 0
   };
 
+  console.log('Loading Stats')
   loadAttributesFromPlayerData();
 
   // Populate from Firestore
@@ -527,6 +585,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     }, { merge: true });
 
+    const user = JSON.parse(localStorage.getItem('user'));
+    fetchDataAndRenderMyFiDashboard(user.uid)
     alert("Your attributes have been saved!");
   } catch (err) {
     console.error("Error saving to Firestore:", err);
@@ -628,7 +688,11 @@ export function openPaymentModal(amountSpent) {
     }, { merge: true });
 
     //alert("Your energy has been added to your avatar!");
+    
     fetchDataAndRenderMyFiDashboard(user.uid)
+    document.addEventListener('DOMContentLoaded', () => {
+    loadAttributesFromPlayerData();
+    })
   } catch (err) {
     console.error("Error saving to Firestore:", err);
     alert("There was an error saving your choices.");

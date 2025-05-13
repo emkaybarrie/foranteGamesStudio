@@ -6,7 +6,7 @@ import { gapiLoaded, gisLoaded, extractSheetId, validateSheet, fetchSheetData, o
 
 
 import { getCashflowData,getDiscretionaryData, getAvatarData  } from './calculations.js';  
-import { renderHUD, renderDashboard, showManualEntryButton, hideManualEntryButton,showLinkAccountButton, 
+import { renderHUD, renderAvatarStats, renderDashboard, showManualEntryButton, hideManualEntryButton,showLinkAccountButton, 
     hideLinkAccountButton, hideUnlinkAccountButton , showUnlinkAccountButton, startLiveHUDUpdate, openPaymentModal, 
     openLinkSheetModal, closeSheetModal, showTooltip, hideTooltip,updateTooltipPosition,
     submitPayment} from './ui.js';
@@ -140,7 +140,9 @@ auth.onAuthStateChanged(async (user) => {
             const startDate = new Date();
             await setDoc(userRef, { startDate: startDate }, { merge: true });
         }
+       
         fetchDataAndRenderMyFiDashboard(user.uid);
+       
        
     }
 });
@@ -425,6 +427,9 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
                     // Render
                     renderDashboard(playerData);
                     await renderHUD(discretionaryData)
+                    
+                    renderAvatarStats();
+                
                     //startLiveHUDUpdate(discretionaryData)
 
                     const ctx = document.getElementById('metricsChart').getContext('2d');
