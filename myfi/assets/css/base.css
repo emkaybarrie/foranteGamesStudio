@@ -96,6 +96,8 @@
   transition: background 0.3s ease;
   cursor: pointer;
   padding: 0.75rem;
+
+  touch-action: none;
 }
 
 .button-special{

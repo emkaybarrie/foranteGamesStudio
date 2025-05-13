@@ -366,7 +366,8 @@ function createDrainBar(resource, barElement, buttonElement, labelElement, sound
     let isDraining = false;
     const audio = soundEffectPath ? new Audio(soundEffectPath) : null;
 
-    buttonElement.addEventListener('mousedown', () => {
+    buttonElement.addEventListener('pointerdown', (e) => {
+        e.preventDefault(); // Prevents mobile from interpreting touch as a gesture
         if (!resource || resource.availableAmount <= 0 || isDraining) return;
         isDraining = true;
         accumulatedAmount = 0;
@@ -405,8 +406,8 @@ function createDrainBar(resource, barElement, buttonElement, labelElement, sound
         barElement.classList.remove('glow-effect');
     };
 
-    buttonElement.addEventListener('mouseup', stopDrain);
-    buttonElement.addEventListener('mouseleave', stopDrain);
+    buttonElement.addEventListener('pointerup', stopDrain);
+    buttonElement.addEventListener('pointerleave', stopDrain);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
