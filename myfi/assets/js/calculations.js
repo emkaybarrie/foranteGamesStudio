@@ -188,43 +188,38 @@ export async function getDiscretionaryData(cashflowDataInput = null, playerDataI
     //await setDoc(userDocRef, playerData, { merge: true });
 }
 
-export async function getContributionData(cashflowSummaryData, playerData) {
+export async function getAvatarData(discretionaryDataInput = null, playerDataInput = null) {
+
+    // Get Local Storage Variables
+    const playerData = playerDataInput ?  playerDataInput : JSON.parse(localStorage.getItem('playerData'))
+    const discretionaryData = discretionaryDataInput ?  discretionaryDataInput : JSON.parse(localStorage.getItem('discretionaryData'))
  
     let contributionResults = {};
     
         const monthsSinceStart = playerData.monthsSinceStart
+        const dailyTargetContribution = discretionaryData.dContributionsTarget_Avatar
+        const totalContributed_Avatar = playerData.avatarData.avatarContribution
 
-        const lifetimeMaxBaseContribution = cashflowSummaryData.averageContributionsAmount * monthsSinceStart
-        const lifetimeBaseContributionPercent = Math.min(playerData.lifetimeContribution / lifetimeMaxBaseContribution, 1.5)
+        const maxContribution_Avatar = dailyTargetContribution * 30.44 * monthsSinceStart
+        const contributionPercent_Avatar = Math.min(totalContributed_Avatar / maxContribution_Avatar, 1.5)
 
-        const lifetimeMaxTotalContribution = cashflowSummaryData.targetContributionsAmount * 12 * 5
-        const contributionLevel = 1 + parseInt(playerData.lifetimeContribution / cashflowSummaryData.targetContributionsAmount)
-        const contributionAmountToNextLevel = cashflowSummaryData.targetContributionsAmount - playerData.lifetimeContribution % cashflowSummaryData.targetContributionsAmount
-        const ascendancy_Rank1Level = lifetimeMaxTotalContribution * 0.2
-        const ascendancy_Rank2Level = lifetimeMaxTotalContribution * 0.5
-        const ascendancy_Rank3Level = lifetimeMaxTotalContribution * 0.7
-        const ascendancy_Rank4Level = lifetimeMaxTotalContribution * 0.9
-        const ascendancy_Ranks = {ascendancy_Rank1Level, ascendancy_Rank2Level, ascendancy_Rank3Level, ascendancy_Rank4Level}
-        const levelsToAscendancy_Rank1 = Math.max((ascendancy_Ranks.ascendancy_Rank1Level - playerData.lifetimeContribution) / cashflowSummaryData.targetContributionsAmount, 0)
-        const levelsToAscendancy_Rank2 = Math.max((ascendancy_Ranks.ascendancy_Rank2Level - playerData.lifetimeContribution) / cashflowSummaryData.targetContributionsAmount, 0)
-        const levelsToAscendancy_Rank3 = Math.max((ascendancy_Ranks.ascendancy_Rank3Level - playerData.lifetimeContribution) / cashflowSummaryData.targetContributionsAmount, 0)
-        const levelsToAscendancy_Rank4 = Math.max((ascendancy_Ranks.ascendancy_Rank4Level - playerData.lifetimeContribution) / cashflowSummaryData.targetContributionsAmount, 0)
-        const levelsToAscendancy_Ranks = {levelsToAscendancy_Rank1, levelsToAscendancy_Rank2, levelsToAscendancy_Rank3, levelsToAscendancy_Rank4}
-        const ascendancy_RankData = {ascendancy_Ranks, levelsToAscendancy_Ranks}
+        const contributionLevel = 1 + parseInt(totalContributed_Avatar / (dailyTargetContribution * 30.44))
+        const contributionAmountToNextLevel = (dailyTargetContribution * 30.44) - totalContributed_Avatar % (dailyTargetContribution * 30.44)
+        
+  
   
         contributionResults = {
-            lifetimeMaxBaseContribution: Math.round(lifetimeMaxBaseContribution),
-            lifetimeBaseContributionPercent: lifetimeBaseContributionPercent,
+            maxContribution_Avatar: Math.round(maxContribution_Avatar),
+            contributionPercent_Avatar: contributionPercent_Avatar,
             contributionLevel: contributionLevel,
             contributionAmountToNextLevel: contributionAmountToNextLevel,
-            ascendancy_RankData: ascendancy_RankData
         };
     
 
     // After building discretionaryResults dynamically (like we did before):
-    window.localStorage.setItem('contributionBreakdown', JSON.stringify(contributionResults));
-    const contributionyBreakdownData = JSON.parse(localStorage.getItem('contributionBreakdown'))
-
+    window.localStorage.setItem('avatarData', JSON.stringify(contributionResults));
+    const contributionyBreakdownData = JSON.parse(localStorage.getItem('avatarData'))
+    console.log(contributionyBreakdownData)
     return contributionyBreakdownData
 
     // Store the finance summary in Firestore

@@ -2,7 +2,7 @@
 import { auth, db } from './auth.js';
 import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { categories, subCategories, incomeCategory } from './config.js';
-import { getDiscretionaryData, getContributionData } from './calculations.js';
+
 
 /* ========== Helpers ========== */
 
@@ -145,6 +145,23 @@ export function renderDashboard(playerData) {
     balanceElement.innerText = playerData.financeSummary.currentBalance !== undefined
         ? `£${playerData.financeSummary.currentBalance.toFixed(2)}`
         : '£0.00';
+
+
+    const avatarData = JSON.parse(localStorage.getItem('avatarData'))
+    const avatarLevelElement = document.getElementById('profile-level');
+    avatarLevelElement.innerText = avatarData.contributionLevel !== undefined
+        ? `Lvl ${avatarData.contributionLevel.toFixed(0)}`
+        : '0';
+
+    const powerLevelElement = document.getElementById('power-level');
+    powerLevelElement.innerText = avatarData.contributionPercent_Avatar !== undefined
+    ? `${avatarData.contributionPercent_Avatar.toFixed(2) * 100}%`
+    : '0';
+
+    const powerTotalElement = document.getElementById('power-total');
+    powerTotalElement.innerText = playerData.avatarData.avatarContribution !== undefined
+    ? `${playerData.avatarData.avatarContribution.toFixed(0)}`
+    : '0';
 
     const profilePic = document.getElementById('profile-picture');
     profilePic.style.backgroundImage = "url('./assets/img/default-profile.png')";

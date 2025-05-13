@@ -5,7 +5,7 @@ import { categories, subCategories, incomeCategory, unallocatedRefName } from '.
 import { gapiLoaded, gisLoaded, extractSheetId, validateSheet, fetchSheetData, openGooglePicker  } from "./api.js";
 
 
-import { getCashflowData,getDiscretionaryData, getContributionData  } from './calculations.js';  
+import { getCashflowData,getDiscretionaryData, getAvatarData  } from './calculations.js';  
 import { renderHUD, renderDashboard, showManualEntryButton, hideManualEntryButton,showLinkAccountButton, 
     hideLinkAccountButton, hideUnlinkAccountButton , showUnlinkAccountButton, startLiveHUDUpdate, openPaymentModal, 
     openLinkSheetModal, closeSheetModal, showTooltip, hideTooltip,updateTooltipPosition} from './ui.js';
@@ -408,7 +408,7 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
                     // Calculate
                     const cashflowData = await getCashflowData(playerData)
                     const discretionaryData = await getDiscretionaryData(cashflowData, playerData)
-                    const contributionyBreakdownData = await getContributionData(cashflowData, playerData)
+                    const avatarData = await getAvatarData(discretionaryData, playerData)
                    
                     localStorage.setItem('playerData', playerData);
      
@@ -571,7 +571,7 @@ export async function loadTransactionData(storedDataSourceID = null) {
         if (storedData) {
             // Parse the stored data
              const parsedData = JSON.parse(storedData);
-             console.log('Stored Data available', parsedData )
+             //console.log('Stored Data available', parsedData )
              if (Array.isArray(parsedData)) {
                 const transactions = parsedData.slice(1).map(row => ({
                     date: row[1], // assuming column B is date

@@ -422,6 +422,30 @@
   color: #fff;
 }
 
+/* Only for stat-block-row within avatar-stats */
+#avatar-stats .stat-block-row {
+  align-items: center;
+}
+
+#avatar-stats .stat-blocks {
+  display: flex;
+  gap: 3px;
+  justify-content: flex-end;
+}
+
+#avatar-stats .block {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.1); /* Empty */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#avatar-stats .block.filled {
+  background-color: #fdd835; /* Filled block color */
+  box-shadow: 0 0 4px #fbc02d;
+}
+
 
 .hud { background: #262626; }
 #hud-upper-misc{
