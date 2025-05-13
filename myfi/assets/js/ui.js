@@ -147,12 +147,12 @@ export function renderDashboard(playerData) {
         ? `£${playerData.financeSummary.currentBalance.toFixed(2)}`
         : '£0.00';
 
-
     const avatarData = JSON.parse(localStorage.getItem('avatarData'))
+    avatarData.avatarContribution = playerData.avatarData.avatarContribution
     const avatarLevelElement = document.getElementById('profile-level');
     avatarLevelElement.innerText = avatarData.contributionLevel !== undefined
         ? `Lvl ${avatarData.contributionLevel.toFixed(0)}`
-        : '0';
+        : 'Lvl 1';
 
     const powerLevelElement = document.getElementById('power-level');
     powerLevelElement.innerText = avatarData.contributionPercent_Avatar !== undefined
@@ -518,9 +518,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseCapAmount = discretionaryData.dContributionsTarget_Avatar
    
     const contributionsResource = {
-        availableAmount: baseCapAmount * 60,
-        capAmount: baseCapAmount * 60,
-        ratePerSecond: baseCapAmount * 0.25 * 60
+        availableAmount: baseCapAmount * 30,
+        capAmount: baseCapAmount * 30,
+        ratePerSecond: baseCapAmount * 0.25 * 30
     };
 
     createDrainBar(

@@ -422,6 +422,7 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
                     const avatarData = await getAvatarData(discretionaryData, playerData)
                    
                     localStorage.setItem('playerData', playerData);
+                    console.log(playerData)
      
 
                     // Render

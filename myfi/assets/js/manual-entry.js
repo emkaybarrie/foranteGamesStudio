@@ -60,6 +60,8 @@ async function handleManualEntry() {
       console.log(financeSummary.expensesByCategory)
 
       financeSummary.expensesByCategory[categories.discretionary][unallocatedRefName] = unallocated
+
+      financeSummary.currentBalance = currentBalance
       
   }
 

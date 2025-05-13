@@ -31,7 +31,7 @@ async function connectBank() {
 }
 
 // Event listener for the "Connect" button
-document.getElementById('connect-btn').addEventListener('click', connectBank);
+// document.getElementById('connect-btn').addEventListener('click', connectBank);
 
 // Optionally, the user can skip the step
 document.getElementById('skip-for-now-btn').addEventListener('click', () => {

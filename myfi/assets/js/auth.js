@@ -67,7 +67,11 @@ export async function signUpUser(email, password, alias, firstName, lastName, st
             financeSummary: {
                 income: 0,
                 expensesByCategory: generateInitialExpensesByCategory()
-            }
+            },
+            avatarData: {
+                avatarContribution: 0
+            },
+            monthsSinceStart: 0
         });
 
         window.location.href = "connect-bank.html"; // Redirect after signup
