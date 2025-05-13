@@ -374,8 +374,10 @@
 
 }
 
+
+
 #avatar-image {
-  width: 100%;
+  width: var(--avatar-size);
   height: var(--avatar-size);
   border-radius: 10%;
   background: url('../img/avatar-image.png') no-repeat center center/cover;

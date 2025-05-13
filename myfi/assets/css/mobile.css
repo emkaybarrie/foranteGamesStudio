@@ -93,15 +93,26 @@
   justify-content: center;
   }
 
+  #attribute-panel {
+  padding: 0.5rem;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  color: white;
+  text-align: center;
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+}
+
   #empower-level-container {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
   #profile-lower-top {
-
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
 
   
 }
