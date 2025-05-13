@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="assets/css/base.css">
     <link rel="stylesheet" href="assets/css/desktop.css">
     <link rel="stylesheet" href="assets/css/mobile.css">
+    <link rel="stylesheet" href="assets/css/helpers.css">
 </head>
 <body>
     <div class="dashboard">
@@ -38,22 +39,33 @@
              <div class="panel" id="profile">
                 <div class="profile-hdr">Profile</div>
                 <div class="sub-panel-container">
-                    <div class="sub-panel profile-upper">
-                        <div class="profile-upper-row">
-                            <div id="profile-upper-row-left">
+                    <div class="sub-panel" id="profile-upper">
+                        <div class="section" id="profile-upper-top">
+                            <div class="sub-section" id="profile-upper-top-left">
                                 <div id="spending-persona">Rogue</div>
                                 <div id="profile-level">Lvl 10</div>
                             </div>
-                            
+                            <div class="sub-section" id="profile-upper-top-center">
                             <div id="profile-picture"></div>
+                            </div>
                             
-                            <div id="profile-upper-row-right">
-                                <div id="glowing-box" class="profile-lower-right-glow-box">Stats</div>
+                            <div class="sub-section" id="profile-upper-row-right">
+                         
                                 
+                                <div class="glow-box" id="avatar-stats">
+                                    <div class="avatar-stat"><span class="stat-label">Power Level:</span> <span class="stat-value">10</span></div>
+                                    <div class="avatar-stat"><span class="stat-label">Ranking:</span> <span class="stat-value">12</span></div>
+                                </div>
+                                
+                           
                             </div>
         
                         </div>
-        
+                        <div class="section" id="profile-upper-bottom">
+                        <div class="sub-section" id="profile-upper-bottom-left">
+                            <div class="glow-box" id="placeholder">PLaceholder</div>
+                        </div>
+                        <div class="sub-section" id="profile-upper-bottom-right">
                         <div id="contributions-bar-container" class="tooltip-target">
                             <div id="empower-level">0</div>
                             <div class="bar-wrapper">
@@ -62,29 +74,42 @@
                                     <div id="contributions-bar" class="bar-fill purple-bar"></div>
                                 </div>
                             </div>
-                            <button class="button action-btn" id="contributions-drain-btn" data-category="contributionsCategory">Empower Avatar</button>
+                            <button class="button" id="contributions-drain-btn" data-category="contributionsCategory">Empower Avatar</button>
+                        </div>
+                        </div>
                         </div>
                     </div>
                     <div class="sub-panel" id="profile-lower">
-                        <div class="sub-panel-section" id="profile-lower-top">
+                        <div class="section" id="profile-lower-top">
+                             <div class="sub-section">
                                 <div class="glow-box" id="avatar-image"></div>
+                            </div>
+                            <div class="sub-section">
                                 <div class="glow-box" id="avatar-stats">
                                     <div class="avatar-stat"><span class="stat-label">Strength:</span> <span class="stat-value">10</span></div>
                                     <div class="avatar-stat"><span class="stat-label">Agility:</span> <span class="stat-value">8</span></div>
                                     <div class="avatar-stat"><span class="stat-label">Intelligence:</span> <span class="stat-value">9</span></div>
                                 </div>
+                                </div>
                         </div>
         
-                        <div class="sub-panel-section" id="profile-lower-middle">
-                            <div class="glow-box">💎 IGC Stats</div>
-                            <div class="glow-box">Badlands Stats</div>
+                        <div class="section" id="profile-lower-middle">
+                            <div class="sub-section">
+                            <div class="glow-box" id="igc-stats">🪙 IGC Stats</div>
+                            </div>
+                            <div class="sub-section">
+                            <div class="glow-box" id="community-stats">🏘️ Community Stats</div>
+                            </div>
+                            <div class="sub-section">
+                            <div class="glow-box" id="badlands-stats">🗺️Badlands Stats</div>
+                            </div>
                         </div>
 
-                        <div class="sub-panel-section" id="profile-lower-bottom">
-                                <button class="button action-btn" id="purchase-igc-btn">Purchase IGC</button>
+                        <div class="section" id="profile-lower-bottom">
+                                <button class="button" id="purchase-igc-btn">Purchase IGC</button>
                                 <button class="button" id="send-contribution-btn">Send Contribution</button>
                                 <div class="glow-box">
-                                    <button class="button button-special" id="enter-badlands-btn">Enter the Badlands</button>
+                                    <button class="button-special" id="enter-badlands-btn">Enter the Badlands</button>
                                 </div>
                         </div>
                     </div>
@@ -94,50 +119,69 @@
              <div class="panel hud" id="hud">
                 <div class="hud-hdr">HUD</div>
                 <div class="sub-panel-container">
-                    <div class="sub-panel hud-upper">
+                    <div class="sub-panel" id="hud-upper">
+                        <div class="section" id="hud-upper-middle">
                         <button id="manual-entry-btn" class="action-btn purple-btn">Manual Entry</button>
                         <!-- Button to trigger the modal -->
                         <button id="link-sheet-btn" class="action-btn purple-btn">🔗 Link</button>
                         <button id="unlink-sheet-btn" class="action-btn purple-btn">❌ Unlink</button>
                         <button id="refresh-link-sheet-btn" class="action-btn purple-btn">🔄 Refresh</button>
-        
+                        </div>
+                        <div class="section" id="hud-upper-middle">
                         <div id="upper-hud-vitals"></div>
+                        </div>
         
-                        <div id="hud-upper-misc">
-                            <div id="hud-upper-misc-left" class="tooltip-target coming-soon-hover">
+                        <div class="section" id="hud-upper-bottom">
+                            <div class="sub-section">
+                            <div id="power-gems" class="tooltip-target coming-soon-hover">
                                 <button id="special" class="special-icon">💎</button>
                                 <button id="special2" class="special-icon">💎</button>
                                 <button id="special3" class="special-icon">💎</button>
                             </div>
-        
-                            <div id="hud-upper-misc-right" class="tooltip-target">
+                            </div>
+                            <div class="sub-section">
+                            <div id="energy-summary" class="tooltip-target">
                                 <div id="discretionary-current-balance"></div>
                                 <div id="current-balance"></div>
+                            </div>
                             </div>
         
                         </div>
         
                     </div>
-                    <div class="sub-panel hud-lower">
-        
-                        <div id="hud-lower-needs">
-                            <div id="action-buttons-needs-container">
-                                <button class="action-button-needs" data-category="needs" >Action 1 - Needs</button>
-                                <button class="action-button-needs" data-category="needs" >Action 2 - Needs</button>
-                                <button class="action-button-needs" data-category="needs" >Action 3 - Needs</button>
-                                <button class="action-button-needs" data-category="needs" >Action 4 - Needs</button>
-                                <button class="action-button-needs" data-category="needs" >Action 5 - Needs</button>
-                                <button class="action-button-needs" data-category="needs" >Action 6 - Needs</button>
-                                <button class="action-button-needs" data-category="needs" >Action 7 - Needs</button>
-                            </div>
-                        </div>
-        
-                        <div id="hud-lower-wants">
+                    <div class="sub-panel" id="hud-lower">
+                        <div class="section" id="hud-lower-top">
                             <div id="action-buttons-wants-container">
-                                <button class="action-button-wants" data-category="wants" >Action 1 - Wants</button>
-                                <button class="action-button-wants" data-category="wants" >Action 2 - Wants</button>
-                                <button class="action-button-wants" data-category="wants" >Action 3 - Wants</button>
-    
+                                    <button class="action-button-growth" data-category="growth" >Action 1 - Growth</button>
+                                    <button class="action-button-growth" data-category="growth" >Action 2 - Growth</button>
+        
+                                </div>
+                        </div>
+                        <div class="section" id="hud-lower-middle">
+                            
+                            <div class="sub-section">
+                         
+                                <div id="action-buttons-wants-container">
+                                    <button class="action-button-wants" data-category="wants" >Action 1 - Wants</button>
+                                    <button class="action-button-wants" data-category="wants" >Action 2 - Wants</button>
+                                    <button class="action-button-wants" data-category="wants" >Action 3 - Wants</button>
+        
+                                </div>
+                         
+                            </div>
+
+                            <div class="sub-section">
+                            
+                                <div id="action-buttons-needs-container">
+                                    <button class="action-button-needs" data-category="needs" >Action 1 - Needs</button>
+                                    <button class="action-button-needs" data-category="needs" >Action 2 - Needs</button>
+                                    <button class="action-button-needs" data-category="needs" >Action 3 - Needs</button>
+                                    <button class="action-button-needs" data-category="needs" >Action 4 - Needs</button>
+                                    <button class="action-button-needs" data-category="needs" >Action 5 - Needs</button>
+                                    <button class="action-button-needs" data-category="needs" >Action 6 - Needs</button>
+                                    <button class="action-button-needs" data-category="needs" >Action 7 - Needs</button>
+                                </div>
+                          
                             </div>
                         </div>
                     </div>
@@ -148,7 +192,7 @@
             <div class="panel metrics coming-soon-hover" id="metrics">
                 <div class="metrics-hdr">Metrics</div>
                 <div class="sub-panel-container">
-                    <div id="sub-panel metrics-upper" >
+                    <div class="sub-panel" id="metrics-upper" >
                         <div id="chart-container">
                             <canvas id="metricsChart"></canvas>
                         </div>
@@ -158,7 +202,7 @@
                         </div>
         
                     </div>
-                    <div id="sub-panel metrics-lower">
+                    <div class="sub-panel" id="metrics-lower">
                         <div id="glowing-box" class="glow-box"></div>
                         <div id="glowing-box" class="glow-box"></div>
         

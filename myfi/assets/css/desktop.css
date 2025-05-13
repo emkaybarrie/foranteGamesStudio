@@ -6,6 +6,14 @@
     font-size: var(--font-size-base);
   }
 
+  /* Variables for global use */
+:root {
+
+  --profile-size: clamp(1rem, 1vw, 1rem);
+  --avatar-size: clamp(1rem, 1vw, 1rem);
+
+}
+
 /* Desktop-specific styles here */
 
 .dashboard {
@@ -39,52 +47,55 @@
 /* Desktop Grid Layout (Default) */
 .panel-container {
   display: grid;
-  grid-template-columns: 30% 40% auto; /* 3 panels for Profile, HUD, Metrics */
+  grid-template-columns: 25% 45% auto; /* 3 panels for Profile, HUD, Metrics */
   grid-gap: 1rem;
   width: 100%;
   /* height: 100%; */
-  height: calc(100% - 5%); /* Adjust based on total header height */
+  height: calc(100vh - 7vh); /* Adjust based on total header height */
   padding: 0.5rem;
 }
 
 /* === Panel Box === */
 .panel {
-  display: flex;
-  flex-direction: column;
-  
-  /* background: #2a2a2a; */
+
   border-radius: 8px;
   padding: 0.75rem;
 
   overflow: auto;
-  
-  
-  gap: 1rem;
 
-  align-items: stretch;
-  justify-content: flex-start;
-
-  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); */
-  box-shadow: 0 0 8px #6200ea;
-  color: white;
 }
 
 .sub-panel-container{
   display: flex;
   flex-direction: column;
+  margin-top: 0.5rem;
   gap: 1rem;
 }
 
 /* === Sub Panels on Desktop === */
 .sub-panel {
-  flex: 1 1 auto;
+
   overflow-y: auto;
   align-content: center;
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: 8px;
-    box-shadow: 0 0 10px 2px #a855f7;
-    background-color: var(--background-color)
+    
+   
 }
+
+.sub-section {
+  height: 100%;
+  width: 100%;
+  padding: 0.25rem;
+  justify-items: center;
+  align-content: center;
+}
+
+#glow-box {
+  height: 100%;
+  width: 100%;
+}
+
 
 .bar-wrapper {
   margin-bottom: 15px;
@@ -145,41 +156,35 @@
 /* Optional specific color per panel */
 
 
-.profile-upper-row {
-  display: flex;
-  flex-wrap: wrap; /* ensures it stacks gracefully on small screens */
-  justify-content: space-between;
-  align-content: center;
-  gap: 0.5rem;
+#profile-upper, #hud-upper, #metrics-upper {
+  height: 47vh;
 }
 
-#profile-upper-row-left, #profile-upper-row-right {
+#profile-lower, #hud-lower, #metrics-lower  {
+  height: 36vh;
+}
+
+
+#profile-upper-top {
   display: flex;
-  flex-direction: column;
+  width: 100%;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  max-width: 20%;
+
 }
 
-#profile-picture {
-  width: clamp(75px, 10vw, 125px);
-  height: clamp(75px, 10vw, 125px);
-  border-radius: 50%;
-  background: url('./assets/img/default-profile.png') no-repeat center center/cover;
-  margin-bottom: 0.5rem;
-  box-shadow: 0 0 8px #6200ea;
-  background-color: #d8d8d8;
-  background-size: cover;
-  background-position: center;
-  transition: all 0.3s ease-in-out;
-  object-fit: cover;
+#profile-upper-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+
 }
 
-#profile-picture:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 12px #a855f7;
-}
+
+
+
+
+
+
 
 #alias-banner {
   width: 100%;
@@ -232,35 +237,58 @@
   max-width: 100%;
 }
 
-.hud { background: #262626; }
-#hud-upper-misc{
+#profile-lower-top {
+
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  box-sizing: border-box; /* Ensures padding doesn't add to width */
-  padding: 10px;
-}
-#hud-upper-misc-left{
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  gap: 20px;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+
+  
 }
 
-.special-icon{
-  width: clamp(75px, 20vw, 125px);
-  height: auto;
-  max-height: 100%;
-  object-fit: contain;
+#profile-lower-bottom{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
 }
 
-#hud-upper-misc-right{
+
+#hud-upper-bottom{
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  align-items: center;
+  padding: 0.5rem;
+  font-size: 1.5rem;
+}
+
+
+#energy-summary{
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+
 }
-.metrics { background: #1b1b1b; }
+
+#hud-lower-top{
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+}
+#hud-lower-middle{
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+}
+
+
+
 
 
 

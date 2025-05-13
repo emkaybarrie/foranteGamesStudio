@@ -465,6 +465,53 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
                         }
                     });
 
+                    const ctx2 = document.getElementById('metricsChart2').getContext('2d');
+
+                    const metricsChart2 = new Chart(ctx2, {
+                        type: 'line',
+                        data: {
+                            labels: ['Day 1', 'Day 3', 'Day 5', 'Day 7'],
+                            datasets: [{
+                                label: 'Daily Spending',
+                                data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary, cashflowData.dAvgSpending_Discretionary],
+                                backgroundColor: [
+                                    '#6200ea',
+                                    '#bb86fc',
+                                    '#985eff',
+                                    '#7f39fb',
+                                    '#3700b3'
+                                ],
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false, // Let the parent container control size
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { color: '#ccc' },
+                                    grid: { color: '#444' }
+                                },
+                                x: {
+                                    ticks: { color: '#ccc' },
+                                    grid: { color: '#444' }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#ccc'
+                                    }
+                                }
+                            },
+                            animation: {
+                                duration: 2000, // milliseconds
+                                easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
+                            },
+                        }
+                    });
+
                     
 
 

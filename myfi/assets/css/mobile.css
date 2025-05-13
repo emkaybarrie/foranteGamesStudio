@@ -6,7 +6,8 @@
 @media (max-width: 768px) {
 
   :root {
-    --profile-size: clamp(5rem, 35vw, 10rem);
+    --profile-size: clamp(5rem, 50vw, 50rem);
+    --avatar-size: clamp(5rem, 50vw, 50rem);
   }
 
   .dashboard {
@@ -75,12 +76,31 @@
   
   }
 
+  
+
   /* Optional: Prevent double scrollbars */
   body, html {
     height: 100%;
     margin: 0;
     overflow: hidden;
     -webkit-overflow-scrolling: touch;
+  }
+
+  #profile-upper-top {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+
+}
+
+  #profile-lower-bottom{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 0.5rem;
   }
 }
 
