@@ -439,6 +439,50 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  let remainingPoints = 10;
+  const pointsDisplay = document.getElementById("points-remaining");
+  const attributes = {
+    resilience: 0,
+    focus: 0,
+    adaptability: 0
+  };
+
+  function updateUI() {
+    pointsDisplay.textContent = remainingPoints;
+    for (let key in attributes) {
+      document.getElementById(`${key}-value`).textContent = attributes[key];
+    }
+  }
+
+  document.querySelectorAll(".increment").forEach(button => {
+    button.addEventListener("click", (e) => {
+      const row = e.target.closest(".attribute-row");
+      const attr = row.dataset.attribute;
+      if (remainingPoints > 0) {
+        attributes[attr]++;
+        remainingPoints--;
+        updateUI();
+      }
+    });
+  });
+
+  document.querySelectorAll(".decrement").forEach(button => {
+    button.addEventListener("click", (e) => {
+      const row = e.target.closest(".attribute-row");
+      const attr = row.dataset.attribute;
+      if (attributes[attr] > 0) {
+        attributes[attr]--;
+        remainingPoints++;
+        updateUI();
+      }
+    });
+  });
+
+  updateUI();
+});
+
+
 /* ========== Modal Helpers ========== */
 
 export function openPaymentModal(amountSpent) {
