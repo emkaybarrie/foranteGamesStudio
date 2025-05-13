@@ -8,7 +8,8 @@ import { gapiLoaded, gisLoaded, extractSheetId, validateSheet, fetchSheetData, o
 import { getCashflowData,getDiscretionaryData, getAvatarData  } from './calculations.js';  
 import { renderHUD, renderDashboard, showManualEntryButton, hideManualEntryButton,showLinkAccountButton, 
     hideLinkAccountButton, hideUnlinkAccountButton , showUnlinkAccountButton, startLiveHUDUpdate, openPaymentModal, 
-    openLinkSheetModal, closeSheetModal, showTooltip, hideTooltip,updateTooltipPosition} from './ui.js';
+    openLinkSheetModal, closeSheetModal, showTooltip, hideTooltip,updateTooltipPosition,
+    submitPayment} from './ui.js';
 
 // Tooltips
 
@@ -245,6 +246,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Profile 
 // Button Listeners
+// document.addEventListener('DOMContentLoaded', () => {
+//     const empowerBtn = document.getElementById('submit-payment');
+//     //const discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
+//     // or pass a specific amount if you like
+//     if (empowerBtn) empowerBtn.addEventListener('click', () => { submitPayment(
+//     )});
+//   })
 // Community Contributions
 document.addEventListener('DOMContentLoaded', () => {
     const sendContributionBtn = document.getElementById('send-contribution-btn');
@@ -270,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const paymentMethodSelect = document.getElementById('paymentMethod');
   const paymentDetailsDiv = document.getElementById('paymentDetails');
   const qrCodeDiv = document.getElementById('qrCode');
+
 
   const paymentInfo = {
     monzo: {

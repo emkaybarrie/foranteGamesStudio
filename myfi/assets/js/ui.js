@@ -2,6 +2,7 @@
 import { auth, db } from './auth.js';
 import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { categories, subCategories, incomeCategory } from './config.js';
+import { fetchDataAndRenderMyFiDashboard } from './dashboard.js';
 
 
 /* ========== Helpers ========== */
@@ -380,15 +381,21 @@ export function startLiveHUDUpdate(discretionaryBreakdownData) {
 function createDrainBar(resource, barElement, buttonElement, labelElement, soundEffectPath) {
     let drainInterval;
     let accumulatedAmount = 0;
-    let empowerLevel = 0;
+    let empowerLevel
+    let addToEmpowerLevel = 0;
     let isDraining = false;
     const audio = soundEffectPath ? new Audio(soundEffectPath) : null;
 
+    window.localStorage.setItem('empowerLevel', JSON.stringify(0));
+
     buttonElement.addEventListener('pointerdown', (e) => {
+        const queuedEmpowerLevel = JSON.parse(localStorage.getItem('empowerLevel'))
+        if(queuedEmpowerLevel < 5){
         e.preventDefault(); // Prevents mobile from interpreting touch as a gesture
         if (!resource || resource.availableAmount <= 0 || isDraining) return;
         isDraining = true;
         accumulatedAmount = 0;
+        
 
         
         
@@ -400,23 +407,27 @@ function createDrainBar(resource, barElement, buttonElement, labelElement, sound
             resource.availableAmount = Math.max(0, resource.availableAmount - drainPerTick);
             accumulatedAmount += drainPerTick;
 
-            const unitsEarned = Math.floor((resource.capAmount - resource.availableAmount) / (resource.capAmount * 0.195) );
+            // const unitsEarned = Math.floor((resource.capAmount - resource.availableAmount) / (resource.capAmount * 0.195) );
+            const unitsEarned = Math.floor( accumulatedAmount/ (resource.capAmount * 0.195) );
+            console.log(unitsEarned, queuedEmpowerLevel)
 
-            if (unitsEarned > empowerLevel) {
-                 empowerLevel = unitsEarned;
-            //     const el = document.getElementById('empower-level');
-            //     el.textContent = empowerLevel;
-            // }
+            
+            
+            //if (unitsEarned > empowerLevel) {
+                 addToEmpowerLevel = Math.min(unitsEarned,5 - queuedEmpowerLevel);
+                empowerLevel = addToEmpowerLevel + queuedEmpowerLevel
+
 
             // Loop through all levels up to the new empower level
-            for (let i = 1; i <= empowerLevel; i++) {
+            for (let i = 1; i <= queuedEmpowerLevel + addToEmpowerLevel; i++) {
                 const el = document.getElementById(`empower-level-${i}`);
                 if (el) {
                     el.classList.add('empower-active');
                     el.classList.remove('empower-inactive');
                 }
             }
-            }
+            //}
+            
 
             const percentage = (resource.availableAmount / resource.capAmount) * 100;
             barElement.style.width = `${percentage}%`;
@@ -424,14 +435,21 @@ function createDrainBar(resource, barElement, buttonElement, labelElement, sound
 
             labelElement.innerText = `£${resource.availableAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
         }, 100);
+        } 
     });
 
     const stopDrain = () => {
         if (!isDraining) return;
         clearInterval(drainInterval);
         isDraining = false;
-        openPaymentModal(accumulatedAmount.toFixed(2));
+        
+        window.localStorage.setItem('empowerLevel', JSON.stringify(empowerLevel));
+        openPaymentModal(accumulatedAmount.toFixed(2), empowerLevel);
         barElement.classList.remove('glow-effect');
+
+        barElement.style.width = `${100}%`;
+        resource.availableAmount = resource.capAmount
+            labelElement.innerText = `£${resource.capAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
     };
 
     buttonElement.addEventListener('pointerup', stopDrain);
@@ -443,9 +461,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseCapAmount = discretionaryData.dContributionsTarget_Avatar
    
     const contributionsResource = {
-        availableAmount: baseCapAmount,
-        capAmount: baseCapAmount,
-        ratePerSecond: baseCapAmount * 0.25
+        availableAmount: baseCapAmount * 60,
+        capAmount: baseCapAmount * 60,
+        ratePerSecond: baseCapAmount * 0.25 * 60
     };
 
     createDrainBar(
@@ -479,10 +497,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const playerData = snapshot.data();
         const attributeData = playerData.attributePoints || {};
 
-        remainingPoints = attributeData.unspent ?? 0;
+        const avatarData = JSON.parse(localStorage.getItem('avatarData'))
+        
+        
         attributes.resilience = attributeData.resilience ?? 0;
         attributes.focus = attributeData.focus ?? 0;
         attributes.adaptability = attributeData.adaptability ?? 0;
+        const spentPoints = attributes.resilience + attributes.focus + attributes.adaptability
+        remainingPoints = (avatarData.contributionLevel * 10) - spentPoints ?? 0;//attributeData.unspent ?? 0;
 
         updateUI();
     } else {
@@ -510,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error("Error saving to Firestore:", err);
     alert("There was an error saving your choices.");
   }
-}
+    }
 
 
 document.getElementById("save-attributes").addEventListener("click", () => {
@@ -565,6 +587,52 @@ export function openPaymentModal(amountSpent) {
     document.getElementById('amount').value = amountSpent;
     modal.style.display = 'block';
 
+    const empowerBtn = document.getElementById('submit-payment');
+    // or pass a specific amount if you like
+    if (empowerBtn) empowerBtn.addEventListener('click', () => { submitPayment(amountSpent
+    )});
+
+}
+
+ export async function submitPayment(amountSpent){
+
+
+
+    const modal = document.getElementById('payment-modal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+
+    for (let i = 1; i <= 5; i++) {
+                const el = document.getElementById(`empower-level-${i}`);
+                if (el) {
+                    el.classList.add('empower-inactive');
+                    el.classList.remove('empower-active');
+                }
+    }
+
+
+    window.localStorage.setItem('empowerLevel', JSON.stringify(0));
+
+    
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    const playerRef = doc(db, 'players', user.uid)
+    const userDoc = await getDoc(playerRef);
+    const playerData = userDoc.data();
+    const newAmount = playerData.avatarData.avatarContribution + parseFloat(amountSpent)
+    try {
+    await setDoc(playerRef, {
+    avatarData: {
+      avatarContribution: parseFloat(newAmount),
+    }
+    }, { merge: true });
+
+    //alert("Your energy has been added to your avatar!");
+    fetchDataAndRenderMyFiDashboard(user.uid)
+  } catch (err) {
+    console.error("Error saving to Firestore:", err);
+    alert("There was an error saving your choices.");
+  }
 }
 
 export function openLinkSheetModal(amountSpent) {

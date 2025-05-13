@@ -203,7 +203,7 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
         const maxContribution_Avatar = dailyTargetContribution * 30.44 * monthsSinceStart
         const contributionPercent_Avatar = Math.min(totalContributed_Avatar / maxContribution_Avatar, 1.5)
 
-        const contributionLevel = 1 + parseInt(totalContributed_Avatar / (dailyTargetContribution * 30.44))
+        const contributionLevel = Math.min(1 + parseInt(totalContributed_Avatar / (dailyTargetContribution * 30.44)), 6 + parseInt(maxContribution_Avatar / (dailyTargetContribution * 30.44)))
         const contributionAmountToNextLevel = (dailyTargetContribution * 30.44) - totalContributed_Avatar % (dailyTargetContribution * 30.44)
         
   
