@@ -232,6 +232,66 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
     //await setDoc(userDocRef, playerData, { merge: true });
 }
 
+export function getAvatarStatData(baseAvatarData){
+
+    // Get Local Storage Variables
+    const discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
+
+    let total = baseAvatarData.health.base
+
+    baseAvatarData.health.empower = baseAvatarData.health.base * 0.5
+
+    total += baseAvatarData.health.empower
+
+    let hudMultiplier = 1 + (discretionaryData.storedDays_Growth * 0.01)
+
+    total *= hudMultiplier
+
+    if (total < baseAvatarData.health.base + baseAvatarData.health.empower){
+        baseAvatarData.health.hud = 0
+    } else {
+        baseAvatarData.health.hud = total - (baseAvatarData.health.base + baseAvatarData.health.empower)
+    }
+
+    // Mana
+    total = baseAvatarData.mana.base
+
+    baseAvatarData.mana.empower = baseAvatarData.mana.base * 0.5
+
+    total += baseAvatarData.mana.empower
+
+    hudMultiplier = 1 + (discretionaryData.storedDays_Wants * 0.01)
+
+    total *= hudMultiplier
+
+    if (total < baseAvatarData.mana.base + baseAvatarData.mana.empower){
+        baseAvatarData.mana.hud = 0
+    } else {
+        baseAvatarData.mana.hud = total - (baseAvatarData.mana.base + baseAvatarData.mana.empower)
+    }
+
+    // Stamina
+    total = baseAvatarData.stamina.base
+
+    baseAvatarData.stamina.empower = baseAvatarData.stamina.base * 0.5
+
+    total += baseAvatarData.stamina.empower
+    console.log(total)
+
+    hudMultiplier = 1.35//1 + (discretionaryData.storedDays_Needs * 0.01)
+
+    total *= hudMultiplier
+
+    if (total < baseAvatarData.stamina.base + baseAvatarData.stamina.empower){
+        baseAvatarData.stamina.hud = 0
+    } else {
+        baseAvatarData.stamina.hud = total - (baseAvatarData.stamina.base + baseAvatarData.stamina.empower)
+    }
+
+
+    return baseAvatarData
+}
+
 
 
 

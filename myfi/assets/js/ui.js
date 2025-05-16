@@ -3,6 +3,7 @@ import { auth, db } from './auth.js';
 import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { categories, subCategories, incomeCategory } from './config.js';
 import { fetchDataAndRenderMyFiDashboard } from './dashboard.js';
+import { getAvatarStatData } from './calculations.js'; 
 
 
 /* ========== Helpers ========== */
@@ -182,11 +183,26 @@ const avatarStatConfig = {
 
 export function renderAvatarStats(statData = null) {
     if(!statData){
-        statData = {
-                        health: 6,
-                        mana: 3,
-                        stamina: 11, // 2 bonus blocks
+        
+        const selectedavatarStub = {
+                        health: {
+                            base:1,
+                            empower: 0,
+                            hud:0,
+                        },
+                        mana: {
+                            base:1.5,
+                            empower:0,
+                            hud:0,
+                        },
+                        stamina: {
+                            base:3,
+                            empower:0,
+                            hud:0,
+                        }, 
                     }
+        statData = getAvatarStatData(selectedavatarStub)
+        console.log(statData)
     }
   const container = document.getElementById('avatar-stats');
 
@@ -194,35 +210,57 @@ export function renderAvatarStats(statData = null) {
 
   rows.forEach(row => {
     
+    
     const stat = row.dataset.stat;
-    const value = statData[stat] || 0;
+    const value_Base = statData[stat].base || 0;
+    const value_Empower = statData[stat].empower || 0;
+    const value_Hud = statData[stat].hud || 0;
+    
     const blocksWrapper = row.querySelector('.stat-blocks');
     blocksWrapper.innerHTML = ''; // Clear old blocks
-    console.log("Stat", stat)
-    const base = Math.min(value, 10); // standard max
-    const bonus = Math.max(value - 10, 0); // anything over 10
 
-    for (let i = 0; i < 10; i++) {
+
+    // Base
+     for (let i = 0; i < value_Base; i++) {
       const block = document.createElement('div');
       block.classList.add('block');
-      if (i < base) {
+      
         block.classList.add('filled');
         block.style.backgroundColor = avatarStatConfig[stat].color;
         block.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].glow}`;
         block.style.animationDelay = `${i * 50}ms`;
-      }
+      
       blocksWrapper.appendChild(block);
     }
-
-    // Add bonus blocks if needed
-    for (let i = 0; i < bonus; i++) {
+    // Empower 
+    for (let i = 0; i < value_Empower; i++) {
       const bonusBlock = document.createElement('div');
       bonusBlock.classList.add('block', 'bonus');
-      bonusBlock.style.backgroundColor = 'gold';
-      bonusBlock.style.boxShadow = '0 0 6px gold';
+      bonusBlock.style.backgroundColor = '#6435e5' //'purple';
+      bonusBlock.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].color}`; //purple';
       bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
       blocksWrapper.appendChild(bonusBlock);
     }
+
+   
+
+    
+
+    // Hud
+    for (let i = 0; i < value_Hud; i++) {
+      const bonusBlock = document.createElement('div');
+      bonusBlock.classList.add('block', 'bonus');
+      bonusBlock.style.backgroundColor = 'orange';
+      bonusBlock.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].glow}`;
+      bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
+      blocksWrapper.appendChild(bonusBlock);
+    }
+
+    
+
+    
+
+    
   });
 }
 
