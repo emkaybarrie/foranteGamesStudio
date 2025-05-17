@@ -9,7 +9,7 @@ import { getCashflowData,getDiscretionaryData, getAvatarData  } from './calculat
 import { renderHUD, renderAvatarStats, renderDashboard, showManualEntryButton, hideManualEntryButton,showLinkAccountButton, 
     hideLinkAccountButton, hideUnlinkAccountButton , showUnlinkAccountButton, startLiveHUDUpdate, openPaymentModal, 
     openLinkSheetModal, closeSheetModal, showTooltip, hideTooltip,updateTooltipPosition,
-    submitPayment} from './ui.js';
+    submitPayment, renderPlayerStats} from './ui.js';
 
 // Tooltips
 
@@ -142,6 +142,8 @@ auth.onAuthStateChanged(async (user) => {
         }
        
         fetchDataAndRenderMyFiDashboard(user.uid);
+
+        
        
        
     }
@@ -401,7 +403,8 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
                 await setDoc(userDocRef, { monthsSinceStart: monthsSinceStart }, { merge: true });
 
                 if (playerData.sheetId) {
-                    console.log("Id Present")
+                    
+                    console.log("Linked Account Detected.  Importing Transaction Data...")
             
                     loadTransactionData(playerData.sheetId);
 
@@ -410,24 +413,33 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
 
                     showUnlinkAccountButton();
                 } else {
+                    console.log("No Linked Account Detected.  Activating Manual Entry Mode...")
                     showManualEntryButton();
                     showLinkAccountButton();
                     hideUnlinkAccountButton();
                 }
 
                 if (playerData) {
+                    console.log("Storing playerData components to Local Storage:" )
+                    console.log('Finance Data...', playerData.financeSummary )
+                    saveToLocalStorage('finanaceData', playerData.financeSummary)
+                    console.log('Avatar Data...', playerData.avatarData)
+                    saveToLocalStorage('avatarData', playerData.avatarData)
+                    saveToLocalStorage('attributeData', playerData.attributePoints)
+
                     // Calculate
                     const cashflowData = await getCashflowData(playerData)
                     const discretionaryData = await getDiscretionaryData(cashflowData, playerData)
                     const avatarData = await getAvatarData(discretionaryData, playerData)
                    
-                    localStorage.setItem('playerData', playerData);
-                    console.log(playerData)
+                    
+                    
      
 
                     // Render
                     renderDashboard(playerData);
-                    await renderHUD(discretionaryData)
+                    renderPlayerStats(playerData)
+                    renderHUD(discretionaryData)
                     
                     renderAvatarStats();
                 
@@ -527,10 +539,6 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
                         }
                     });
 
-                    
-
-
- 
                 }
 
             } else {
@@ -543,6 +551,62 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
         }
     } catch (error) {
         console.error("Error fetching Firestore document:", error);
+    }
+}
+
+export function saveToLocalStorage(storageReference, value){
+    window.localStorage.setItem(storageReference, JSON.stringify(value))
+    return JSON.parse(localStorage.getItem(storageReference))
+}
+
+export function loadFromLocalStorage(storageReference){
+    return JSON.parse(localStorage.getItem(storageReference))
+}
+
+export async function getPlayerData(){
+    const user = JSON.parse(localStorage.getItem('user'));
+    window.localStorage.setItem('user', JSON.stringify(user));
+    const userRef = doc(db, 'players', user.uid);
+
+    try {
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+            const playerData = userDoc.data();
+      
+            return playerData
+            
+        }
+    } catch (error) {
+        console.error("Error fetching Firestore document:", error);
+    }
+}
+
+export async function saveAttributesToFirestore(attributeDataInput = null) {
+    
+
+    const attributeData = attributeDataInput ?  attributeDataInput : loadFromLocalStorage('attributeData')
+    
+    console.log("Data to Save to Attributes: ", attributeData )
+
+    const confirmed = confirm("Are you sure you want to lock in your choices? This cannot be undone.");
+    if (!confirmed) return;
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    const playerRef = doc(db, 'players', user.uid);
+
+    try {
+    await setDoc(playerRef, {
+    attributePoints: attributeData
+    }, { merge: true });
+
+    window.localStorage.setItem('attributeData', attributeData)
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    fetchDataAndRenderMyFiDashboard(user.uid)
+    alert("Your attributes have been saved!");
+    } catch (err) {
+    console.error("Error saving to Firestore:", err);
+    alert("There was an error saving your choices.");
     }
 }
 

@@ -1,6 +1,7 @@
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './auth.js';
 import { categories, subCategories } from './config.js'; // Categories for mandatory, discretionary
+import { getPlayerData } from "./dashboard.js";
 
 // Function to process transactions from Google Sheets
 export async function getCashflowData(playerDataInput = null) {
@@ -68,7 +69,6 @@ export async function getCashflowData(playerDataInput = null) {
 
     window.localStorage.setItem('cashflowData', JSON.stringify(cashflowData))
     cashflowData = JSON.parse(localStorage.getItem('cashflowData'))
-    console.log(cashflowData)
 
     return cashflowData 
 
@@ -180,7 +180,7 @@ export async function getDiscretionaryData(cashflowDataInput = null, playerDataI
 
     window.localStorage.setItem('discretionaryData', JSON.stringify(discretionaryData))
     discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
-    console.log(discretionaryData)
+
 
     return discretionaryData 
 
@@ -198,17 +198,15 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
     
         const monthsSinceStart = playerData.monthsSinceStart
         const dailyTargetContribution = discretionaryData.dContributionsTarget_Avatar ? discretionaryData.dContributionsTarget_Avatar : 1
-        console.log(discretionaryData.dContributionsTarget_Avatar)
-        console.log(dailyTargetContribution)
+
         const totalContributed_Avatar = playerData.avatarData.avatarContribution ? playerData.avatarData.avatarContribution : 0;
        
 
         const maxContribution_Avatar = dailyTargetContribution * 30.44 * monthsSinceStart
         const contributionPercent_Avatar = Math.max(Math.min(totalContributed_Avatar / maxContribution_Avatar, 1.5),0)
 
-        const contributionLevel = Math.min(1 + parseInt(totalContributed_Avatar / (dailyTargetContribution * 30.44)), 6 + parseInt(maxContribution_Avatar / (dailyTargetContribution * 30.44)))
-        console.log(parseInt(totalContributed_Avatar / (dailyTargetContribution * 30.44)))
-        console.log(parseInt(totalContributed_Avatar / (dailyTargetContribution * 30.44)))
+        const contributionLevel = Math.min(1 + parseInt(totalContributed_Avatar / (dailyTargetContribution * 30.44)), 60 + parseInt(maxContribution_Avatar / (dailyTargetContribution * 30.44)))
+
         const contributionAmountToNextLevel = (dailyTargetContribution * 30.44) - totalContributed_Avatar % (dailyTargetContribution * 30.44)
         
   
@@ -224,7 +222,6 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
     // After building discretionaryResults dynamically (like we did before):
     window.localStorage.setItem('avatarData', JSON.stringify(contributionResults));
     const contributionyBreakdownData = JSON.parse(localStorage.getItem('avatarData'))
-    console.log(contributionyBreakdownData)
     return contributionyBreakdownData
 
     // Store the finance summary in Firestore
@@ -232,61 +229,98 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
     //await setDoc(userDocRef, playerData, { merge: true });
 }
 
-export function getAvatarStatData(baseAvatarData){
+ export async function getAvatarStatData(baseAvatarData){
 
     // Get Local Storage Variables
+ 
+    const playerData = await getPlayerData()
+    
+    
+    const avatarData = JSON.parse(localStorage.getItem('avatarData'))
     const discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
+ 
 
+    const empowerMultiplier = 0.5
+    const hudMultiplier_Health = (discretionaryData.storedDays_Growth * 0.01)
+    const hudMultiplier_Mana = (discretionaryData.storedDays_Wants * 0.01)
+    const hudMultiplier_Stamina = (discretionaryData.storedDays_Stamina * 0.01)
+    const chargeMultiplier = avatarData.contributionPercent_Avatar
+    // Skill Tree Stub
+    const empowerMultiplier_HealthModifier = 1 + (playerData.attributePoints.resilience * 0.01)
+    const empowerMultiplier_ManaModifier = 1 + (playerData.attributePoints.focus * 0.01)
+    const empowerMultiplier_StaminaModifier = 1 + (playerData.attributePoints.adaptability * 0.01)
+
+    const hudMultiplier_HealthModifier = 1 + (playerData.attributePoints.resilience * 0.01)
+    const hudMultiplier_ManaModifier = 1 + (playerData.attributePoints.focus * 0.01)
+    const hudMultiplier_StaminaModifier = 1 + (playerData.attributePoints.adaptability * 0.01)
+
+    const chargeMultiplier_HealthModifier = 1 + (playerData.attributePoints.resilience * 0.01)
+    const chargeMultiplier_ManaModifier = 1 + (playerData.attributePoints.focus * 0.01)
+    const chargeMultiplier_StaminaModifier = 1 + (playerData.attributePoints.adaptability * 0.01)
+    
+
+    // Health
     let total = baseAvatarData.health.base
 
-    baseAvatarData.health.empower = baseAvatarData.health.base * 0.5
+    baseAvatarData.health.empower = baseAvatarData.health.base * (empowerMultiplier * empowerMultiplier_HealthModifier)
 
     total += baseAvatarData.health.empower
 
-    let hudMultiplier = 1 + (discretionaryData.storedDays_Growth * 0.01)
+    let hudMultiplier = 1 + (hudMultiplier_Health * hudMultiplier_HealthModifier)
 
     total *= hudMultiplier
 
-    if (total < baseAvatarData.health.base + baseAvatarData.health.empower){
-        baseAvatarData.health.hud = 0
-    } else {
+    //if (total < baseAvatarData.health.base + baseAvatarData.health.empower){
+     //   baseAvatarData.health.hud = 0
+   // } else {
         baseAvatarData.health.hud = total - (baseAvatarData.health.base + baseAvatarData.health.empower)
-    }
+   // }
 
     // Mana
-    total = baseAvatarData.mana.base
+        total = baseAvatarData.mana.base
 
-    baseAvatarData.mana.empower = baseAvatarData.mana.base * 0.5
+        baseAvatarData.mana.empower = baseAvatarData.mana.base * (empowerMultiplier * empowerMultiplier_ManaModifier)
 
-    total += baseAvatarData.mana.empower
+        total += baseAvatarData.mana.empower
 
-    hudMultiplier = 1 + (discretionaryData.storedDays_Wants * 0.01)
+        hudMultiplier = 1 + (hudMultiplier_Mana * hudMultiplier_ManaModifier) 
 
-    total *= hudMultiplier
+        total *= hudMultiplier
 
-    if (total < baseAvatarData.mana.base + baseAvatarData.mana.empower){
-        baseAvatarData.mana.hud = 0
-    } else {
-        baseAvatarData.mana.hud = total - (baseAvatarData.mana.base + baseAvatarData.mana.empower)
-    }
+      //  if (total < baseAvatarData.mana.base + baseAvatarData.mana.empower){
+       //     baseAvatarData.mana.hud = 0
+      //  } else {
+            baseAvatarData.mana.hud = total - (baseAvatarData.mana.base + baseAvatarData.mana.empower)
+     //   }
 
     // Stamina
     total = baseAvatarData.stamina.base
 
-    baseAvatarData.stamina.empower = baseAvatarData.stamina.base * 0.5
+    baseAvatarData.stamina.empower = baseAvatarData.stamina.base * (empowerMultiplier * empowerMultiplier_StaminaModifier)
 
     total += baseAvatarData.stamina.empower
-    console.log(total)
 
-    hudMultiplier = 1.35//1 + (discretionaryData.storedDays_Needs * 0.01)
+
+    hudMultiplier = 1 + (hudMultiplier_Stamina * hudMultiplier_StaminaModifier) 
 
     total *= hudMultiplier
 
-    if (total < baseAvatarData.stamina.base + baseAvatarData.stamina.empower){
-        baseAvatarData.stamina.hud = 0
-    } else {
+    //if (total < baseAvatarData.stamina.base + baseAvatarData.stamina.empower){
+      //  baseAvatarData.stamina.hud = 0
+    //} else {
         baseAvatarData.stamina.hud = total - (baseAvatarData.stamina.base + baseAvatarData.stamina.empower)
+    //}
+
+    // Charge
+    if (baseAvatarData.lowestStat == "Health"){
+        baseAvatarData.health.charge = 1 * (chargeMultiplier * chargeMultiplier_HealthModifier)
+    } else if (baseAvatarData.lowestStat == "Mana"){
+        baseAvatarData.mana.charge = 1 * (chargeMultiplier * chargeMultiplier_ManaModifier)
+    } else {
+        baseAvatarData.stamina.charge = 1 * (chargeMultiplier * chargeMultiplier_StaminaModifier)
     }
+
+ 
 
 
     return baseAvatarData

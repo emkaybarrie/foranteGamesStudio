@@ -2,7 +2,7 @@
 import { auth, db } from './auth.js';
 import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { categories, subCategories, incomeCategory } from './config.js';
-import { fetchDataAndRenderMyFiDashboard } from './dashboard.js';
+import { fetchDataAndRenderMyFiDashboard, loadFromLocalStorage, saveAttributesToFirestore, saveToLocalStorage } from './dashboard.js';
 import { getAvatarStatData } from './calculations.js'; 
 
 
@@ -173,7 +173,76 @@ export function renderDashboard(playerData) {
     }
 }
 
-/* ============ Profilel Renderer =========== */
+
+
+/* ============ Profile Renderer =========== */
+
+export async function renderPlayerStats() {
+ 
+    console.log('Rendering Profile Stats...' )
+    loadAttributesFromPlayerData();
+
+}
+
+// Attribute Panel
+async function loadAttributesFromPlayerData() {
+
+        const attributeData = loadFromLocalStorage('attributeData') || {};
+        const avatarData = JSON.parse(localStorage.getItem('avatarData'))
+        
+        const spentPoints = attributeData.resilience + attributeData.focus + attributeData.adaptability
+        const unspentPoints = (avatarData.contributionLevel * 10) - spentPoints ?? 0;//attributeData.unspent ?? 0;
+        attributeData.unspent = unspentPoints
+
+        updateUI(attributeData)
+
+        document.querySelectorAll(".increment").forEach(button => {
+            button.addEventListener("click", (e) => {
+                
+                const row = e.target.closest(".attribute-row");
+                const attr = row.dataset.attribute;
+                if (attributeData.unspent > 0) {
+                
+                    attributeData[attr]++;
+                    attributeData.unspent--;
+                    updateUI(attributeData)
+
+                }
+            });
+        });
+
+        document.querySelectorAll(".decrement").forEach(button => {
+            button.addEventListener("click", (e) => {
+            const row = e.target.closest(".attribute-row");
+            const attr = row.dataset.attribute;
+            if (attributeData[attr] > 0) {
+                attributeData[attr]--;
+                attributeData.unspent++;
+                updateUI(attributeData);
+            }
+            });
+        });
+
+
+}
+
+
+
+
+function updateUI(attributeData){
+    for (let key in attributeData) {
+        document.getElementById(`${key}-value`).textContent = attributeData[key];
+    }
+
+    saveToLocalStorage('attributeData', attributeData)
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById("save-attributes").addEventListener("click", () => {
+            const attributeData = loadFromLocalStorage('attributeData')
+            saveAttributesToFirestore(attributeData);
+        });
+});
 
 const avatarStatConfig = {
   health: { color: '#e53935', glow: '#ff8a80' },
@@ -181,7 +250,7 @@ const avatarStatConfig = {
   stamina: { color: '#43a047', glow: '#b9f6ca' },
 };
 
-export function renderAvatarStats(statData = null) {
+export async function renderAvatarStats(statData = null) {
     if(!statData){
         
         const selectedavatarStub = {
@@ -200,10 +269,15 @@ export function renderAvatarStats(statData = null) {
                             empower:0,
                             hud:0,
                         }, 
+                        lowestStat: "Health"
                     }
-        statData = getAvatarStatData(selectedavatarStub)
-        console.log(statData)
+
+        statData = await getAvatarStatData(selectedavatarStub)
+
     }
+
+    
+
   const container = document.getElementById('avatar-stats');
 
   const rows = container.querySelectorAll('.avatar-stat');
@@ -214,6 +288,7 @@ export function renderAvatarStats(statData = null) {
     const stat = row.dataset.stat;
     const value_Base = statData[stat].base || 0;
     const value_Empower = statData[stat].empower || 0;
+    const value_Charge = statData[stat].charge || 0;
     const value_Hud = statData[stat].hud || 0;
     
     const blocksWrapper = row.querySelector('.stat-blocks');
@@ -242,9 +317,16 @@ export function renderAvatarStats(statData = null) {
       blocksWrapper.appendChild(bonusBlock);
     }
 
-   
+    // Charge 
+    for (let i = 0; i < value_Charge; i++) {
+      const bonusBlock = document.createElement('div');
+      bonusBlock.classList.add('block', 'bonus');
+      bonusBlock.style.backgroundColor = '#4a25af' //'purple';'
+      bonusBlock.style.boxShadow = '0 0 5px purple';
+      bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
+      blocksWrapper.appendChild(bonusBlock);
+    }
 
-    
 
     // Hud
     for (let i = 0; i < value_Hud; i++) {
@@ -302,7 +384,7 @@ export async function renderHUD(discretionaryData) {
             const storedDays = discretionaryData[`storedDays_${subCat}`] ?? 0;
 
             // Use the variables as needed
-            console.log(`${subCat}:`, { availableResource, dSpendingCap, storedDays });
+           
 
             const percentage = Math.min((availableResource / dSpendingCap) * 100, 100);
 
@@ -570,108 +652,11 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 });
 
-// Attribute Panel
-document.addEventListener('DOMContentLoaded', () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    const playerRef = doc(db, 'players', user.uid)
-
-  let remainingPoints = 0;
-  const pointsDisplay = document.getElementById("points-remaining");
-  const attributes = {
-    resilience: 0,
-    focus: 0,
-    adaptability: 0
-  };
-
-  console.log('Loading Stats')
-  loadAttributesFromPlayerData();
-
-  // Populate from Firestore
-    async function loadAttributesFromPlayerData() {
-    const snapshot = await getDoc(playerRef);
-    if (snapshot.exists()) {
-        const playerData = snapshot.data();
-        const attributeData = playerData.attributePoints || {};
-
-        const avatarData = JSON.parse(localStorage.getItem('avatarData'))
-        
-        
-        attributes.resilience = attributeData.resilience ?? 0;
-        attributes.focus = attributeData.focus ?? 0;
-        attributes.adaptability = attributeData.adaptability ?? 0;
-        const spentPoints = attributes.resilience + attributes.focus + attributes.adaptability
-        remainingPoints = (avatarData.contributionLevel * 10) - spentPoints ?? 0;//attributeData.unspent ?? 0;
-
-        updateUI();
-    } else {
-        console.warn("No player data found.");
-    }
-    }
 
 
-    async function saveAttributesToFirestore(playerRef) {
-  const confirmed = confirm("Are you sure you want to lock in your choices? This cannot be undone.");
-  if (!confirmed) return;
-
-  try {
-    await setDoc(playerRef, {
-    attributePoints: {
-      unspent: remainingPoints,
-      resilience: attributes.resilience,
-      focus: attributes.focus,
-      adaptability: attributes.adaptability
-    }
-    }, { merge: true });
-
-    const user = JSON.parse(localStorage.getItem('user'));
-    fetchDataAndRenderMyFiDashboard(user.uid)
-    alert("Your attributes have been saved!");
-  } catch (err) {
-    console.error("Error saving to Firestore:", err);
-    alert("There was an error saving your choices.");
-  }
-    }
 
 
-document.getElementById("save-attributes").addEventListener("click", () => {
-  saveAttributesToFirestore(playerRef);
-});
-
-
-  function updateUI() {
-    pointsDisplay.textContent = remainingPoints;
-    for (let key in attributes) {
-      document.getElementById(`${key}-value`).textContent = attributes[key];
-    }
-  }
-
-  document.querySelectorAll(".increment").forEach(button => {
-    button.addEventListener("click", (e) => {
-      const row = e.target.closest(".attribute-row");
-      const attr = row.dataset.attribute;
-      if (remainingPoints > 0) {
-        attributes[attr]++;
-        remainingPoints--;
-        updateUI();
-      }
-    });
-  });
-
-  document.querySelectorAll(".decrement").forEach(button => {
-    button.addEventListener("click", (e) => {
-      const row = e.target.closest(".attribute-row");
-      const attr = row.dataset.attribute;
-      if (attributes[attr] > 0) {
-        attributes[attr]--;
-        remainingPoints++;
-        updateUI();
-      }
-    });
-  });
-
-  updateUI();
-});
-
+    
 
 
 

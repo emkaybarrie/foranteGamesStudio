@@ -32,6 +32,7 @@ const getUserDataFromFirestore = async (uid) => {
 
 // 🔐 Login user
 export async function loginUser(email, password) {
+    console.log('User Attempting to Log In')
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
