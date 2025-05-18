@@ -1,7 +1,7 @@
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './auth.js';
 import { categories, subCategories } from './config.js'; // Categories for mandatory, discretionary
-import { getPlayerData } from "./dashboard.js";
+import { getPlayerData, saveToLocalStorage } from "./dashboard.js";
 
 // Function to process transactions from Google Sheets
 export async function getCashflowData(playerDataInput = null) {
@@ -193,8 +193,9 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
     // Get Local Storage Variables
     const playerData = playerDataInput ?  playerDataInput : JSON.parse(localStorage.getItem('playerData'))
     const discretionaryData = discretionaryDataInput ?  discretionaryDataInput : JSON.parse(localStorage.getItem('discretionaryData'))
+    let avatarData = playerData.avatarData
+    console.log(avatarData)
  
-    let contributionResults = {};
     
         const monthsSinceStart = playerData.monthsSinceStart
         const dailyTargetContribution = discretionaryData.dContributionsTarget_Avatar ? discretionaryData.dContributionsTarget_Avatar : 1
@@ -211,18 +212,21 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
         
   
   
-        contributionResults = {
+        avatarData = {
+            ...avatarData,
             maxContribution_Avatar: Math.round(maxContribution_Avatar),
             contributionPercent_Avatar: contributionPercent_Avatar,
             contributionLevel: contributionLevel,
             contributionAmountToNextLevel: contributionAmountToNextLevel,
         };
+
+        console.log(avatarData)
     
 
     // After building discretionaryResults dynamically (like we did before):
-    window.localStorage.setItem('avatarData', JSON.stringify(contributionResults));
-    const contributionyBreakdownData = JSON.parse(localStorage.getItem('avatarData'))
-    return contributionyBreakdownData
+    saveToLocalStorage('avatarData', avatarData)
+    avatarData = JSON.parse(localStorage.getItem('avatarData'))
+    return avatarData
 
     // Store the finance summary in Firestore
 
@@ -240,7 +244,7 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
     const discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
  
 
-    const empowerMultiplier = 0.5
+    const empowerMultiplier = avatarData.avatarEmpowerLevel * 0.1
     const hudMultiplier_Health = (discretionaryData.storedDays_Growth * 0.01)
     const hudMultiplier_Mana = (discretionaryData.storedDays_Wants * 0.01)
     const hudMultiplier_Stamina = (discretionaryData.storedDays_Stamina * 0.01)

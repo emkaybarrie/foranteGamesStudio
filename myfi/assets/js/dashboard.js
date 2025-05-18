@@ -11,6 +11,34 @@ import { renderHUD, renderAvatarStats, renderDashboard, showManualEntryButton, h
     openLinkSheetModal, closeSheetModal, showTooltip, hideTooltip,updateTooltipPosition,
     submitPayment, renderPlayerStats} from './ui.js';
 
+const DataManager = {
+  data: {},
+  
+  load() {
+    const local = localStorage.getItem("gameData");
+    this.data = local ? JSON.parse(local) : {};
+    // Optional fallback from Firestore
+  },
+
+  get(key) {
+    return this.data[key];
+  },
+
+  set(key, value) {
+    this.data[key] = value;
+    localStorage.setItem("gameData", JSON.stringify(this.data));
+  },
+
+  bulkSet(obj) {
+    Object.assign(this.data, obj);
+    localStorage.setItem("gameData", JSON.stringify(this.data));
+  },
+
+  syncToFirestore() {
+    saveToFirestore(this.data);
+  }
+};
+
 // Tooltips
 
 // Add event listeners for elements with 'tooltip-target' class
@@ -133,6 +161,7 @@ auth.onAuthStateChanged(async (user) => {
        
     } else {
         window.localStorage.setItem('user', JSON.stringify(user));
+        
         const userRef = doc(db, 'players', user.uid);
         const docSnap = await getDoc(userRef);
 
@@ -367,16 +396,11 @@ document.getElementById('close-payment-modal').addEventListener('click', () => {
 //     closeBtn.addEventListener('click', () => closeModal(paymentModal));
 
 export async function fetchDataAndRenderMyFiDashboard(uid) {
-    const userDocRef = doc(db, "players", uid);
+    const userDocRef = doc(db, "players", uid); // Temp
+    const playerData = await getPlayerData()
+    console.log("Player data from Firestore:", playerData);
 
-    try {
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-            const playerData = userDoc.data();
-            console.log("Player data from Firestore:", playerData);
-            
-
-            if (playerData.alias && playerData.startBalance !== undefined) {
+    if (playerData.alias && playerData.startBalance !== undefined) {
                 
                 // ✅ Handle startDate
                 let startDate = null
@@ -431,6 +455,9 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
                     const cashflowData = await getCashflowData(playerData)
                     const discretionaryData = await getDiscretionaryData(cashflowData, playerData)
                     const avatarData = await getAvatarData(discretionaryData, playerData)
+
+                    saveAvatarDataToFireStore(avatarData)
+               
                    
                     
                     
@@ -541,17 +568,199 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
 
                 }
 
-            } else {
-                console.error("Alias or balance missing.");
-                window.location.href = 'login.html';
-            }
-        } else {
-            console.error("No document found.");
-            window.location.href = 'login.html';
-        }
-    } catch (error) {
-        console.error("Error fetching Firestore document:", error);
+    } else {
+        console.error("Alias or balance missing.");
+        //window.location.href = 'login.html';
     }
+
+    // const userDocRef = doc(db, "players", uid);
+
+    // try {
+    //     const userDoc = await getDoc(userDocRef);
+    //     if (userDoc.exists()) {
+    //         const playerData = userDoc.data();
+    //         console.log("Player data from Firestore:", playerData);
+            
+
+    //         if (playerData.alias && playerData.startBalance !== undefined) {
+                
+    //             // ✅ Handle startDate
+    //             let startDate = null
+    //             if (playerData.financeSummary.transactionStartDate){
+    //                 startDate = playerData.financeSummary.transactionStartDate
+                    
+
+    //                 const [day, month, year] = startDate.split("/");
+    //                 startDate = new Date(`${year}-${month}-${day}`);
+                 
+                    
+    //             } else {
+    //                 startDate = playerData.startDate ? playerData.startDate.toDate() : null;
+    //                 if (!startDate) {
+    //                     console.error("Start date is missing!");
+    //                     return;
+    //                 }
+    //             }
+
+            
+    //             const monthsSinceStart = parseFloat((new Date() - new Date(startDate)) / (1000 * 60 * 60 * 24 * 30.44));
+
+
+    //             await setDoc(userDocRef, { monthsSinceStart: monthsSinceStart }, { merge: true });
+
+    //             if (playerData.sheetId) {
+                    
+    //                 console.log("Linked Account Detected.  Importing Transaction Data...")
+            
+    //                 loadTransactionData(playerData.sheetId);
+
+    //                 hideManualEntryButton();
+    //                 hideLinkAccountButton();
+
+    //                 showUnlinkAccountButton();
+    //             } else {
+    //                 console.log("No Linked Account Detected.  Activating Manual Entry Mode...")
+    //                 showManualEntryButton();
+    //                 showLinkAccountButton();
+    //                 hideUnlinkAccountButton();
+    //             }
+
+    //             if (playerData) {
+    //                 console.log("Storing playerData components to Local Storage:" )
+    //                 console.log('Finance Data...', playerData.financeSummary )
+    //                 saveToLocalStorage('finanaceData', playerData.financeSummary)
+    //                 console.log('Avatar Data...', playerData.avatarData)
+    //                 saveToLocalStorage('avatarData', playerData.avatarData)
+    //                 saveToLocalStorage('attributeData', playerData.attributePoints)
+
+    //                 // Calculate
+    //                 const cashflowData = await getCashflowData(playerData)
+    //                 const discretionaryData = await getDiscretionaryData(cashflowData, playerData)
+    //                 const avatarData = await getAvatarData(discretionaryData, playerData)
+
+    //                 saveAvatarDataToFireStore(avatarData)
+               
+                   
+                    
+                    
+     
+
+    //                 // Render
+    //                 renderDashboard(playerData);
+    //                 renderPlayerStats(playerData)
+    //                 renderHUD(discretionaryData)
+                    
+    //                 renderAvatarStats();
+                
+    //                 //startLiveHUDUpdate(discretionaryData)
+
+    //                 const ctx = document.getElementById('metricsChart').getContext('2d');
+
+    //                 const metricsChart = new Chart(ctx, {
+    //                     type: 'bar',
+    //                     data: {
+    //                         labels: ['Income', 'Mandatory', 'Supplementary', 'Discretionary'],
+    //                         datasets: [{
+    //                             label: 'Average Daily Totals',
+    //                             data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary, cashflowData.dAvgSpending_Discretionary],
+    //                             backgroundColor: [
+    //                                 '#6200ea',
+    //                                 '#bb86fc',
+    //                                 '#985eff',
+    //                                 '#7f39fb',
+    //                                 '#3700b3'
+    //                             ],
+    //                             borderRadius: 6
+    //                         }]
+    //                     },
+    //                     options: {
+    //                         responsive: true,
+    //                         maintainAspectRatio: false, // Let the parent container control size
+    //                         scales: {
+    //                             y: {
+    //                                 beginAtZero: true,
+    //                                 ticks: { color: '#ccc' },
+    //                                 grid: { color: '#444' }
+    //                             },
+    //                             x: {
+    //                                 ticks: { color: '#ccc' },
+    //                                 grid: { color: '#444' }
+    //                             }
+    //                         },
+    //                         plugins: {
+    //                             legend: {
+    //                                 labels: {
+    //                                     color: '#ccc'
+    //                                 }
+    //                             }
+    //                         },
+    //                         animation: {
+    //                             duration: 2000, // milliseconds
+    //                             easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
+    //                         },
+    //                     }
+    //                 });
+
+    //                 const ctx2 = document.getElementById('metricsChart2').getContext('2d');
+
+    //                 const metricsChart2 = new Chart(ctx2, {
+    //                     type: 'line',
+    //                     data: {
+    //                         labels: ['Day 1', 'Day 3', 'Day 5', 'Day 7'],
+    //                         datasets: [{
+    //                             label: 'Daily Spending',
+    //                             data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary, cashflowData.dAvgSpending_Discretionary],
+    //                             backgroundColor: [
+    //                                 '#6200ea',
+    //                                 '#bb86fc',
+    //                                 '#985eff',
+    //                                 '#7f39fb',
+    //                                 '#3700b3'
+    //                             ],
+    //                             borderRadius: 6
+    //                         }]
+    //                     },
+    //                     options: {
+    //                         responsive: true,
+    //                         maintainAspectRatio: false, // Let the parent container control size
+    //                         scales: {
+    //                             y: {
+    //                                 beginAtZero: true,
+    //                                 ticks: { color: '#ccc' },
+    //                                 grid: { color: '#444' }
+    //                             },
+    //                             x: {
+    //                                 ticks: { color: '#ccc' },
+    //                                 grid: { color: '#444' }
+    //                             }
+    //                         },
+    //                         plugins: {
+    //                             legend: {
+    //                                 labels: {
+    //                                     color: '#ccc'
+    //                                 }
+    //                             }
+    //                         },
+    //                         animation: {
+    //                             duration: 2000, // milliseconds
+    //                             easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
+    //                         },
+    //                     }
+    //                 });
+
+    //             }
+
+    //         } else {
+    //             console.error("Alias or balance missing.");
+    //             window.location.href = 'login.html';
+    //         }
+    //     } else {
+    //         console.error("No document found.");
+    //         window.location.href = 'login.html';
+    //     }
+    // } catch (error) {
+    //     console.error("Error fetching Firestore document:", error);
+    // }
 }
 
 export function saveToLocalStorage(storageReference, value){
@@ -563,9 +772,32 @@ export function loadFromLocalStorage(storageReference){
     return JSON.parse(localStorage.getItem(storageReference))
 }
 
-export async function getPlayerData(){
+export async function saveAvatarDataToFireStore(avatarDataInput = null){
+    const avatarData = avatarDataInput ?  avatarDataInput : loadFromLocalStorage('avatarData')
+    
+    console.log("Data to Save to Attributes: ", avatarData )
+
     const user = JSON.parse(localStorage.getItem('user'));
-    window.localStorage.setItem('user', JSON.stringify(user));
+    const playerRef = doc(db, 'players', user.uid);
+
+    try {
+    await setDoc(playerRef, {
+    avatarData: avatarData
+    }, { merge: true });
+
+    window.localStorage.setItem('avatarData', avatarData)
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    //fetchDataAndRenderMyFiDashboard(user.uid)
+    //alert("Your attributes have been saved!");
+    } catch (err) {
+    console.error("Error saving to Firestore:", err);
+    //alert("There was an error saving your choices.");
+    }
+}
+
+export async function getPlayerData(){ // Check local then fallback to DB
+    const user = JSON.parse(localStorage.getItem('user'));
     const userRef = doc(db, 'players', user.uid);
 
     try {

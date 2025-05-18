@@ -223,11 +223,24 @@ async function loadAttributesFromPlayerData() {
             });
         });
 
+        document.querySelector("#reset-attributes").addEventListener("click", () => {
+            let totalSpent = 0;
+
+            for (const key in attributeData) {
+                if (key !== "unspent") {
+                    totalSpent += attributeData[key];
+                    attributeData[key] = 0;
+                }
+            }
+
+            attributeData.unspent += totalSpent;
+            updateUI(attributeData);
+        });
+
+        // Clear points
+
 
 }
-
-
-
 
 function updateUI(attributeData){
     for (let key in attributeData) {
@@ -694,7 +707,7 @@ export function openPaymentModal(amountSpent) {
     }
 
 
-    window.localStorage.setItem('empowerLevel', JSON.stringify(0));
+    
 
     
 
@@ -707,11 +720,12 @@ export function openPaymentModal(amountSpent) {
     await setDoc(playerRef, {
     avatarData: {
       avatarContribution: parseFloat(newAmount),
+      avatarEmpowerLevel: JSON.parse(localStorage.getItem('empowerLevel'))
     }
     }, { merge: true });
 
     //alert("Your energy has been added to your avatar!");
-    
+    window.localStorage.setItem('empowerLevel', JSON.stringify(0));
     fetchDataAndRenderMyFiDashboard(user.uid)
     document.addEventListener('DOMContentLoaded', () => {
     loadAttributesFromPlayerData();
