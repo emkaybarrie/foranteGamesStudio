@@ -97,39 +97,39 @@
 }
 
 
-.bar-wrapper {
+/* .bar-wrapper {
   margin-bottom: 15px;
 }
 
 .bar-label {
   font-weight: 600;
   margin-bottom: 5px;
-}
+} */
 
-.bar-background {
+/* .bar-background {
   position: relative;
   background: #333;
   border-radius: 8px;
   height: 24px;
-}
+} */
 
-.bar-fill {
+/* .bar-fill {
   height: 100%;
   border-radius: 8px;
   transition: width 0.4s ease;
-}
+} */
 
-.bar-fill.growth {
+ /* .bar-fill.growth {
   background: #d32f2f;
-}
+}  */
 
-.bar-fill.wants {
+/* .bar-fill.wants {
   background: #1976d2;
 }
 
 .bar-fill.needs {
   background: #388e3c;
-}
+} */
 
 .bar-fill.purple-bar {
   background: linear-gradient(180deg, #8a4fff 0%, #4e2c99 100%);

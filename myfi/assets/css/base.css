@@ -150,6 +150,18 @@
   left: 0;
 }
 
+.bar-fill.growth {
+  background: #d32f2f;
+}
+
+.bar-fill.wants {
+  background: #1976d2;
+}
+
+.bar-fill.needs {
+  background: #388e3c;
+}
+
 /* Overlay content inside bar */
 .bar-inner-content {
   position: relative;
@@ -313,19 +325,8 @@
   100% { transform: translate(0, 0) rotate(0deg); }
 }
 
-/* OLD */
 
-/* .bar-fill.growth {
-  background: #d32f2f;
-}
 
-.bar-fill.wants {
-  background: #1976d2;
-}
-
-.bar-fill.needs {
-  background: #388e3c;
-} */
 
 .bar-fill.purple-bar {
   background: linear-gradient(180deg, #8a4fff 0%, #4e2c99 100%);
@@ -351,27 +352,6 @@
 
 /* Circle for stored days */
 
-/*
- .circle-badge {
-    position: absolute;
-    left: -20px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #fff;
-    color: #000;
-    border-radius: 50%;
-    width: 35px; 
-    height: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem; 
-    font-weight: 700;
-    box-shadow: 0 0 4px #0004;
-    transition: all 0.3s ease-in-out;
-
-  } 
-  */
 
 .circle-badge:hover {
     transform: translateY(-50%) scale(1.2); /* Slightly expand when hovered */
@@ -689,7 +669,10 @@
 
 
 .hud { background: #262626; }
-
+#hud-upper-top{
+  display: flex;
+  justify-content: flex-end;
+}
 #hud-upper-misc{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

@@ -136,6 +136,23 @@
     gap: 1rem;
     padding: 0.5rem;
   }
+
+  .bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 20px auto;
+    width: 90%;
+  }
+
+  .bar-background {
+    width: 100%;
+  }
+
+  .bar-inner-content {
+    font-size: 0.75rem;
+    padding: 0 6px;
+  }
 }
 
 /* Small Phones (≤ 480px) */
