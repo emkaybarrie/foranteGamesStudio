@@ -137,13 +137,21 @@
     padding: 0.5rem;
   }
 
-  .bar-wrapper {
+  /* .bar-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    margin: 20px auto;
+    margin: 40px;
     width: 90%;
-  }
+  } */
+
+  /* .bar-wrapper {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3.5rem;
+  margin: 40px;
+} */
 
   .bar-background {
     width: 100%;

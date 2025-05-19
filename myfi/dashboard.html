@@ -269,6 +269,11 @@
         <div class="modal-content">
           <button class="modal-close" id="close-payment-modal">&times;</button>
 
+          <h2>Enter Payment</h2>
+          <input type="number" id="amount" placeholder="Amount spent" />
+          
+          
+          <h2>Select Payment Method</h2>
           <select id="paymentMethod">
             <option value="" disabled selected>Select...</option>
             <option value="monzo">Monzo</option>
@@ -279,11 +284,13 @@
 
           <div id="paymentDetails" style="margin-top: 20px;"></div>
 
-            <div id="qrCode" style="margin-top: 20px;"></div>
+            <button class="button" id="submit-payment">Proceed</button>
+            <h2 id="qrHeader" style="display: none;"> OR</h2>
+            <div id="qrCode" style="margin-top: 20px"></div>
 
-          <h2>Enter Payment</h2>
-          <input type="number" id="amount" placeholder="Amount spent" />
-          <button class="purple-btn" id="submit-payment">Submit</button>
+            
+
+          
         </div>
       </div>
 

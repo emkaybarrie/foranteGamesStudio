@@ -350,11 +350,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear and re-add QR
     qrCodeDiv.innerHTML = '';
     qrCodeDiv.appendChild(qr.element);
+
+    const submit = document.getElementById('submit-payment');
+    if (submit) submit.style.display = 'block';
+    const qrHeader = document.getElementById('qrHeader');
+    if (qrHeader) qrHeader.style.display = 'block';
+
   });
 
 
 document.getElementById('close-payment-modal').addEventListener('click', () => {
     document.getElementById('payment-modal').style.display = 'none';
+    const qrHeader = document.getElementById('qrHeader');
+    if (qrHeader) qrHeader.style.display = 'none';
   });
 
 // document.addEventListener('DOMContentLoaded', () => {

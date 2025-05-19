@@ -742,6 +742,11 @@
     text-align: center;
 }
 
+#submit-payment {
+  display: none;      /* ensure it's a block element */
+  margin: 20px auto;  /* vertical 20px, horizontal auto (center) */
+}
+
 /*New and correct MODAL */
 /* Modal container */
 #picker-modal {
