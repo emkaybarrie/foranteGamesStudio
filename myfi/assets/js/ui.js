@@ -385,58 +385,208 @@ function refreshDashboard(playerData) {
 }
 
 
+// export async function renderHUD(discretionaryData) {
+//     const upperHudContainer_Vitals = document.getElementById('upper-hud-vitals');
+//     upperHudContainer_Vitals.innerHTML = "";
+
+//     subCategories[categories.discretionary].forEach(subCat => {
+//         if (subCat.toLowerCase() !== 'unallocated')  {
+            
+//             const availableResource = discretionaryData[`availableResource_${subCat}`] ?? 0;
+//             const dSpendingCap = discretionaryData[`dSpendingCap_${subCat}`] ?? 1;
+//             const storedDays = discretionaryData[`storedDays_${subCat}`] ?? 0;
+
+//             // Use the variables as needed
+           
+
+//             const percentage = Math.min((availableResource / dSpendingCap) * 100, 100);
+
+            
+
+//             const barWrapper = document.createElement('div');
+//             barWrapper.className = 'bar-wrapper';
+
+//             const label = document.createElement('div');
+//             label.className = 'bar-label';
+//             label.innerText = `£0.00 / £${dSpendingCap.toFixed(2)}`;
+
+//             const barBackground = document.createElement('div');
+//             barBackground.className = 'bar-background';
+
+//             const barFill = document.createElement('div');
+//             barFill.className = `bar-fill ${subCat.toLowerCase()}`;
+//             barFill.style.width = `0%`;
+
+//             // Circle badge for stored days
+//             const circleBadge = document.createElement('div');
+//             circleBadge.className = 'circle-badge';
+//             circleBadge.innerText = `${Math.round(storedDays)}`;
+
+//             barBackground.append(barFill, circleBadge);
+//             barWrapper.append(label, barBackground);
+//             upperHudContainer_Vitals.append(subCat, barWrapper);
+
+//             // Animate
+//             animateProgressBar(barFill, percentage);
+//             animateAmount(label, 0, availableResource, dSpendingCap);
+
+//             if (percentage >= 90) {
+//                 barFill.classList.add('pulse');
+//             }
+        
+//     }
+//     });
+// }
+
 export async function renderHUD(discretionaryData) {
     const upperHudContainer_Vitals = document.getElementById('upper-hud-vitals');
     upperHudContainer_Vitals.innerHTML = "";
 
     subCategories[categories.discretionary].forEach(subCat => {
-        if (subCat.toLowerCase() !== 'unallocated')  {
-            
+        if (subCat.toLowerCase() !== 'unallocated') {
+
             const availableResource = discretionaryData[`availableResource_${subCat}`] ?? 0;
             const dSpendingCap = discretionaryData[`dSpendingCap_${subCat}`] ?? 1;
             const storedDays = discretionaryData[`storedDays_${subCat}`] ?? 0;
 
-            // Use the variables as needed
-           
-
             const percentage = Math.min((availableResource / dSpendingCap) * 100, 100);
-
-            
 
             const barWrapper = document.createElement('div');
             barWrapper.className = 'bar-wrapper';
 
-            const label = document.createElement('div');
-            label.className = 'bar-label';
-            label.innerText = `£0.00 / £${dSpendingCap.toFixed(2)}`;
-
+            // Bar background
             const barBackground = document.createElement('div');
             barBackground.className = 'bar-background';
 
+            // Bar fill
             const barFill = document.createElement('div');
             barFill.className = `bar-fill ${subCat.toLowerCase()}`;
             barFill.style.width = `0%`;
 
-            // Circle badge for stored days
-            const circleBadge = document.createElement('div');
-            circleBadge.className = 'circle-badge';
-            circleBadge.innerText = `${Math.round(storedDays)}`;
+            // Bar content overlay
+            const barContent = document.createElement('div');
+            barContent.className = 'bar-inner-content';
 
-            barBackground.append(barFill, circleBadge);
-            barWrapper.append(label, barBackground);
-            upperHudContainer_Vitals.append(subCat, barWrapper);
+            const leftText = document.createElement('div');
+            leftText.className = 'bar-left-text';
+            leftText.innerText = subCat // `£${availableResource.toFixed(2)} / £${dSpendingCap.toFixed(2)}`;
+
+            const rightText = document.createElement('div');
+            rightText.className = 'bar-right-text';
+            rightText.innerText = `£${availableResource.toFixed(2)} / £${dSpendingCap.toFixed(2)}`;
+
+            barContent.append(leftText, rightText);
+
+            // Icon inside bar (replace storedDays badge)
+            const icon = document.createElement('img');
+            icon.className = 'vital-icon';
+            icon.src = `/assets/img/${subCat.toLowerCase()}.png`; // Ensure you have matching icons
+
+            // New storedDays circle badge (outside right)
+            const storedDaysBadge = document.createElement('div');
+            storedDaysBadge.className = 'circle-badge outside-right';
+            storedDaysBadge.innerText = `${Math.round(storedDays)}`;
+            storedDaysBadge.classList.add(subCat.toLowerCase()); // E.g., 'needs', 'wants'
+
+            applyPulseSettings(storedDaysBadge, storedDays, {
+                minDays: 1,
+                maxDays: 31,
+                minDuration: 0.6,
+                maxDuration: 3.0
+            });
+                        
+
+            const badgeWrapper = document.createElement('div');
+            badgeWrapper.className = 'badge-wrapper';
+            badgeWrapper.appendChild(storedDaysBadge);  
+
+            barBackground.append(barFill, barContent,icon);
+            barWrapper.append(barBackground, badgeWrapper);
+            upperHudContainer_Vitals.append(barWrapper);
 
             // Animate
             animateProgressBar(barFill, percentage);
-            animateAmount(label, 0, availableResource, dSpendingCap);
+            animateAmount(rightText, 0, availableResource, dSpendingCap);
 
             if (percentage >= 90) {
                 barFill.classList.add('pulse');
             }
-        
-    }
+        }
     });
 }
+
+    // function applyPulseSettings(badgeEl, storedDays, {
+    //     minDays = 1,
+    //     maxDays = 31,
+    //     minDuration = 0.6,
+    //     maxDuration = 3.0,
+    //     } = {}) {
+    //     // If below threshold, remove pulse animation
+    //     if (storedDays < minDays) {
+    //         badgeEl.style.removeProperty('--pulse-duration');
+    //         badgeEl.classList.remove('growth-pulse', 'wants-pulse', 'needs-pulse');
+    //         return;
+    //     }
+
+    //     // Clamp and normalize
+    //     const clamped = Math.min(maxDays, Math.max(minDays, storedDays));
+    //     const normalized = (clamped - minDays) / (maxDays - minDays); // 0 to 1
+
+    //     // Scale duration: faster when storedDays is higher
+    //     const duration = maxDuration - normalized * (maxDuration - minDuration);
+
+    //     // Set duration
+    //     badgeEl.style.setProperty('--pulse-duration', `${duration.toFixed(2)}s`);
+
+    //     // Make sure the correct pulse class is added
+    //     if (badgeEl.classList.contains('growth')) badgeEl.classList.add('growth-pulse');
+    //     if (badgeEl.classList.contains('wants')) badgeEl.classList.add('wants-pulse');
+    //     if (badgeEl.classList.contains('needs')) badgeEl.classList.add('needs-pulse');
+    // }
+
+    function applyPulseSettings(badgeEl, storedDays, {
+  minDays = 1,
+  maxDays = 31,
+  minDuration = 0.6,
+  maxDuration = 3.0,
+  crackMin = -1,
+  crackMax = -31,
+} = {}) {
+  const category = badgeEl.classList.contains('growth') ? 'growth'
+                  : badgeEl.classList.contains('wants') ? 'wants'
+                  : badgeEl.classList.contains('needs') ? 'needs'
+                  : null;
+
+  badgeEl.classList.remove('growth-pulse', 'wants-pulse', 'needs-pulse', 'crack-effect');
+  badgeEl.style.removeProperty('--pulse-duration');
+  badgeEl.style.removeProperty('--crack-magnitude');
+  badgeEl.style.removeProperty('--crack-duration');
+
+  if (!category) return;
+
+  if (storedDays < minDays) {
+    const clampedNeg = Math.max(crackMin, Math.min(crackMax, storedDays));
+    const normalized = (clampedNeg - crackMin) / (crackMax - crackMin); // [0, 1]
+    const magnitude = 1 + normalized * 4; // Range [1, 5]
+    const duration = 1.8 - normalized * 0.8; // Faster if more negative, e.g. 1s to 1.8s
+
+    badgeEl.style.setProperty('--crack-magnitude', magnitude.toFixed(2));
+    badgeEl.style.setProperty('--crack-duration', `${duration.toFixed(2)}s`);
+    badgeEl.classList.add('crack-effect');
+    return;
+  }
+
+  // Otherwise, apply normal pulsing
+  const clamped = Math.min(maxDays, Math.max(minDays, storedDays));
+  const normalized = (clamped - minDays) / (maxDays - minDays);
+  const duration = maxDuration - normalized * (maxDuration - minDuration);
+
+  badgeEl.style.setProperty('--pulse-duration', `${duration.toFixed(2)}s`);
+  badgeEl.classList.add(`${category}-pulse`);
+}
+
+
+
 
 /* ========== HUD Live Updater ========== */
 

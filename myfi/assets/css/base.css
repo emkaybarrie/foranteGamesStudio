@@ -121,7 +121,11 @@
 
 
 .bar-wrapper {
-  margin-bottom: 15px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3.5rem;
+  margin: 40px;
 }
 
 .bar-label {
@@ -133,16 +137,185 @@
   position: relative;
   background: #333;
   border-radius: 8px;
-  height: 1.25rem;
+  height: 1.5rem;
+  overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
   border-radius: 8px;
   transition: width 0.4s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
-.bar-fill.growth {
+/* Overlay content inside bar */
+.bar-inner-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8px;
+  height: 100%;
+  align-items: center;
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.bar-left-text {
+  text-align: left;
+}
+
+.bar-right-text {
+  text-align: right;
+}
+
+/* Icon inside bar (vital image) */
+.vital-icon {
+  position: absolute;
+  left: -24px; /* Adjust to your needs */
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
+  width: 24px;
+  background: #ceccd3;
+  border: 2px solid red;
+}
+
+.badge-wrapper {
+  position: absolute;
+  right: 0rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none; /* optional */
+}
+
+/* New badge outside the bar on the right */
+
+.circle-badge.outside-right {
+  background: #8a4fff;
+  color: white;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+  transform: none; /* neutral base */
+}
+
+.circle-badge.outside-right.growth {
+  background: #e74c3c; /* red for Needs */
+
+}
+.circle-badge.outside-right.wants {
+  background: #3498db; /* blue for Wants */
+
+}
+.circle-badge.outside-right.needs {
+  background: #2ecc71; /* green for Growth */
+
+}
+
+.circle-badge.growth-pulse {
+  animation: pulse-growth var(--pulse-duration, 2s) infinite;
+}
+
+.circle-badge.wants-pulse {
+  animation: pulse-wants var(--pulse-duration, 2s) infinite;
+}
+
+.circle-badge.needs-pulse {
+  animation: pulse-needs var(--pulse-duration, 2s) infinite;
+}
+
+
+@keyframes pulse-growth {
+  0% {
+    box-shadow: 0 0 6px #e74c3c, 0 0 12px #e74c3c;
+    transform: scale(1);
+  }
+  25% {
+    box-shadow: 0 0 10px #e74c3c, 0 0 20px #e74c3c;
+    transform: scale(1.05) rotate(-1deg);
+  }
+  50% {
+    box-shadow: 0 0 14px #e74c3c, 0 0 24px #e74c3c;
+    transform: scale(1.1) rotate(1deg);
+  }
+  75% {
+    box-shadow: 0 0 10px #e74c3c, 0 0 18px #e74c3c;
+    transform: scale(1.07) rotate(-0.5deg);
+  }
+  100% {
+    box-shadow: 0 0 6px #e74c3c, 0 0 12px #e74c3c;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-wants {
+  0% {
+    box-shadow: 0 0 6px #3498db, 0 0 12px #3498db;
+    transform: scale(1);
+  }
+  25% {
+    box-shadow: 0 0 10px #3498db, 0 0 20px #3498db;
+    transform: scale(1.05) rotate(-1deg);
+  }
+  50% {
+    box-shadow: 0 0 14px #3498db, 0 0 24px #3498db;
+    transform: scale(1.1) rotate(1deg);
+  }
+  75% {
+    box-shadow: 0 0 10px #3498db, 0 0 18px #3498db;
+    transform: scale(1.07) rotate(-0.5deg);
+  }
+  100% {
+    box-shadow: 0 0 6px #3498db, 0 0 12px #3498db;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-needs {
+  0% {
+    box-shadow: 0 0 6px #2ecc71, 0 0 12px #2ecc71;
+    transform: scale(1);
+  }
+  25% {
+    box-shadow: 0 0 10px #2ecc71, 0 0 20px #2ecc71;
+    transform: scale(1.05) rotate(-1deg);
+  }
+  50% {
+    box-shadow: 0 0 14px #2ecc71, 0 0 24px #2ecc71;
+    transform: scale(1.1) rotate(1deg);
+  }
+  75% {
+    box-shadow: 0 0 10px #2ecc71, 0 0 18px #2ecc71;
+    transform: scale(1.07) rotate(-0.5deg);
+  }
+  100% {
+    box-shadow: 0 0 6px #2ecc71, 0 0 12px #2ecc71;
+    transform: scale(1);
+  }
+}
+
+.circle-badge.crack-effect {
+  animation: cracky var(--crack-duration, 1s) infinite;
+}
+
+@keyframes cracky {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  20%  { transform: translate(calc(var(--crack-magnitude, 1) * -1px), calc(var(--crack-magnitude, 1) * 1px)) rotate(-1deg); }
+  40%  { transform: translate(calc(var(--crack-magnitude, 1) * 1px), calc(var(--crack-magnitude, 1) * -1px)) rotate(1deg); }
+  60%  { transform: translate(calc(var(--crack-magnitude, 1) * -0.5px), calc(var(--crack-magnitude, 1) * 0.5px)) rotate(-0.5deg); }
+  80%  { transform: translate(calc(var(--crack-magnitude, 1) * 0.5px), calc(var(--crack-magnitude, 1) * -0.5px)) rotate(0.5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+/* OLD */
+
+/* .bar-fill.growth {
   background: #d32f2f;
 }
 
@@ -152,7 +325,7 @@
 
 .bar-fill.needs {
   background: #388e3c;
-}
+} */
 
 .bar-fill.purple-bar {
   background: linear-gradient(180deg, #8a4fff 0%, #4e2c99 100%);
@@ -175,6 +348,57 @@
       box-shadow: 0 0 15px 10px rgba(138, 79, 255, 0.7);
   }
 }  
+
+/* Circle for stored days */
+
+/*
+ .circle-badge {
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    color: #000;
+    border-radius: 50%;
+    width: 35px; 
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem; 
+    font-weight: 700;
+    box-shadow: 0 0 4px #0004;
+    transition: all 0.3s ease-in-out;
+
+  } 
+  */
+
+.circle-badge:hover {
+    transform: translateY(-50%) scale(1.2); /* Slightly expand when hovered */
+    font-size: 1.2rem; /* Larger text when hovered */
+    box-shadow: 0 0 10px 4px rgba(138, 79, 255, 0.7); /* Glowing effect on hover */
+}
+
+/* Color-specific circles (for each bar) */
+.circle-badge.growth {
+    background: #d32f2f; /* Matching Growth bar */
+    color: white;
+}
+
+.circle-badge.wants {
+    background: #1976d2; /* Matching Wants bar */
+    color: white;
+}
+
+.circle-badge.needs {
+    background: #388e3c; /* Matching Needs bar */
+    color: white;
+}
+
+.circle-badge.purple-bar {
+    background: linear-gradient(180deg, #8a4fff 0%, #4e2c99 100%); /* Matching Purple bar */
+    color: white;
+}
 
 /* Optional specific color per panel */
 
@@ -465,6 +689,7 @@
 
 
 .hud { background: #262626; }
+
 #hud-upper-misc{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

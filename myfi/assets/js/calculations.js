@@ -155,8 +155,8 @@ export async function getDiscretionaryData(cashflowDataInput = null, playerDataI
     availableResource_Needs = Math.abs(totalAccumulatedResource_Needs % dSpendingCap_Needs)
     availableResource_Total = availableResource_Growth + availableResource_Wants + availableResource_Needs
 
-    storedDays_Growth = parseInt(totalAccumulatedResource_Growth / dSpendingCap_Growth)
-    storedDays_Wants = parseInt(totalAccumulatedResource_Wants / dSpendingCap_Wants)
+    storedDays_Growth = 20 //parseInt(totalAccumulatedResource_Growth / dSpendingCap_Growth)
+    storedDays_Wants = 2//parseInt(totalAccumulatedResource_Wants / dSpendingCap_Wants)
     storedDays_Needs = parseInt(totalAccumulatedResource_Needs / dSpendingCap_Needs)
 
     let discretionaryData = { 
