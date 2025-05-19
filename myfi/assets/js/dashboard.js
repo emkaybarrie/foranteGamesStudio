@@ -3,6 +3,7 @@ import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic
 import { logoutUser } from './auth.js';
 import { categories, subCategories, incomeCategory, unallocatedRefName } from './config.js';
 import { gapiLoaded, gisLoaded, extractSheetId, validateSheet, fetchSheetData, openGooglePicker  } from "./api.js";
+import playerDataManager from "./playerDataManager.js";
 
 
 import { getCashflowData,getDiscretionaryData, getAvatarData  } from './calculations.js';  
@@ -169,6 +170,10 @@ auth.onAuthStateChanged(async (user) => {
             const startDate = new Date();
             await setDoc(userRef, { startDate: startDate }, { merge: true });
         }
+
+        await playerDataManager.init(user.uid).then((player) => {
+      console.log("Player data loaded:", player);
+    });
        
         fetchDataAndRenderMyFiDashboard(user.uid);
 
@@ -452,6 +457,7 @@ export async function fetchDataAndRenderMyFiDashboard(uid) {
                 }
 
                 if (playerData) {
+                    saveToLocalStorage('alias', playerData.alias)
                     console.log("Storing playerData components to Local Storage:" )
                     console.log('Finance Data...', playerData.financeSummary )
                     saveToLocalStorage('finanaceData', playerData.financeSummary)

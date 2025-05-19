@@ -125,7 +125,7 @@
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 3.5rem;
-  margin: 40px;
+  margin: 15px;
 }
 
 .bar-label {
@@ -137,9 +137,40 @@
   position: relative;
   background: #333;
   border-radius: 8px;
-  height: 1.5rem;
+  height: 2rem;
   overflow: hidden;
+
+
 }
+
+.bar-stripes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 3;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.25),
+    rgba(255, 255, 255, 0.25) 1px,
+    
+    transparent 4px,
+    transparent calc(100% / 4)
+  );
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+  animation: pulse-glow 1.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+  }
+}
+
 
 .bar-fill {
   height: 100%;
@@ -148,24 +179,27 @@
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 1; /* Behind the text and icons */
 }
 
+
 .bar-fill.growth {
-  background: #d32f2f;
+  background-color: #d32f2f;
 }
 
 .bar-fill.wants {
-  background: #1976d2;
+  background-color: #1976d2;
 }
 
+
 .bar-fill.needs {
-  background: #388e3c;
+  background-color: #388e3c;
 }
 
 /* Overlay content inside bar */
 .bar-inner-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   justify-content: space-between;
   padding: 0 8px;

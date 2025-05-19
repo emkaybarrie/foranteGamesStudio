@@ -2,7 +2,7 @@
 import { auth, db } from './auth.js';
 import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { categories, subCategories, incomeCategory } from './config.js';
-import { fetchDataAndRenderMyFiDashboard, loadFromLocalStorage, saveAttributesToFirestore, saveToLocalStorage } from './dashboard.js';
+import { fetchDataAndRenderMyFiDashboard, getPlayerData, loadFromLocalStorage, saveAttributesToFirestore, saveToLocalStorage } from './dashboard.js';
 import { getAvatarStatData } from './calculations.js'; 
 
 
@@ -442,7 +442,14 @@ export async function renderHUD(discretionaryData) {
     const upperHudContainer_Vitals = document.getElementById('upper-hud-vitals');
     upperHudContainer_Vitals.innerHTML = "";
 
+    const segmentsPerSubCat = {
+        needs: 7,
+        wants: 7,
+        growth: 7
+    };
+
     subCategories[categories.discretionary].forEach(subCat => {
+
         if (subCat.toLowerCase() !== 'unallocated') {
 
             const availableResource = discretionaryData[`availableResource_${subCat}`] ?? 0;
@@ -462,6 +469,49 @@ export async function renderHUD(discretionaryData) {
             const barFill = document.createElement('div');
             barFill.className = `bar-fill ${subCat.toLowerCase()}`;
             barFill.style.width = `0%`;
+
+            const stripeOverlay = document.createElement('div');
+            stripeOverlay.className = 'bar-stripes';
+            
+
+            // const segmentCount = segmentsPerSubCat[subCat.toLowerCase()] || 7;
+            // const segmentWidthPercent = 100 / segmentCount;
+
+            // barFill.style.setProperty('--segment-size', `${segmentWidthPercent}%`);
+            // barFill.style.setProperty('--segment-image', `
+            // repeating-linear-gradient(
+            //     to right,
+            //     rgba(255, 255, 255, 0.15),
+            //     rgba(255, 255, 255, 0.15) 1px,
+            //     transparent 1px,
+            //     transparent ${segmentWidthPercent}%
+            // )
+            // `);
+
+            // Instead of one barFill, create segmentsCount bar-fill-segment divs
+            // const segmentWidthPercent = 100 / segmentsCount;
+
+            // const segmentFills = [];
+
+            // for (let i = 0; i < segmentsCount; i++) {
+            //     const segment = document.createElement('div');
+            //     segment.className = `bar-fill-segment ${subCat.toLowerCase()}`;
+            //     segment.style.width = `${segmentWidthPercent}%`;
+            //     segment.style.float = 'left';
+            //     segment.style.position = 'relative';
+
+            //     // Create inner fill that will animate width from 0 to 100% inside this segment
+            //     const fill = document.createElement('div');
+            //     fill.className = 'bar-fill-segment-inner';
+            //     fill.style.width = '0%';  // start empty
+            //     fill.style.height = '100%';
+            //     fill.style.backgroundColor = 'inherit'; // keep color based on subCat class
+
+            //     segment.appendChild(fill);
+            //     barBackground.appendChild(segment);
+
+            //     segmentFills.push(fill);
+            // }
 
             // Bar content overlay
             const barContent = document.createElement('div');
@@ -499,17 +549,48 @@ export async function renderHUD(discretionaryData) {
             const badgeWrapper = document.createElement('div');
             badgeWrapper.className = 'badge-wrapper';
             badgeWrapper.appendChild(storedDaysBadge);  
-
+            barBackground.appendChild(stripeOverlay);
             barBackground.append(barFill, barContent,icon);
+            // barBackground.append(barContent,icon);
             barWrapper.append(barBackground, badgeWrapper);
             upperHudContainer_Vitals.append(barWrapper);
 
             // Animate
-            animateProgressBar(barFill, percentage);
+             animateProgressBar(barFill, percentage);
+            // Animate the segments fill one after another
+            // async function animateSegments(fills, totalPercent) {
+            //     let remainingPercent = totalPercent;
+            //     for (let i = 0; i < fills.length; i++) {
+            //         const fillPercent = Math.min(remainingPercent, segmentWidthPercent);
+            //         remainingPercent -= fillPercent;
+
+            //         await animateSegmentFill(fills[i], fillPercent / segmentWidthPercent * 100);
+            //     }
+            // }
+
+            // function animateSegmentFill(element, targetWidthPercent) {
+            //     return new Promise(resolve => {
+            //         let width = 0;
+            //         const step = 2; // animation speed control
+            //         const interval = setInterval(() => {
+            //             width += step;
+            //             if (width >= targetWidthPercent) {
+            //                 width = targetWidthPercent;
+            //                 clearInterval(interval);
+            //                 resolve();
+            //             }
+            //             element.style.width = width + '%';
+            //         }, 20);
+            //     });
+            // }
+
+            // animateSegments(segmentFills, percentage);
             animateAmount(rightText, 0, availableResource, dSpendingCap);
 
             if (percentage >= 90) {
                 barFill.classList.add('pulse');
+                // segmentFills.forEach(f => f.classList.add('pulse'));
+
             }
         }
     });
@@ -842,7 +923,12 @@ export function openPaymentModal(amountSpent) {
 
  export async function submitPayment(amountSpent){
 
+    const alias = loadFromLocalStorage('alias')
+    console.log(alias)
 
+    const submitURL = "https://monzo.me/emkaybarrie?amount=10.00&d=MyFi_" + alias
+
+    window.open(submitURL, '_blank');
 
     const modal = document.getElementById('payment-modal');
     modal.classList.add('hidden');
