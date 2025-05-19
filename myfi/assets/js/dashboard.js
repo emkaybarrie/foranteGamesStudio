@@ -6,11 +6,11 @@ import { gapiLoaded, gisLoaded, extractSheetId, validateSheet, fetchSheetData, o
 import playerDataManager from "./playerDataManager.js";
 
 
-import { getCashflowData,getDiscretionaryData, getAvatarData  } from './calculations.js';  
-import { renderHUD, renderAvatarStats, renderDashboard, showManualEntryButton, hideManualEntryButton,showLinkAccountButton, 
+import { generateCashflowData, generateHudData, generateAvatarData  } from './calculations.js';  
+import { renderProfile, renderHUD, showManualEntryButton, hideManualEntryButton,showLinkAccountButton, 
     hideLinkAccountButton, hideUnlinkAccountButton , showUnlinkAccountButton, startLiveHUDUpdate, openPaymentModal, 
     openLinkSheetModal, closeSheetModal, showTooltip, hideTooltip,updateTooltipPosition,
-    submitPayment, renderPlayerStats} from './ui.js';
+    submitPayment} from './ui.js';
 
 const DataManager = {
   data: {},
@@ -155,7 +155,6 @@ document.addEventListener('sheetLinked', () => {
 
 
 // Core Code 
-
 auth.onAuthStateChanged(async (user) => {
     if (!user) {
         window.location.href = 'login.html';
@@ -171,17 +170,201 @@ auth.onAuthStateChanged(async (user) => {
             await setDoc(userRef, { startDate: startDate }, { merge: true });
         }
 
-        await playerDataManager.init(user.uid).then((player) => {
-      console.log("Player data loaded:", player);
-    });
-       
-        fetchDataAndRenderMyFiDashboard(user.uid);
+        const playerData = await playerDataManager.init(user.uid).then((player) => {
+            console.log("Player data loaded:", player.alias);
+            return player
+        });
+
+       console.log(playerData)
+        loadDashboard(playerData);
 
         
        
        
     }
 });
+
+
+export async function loadDashboard(playerData) {
+   
+    //const playerData = await getPlayerData()
+    console.log("Initialising Dashboard...");
+
+    if (playerData.alias !== undefined) {
+                
+                // ✅ Handle startDate
+                let startDate = null
+                if (playerData.financeSummary.transactionStartDate){
+                    startDate = playerData.financeSummary.transactionStartDate
+                    
+
+                    const [day, month, year] = startDate.split("/");
+                    startDate = new Date(`${year}-${month}-${day}`);
+                 
+                    
+                } else {
+                    startDate = playerData.startDate ? playerData.startDate.toDate() : null;
+                    if (!startDate) {
+                        console.error("Start date is missing!");
+                        return;
+                    }
+                }
+
+            
+                const monthsSinceStart = parseFloat((new Date() - new Date(startDate)) / (1000 * 60 * 60 * 24 * 30.44));
+
+
+                playerDataManager.update({
+                    monthsSinceStart: monthsSinceStart 
+                });
+
+           
+
+                if (playerData.sheetId) {
+                    
+                    console.log("Linked Account Detected.  Importing Transaction Data...")
+            
+                    loadTransactionData(playerData.sheetId);
+
+                    hideManualEntryButton();
+                    hideLinkAccountButton();
+
+                    showUnlinkAccountButton();
+                } else {
+                    console.log("No Linked Account Detected.  Activating Manual Entry Mode...")
+                    showManualEntryButton();
+                    showLinkAccountButton();
+                    hideUnlinkAccountButton();
+                }
+
+              
+                    
+                    // Calculate
+                    console.log("Refreshing Cashflow Data...")
+                    await generateCashflowData()
+                    console.log("Refreshing HUD Data...")
+                    await generateHudData()
+                    console.log("Refreshing Avatar Data...")
+                    await generateAvatarData()
+
+    
+                    playerData = await playerDataManager.save();
+               
+                    // Render
+                    renderProfile()
+                    renderHUD()
+            
+
+                    // renderMetrics 
+
+                        const cashflowData = playerData.financeSummary.cashflowData
+                        const ctx = document.getElementById('metricsChart').getContext('2d');
+
+                        const metricsChart = new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['Income', 'Mandatory', 'Supplementary', 'Discretionary'],
+                                datasets: [{
+                                    label: 'Average Daily Totals',
+                                    data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary,cashflowData.dAvgSpending_Discretionary],
+                                    backgroundColor: [
+                                        '#6200ea',
+                                        '#bb86fc',
+                                        '#985eff',
+                                        '#7f39fb',
+                                        '#3700b3'
+                                    ],
+                                    borderRadius: 6
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false, // Let the parent container control size
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: { color: '#ccc' },
+                                        grid: { color: '#444' }
+                                    },
+                                    x: {
+                                        ticks: { color: '#ccc' },
+                                        grid: { color: '#444' }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: {
+                                            color: '#ccc'
+                                        }
+                                    }
+                                },
+                                animation: {
+                                    duration: 2000, // milliseconds
+                                    easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
+                                },
+                            }
+                        });
+
+                        const ctx2 = document.getElementById('metricsChart2').getContext('2d');
+
+                        const metricsChart2 = new Chart(ctx2, {
+                            type: 'line',
+                            data: {
+                                labels: ['Day 1', 'Day 3', 'Day 5', 'Day 7'],
+                                datasets: [{
+                                    label: 'Daily Spending',
+                                    data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary, cashflowData.dAvgSpending_Discretionary],
+                                    backgroundColor: [
+                                        '#6200ea',
+                                        '#bb86fc',
+                                        '#985eff',
+                                        '#7f39fb',
+                                        '#3700b3'
+                                    ],
+                                    borderRadius: 6
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false, // Let the parent container control size
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: { color: '#ccc' },
+                                        grid: { color: '#444' }
+                                    },
+                                    x: {
+                                        ticks: { color: '#ccc' },
+                                        grid: { color: '#444' }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        labels: {
+                                            color: '#ccc'
+                                        }
+                                    }
+                                },
+                                animation: {
+                                    duration: 2000, // milliseconds
+                                    easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
+                                },
+                            }
+                        });
+                    
+       
+
+    } else {
+        console.error("Alias or balance missing.");
+        window.location.href = 'login.html';
+    }
+
+
+}
+
+
+
+
 
 // Logout and Manual Entry button setup
 document.addEventListener('DOMContentLoaded', () => {
@@ -408,374 +591,7 @@ document.getElementById('close-payment-modal').addEventListener('click', () => {
 //     // Close button inside Payment modal
 //     closeBtn.addEventListener('click', () => closeModal(paymentModal));
 
-export async function fetchDataAndRenderMyFiDashboard(uid) {
-    const userDocRef = doc(db, "players", uid); // Temp
-    const playerData = await getPlayerData()
-    console.log("Player data from Firestore:", playerData);
 
-    if (playerData.alias && playerData.startBalance !== undefined) {
-                
-                // ✅ Handle startDate
-                let startDate = null
-                if (playerData.financeSummary.transactionStartDate){
-                    startDate = playerData.financeSummary.transactionStartDate
-                    
-
-                    const [day, month, year] = startDate.split("/");
-                    startDate = new Date(`${year}-${month}-${day}`);
-                 
-                    
-                } else {
-                    startDate = playerData.startDate ? playerData.startDate.toDate() : null;
-                    if (!startDate) {
-                        console.error("Start date is missing!");
-                        return;
-                    }
-                }
-
-            
-                const monthsSinceStart = parseFloat((new Date() - new Date(startDate)) / (1000 * 60 * 60 * 24 * 30.44));
-
-
-                await setDoc(userDocRef, { monthsSinceStart: monthsSinceStart }, { merge: true });
-
-                if (playerData.sheetId) {
-                    
-                    console.log("Linked Account Detected.  Importing Transaction Data...")
-            
-                    loadTransactionData(playerData.sheetId);
-
-                    hideManualEntryButton();
-                    hideLinkAccountButton();
-
-                    showUnlinkAccountButton();
-                } else {
-                    console.log("No Linked Account Detected.  Activating Manual Entry Mode...")
-                    showManualEntryButton();
-                    showLinkAccountButton();
-                    hideUnlinkAccountButton();
-                }
-
-                if (playerData) {
-                    saveToLocalStorage('alias', playerData.alias)
-                    console.log("Storing playerData components to Local Storage:" )
-                    console.log('Finance Data...', playerData.financeSummary )
-                    saveToLocalStorage('finanaceData', playerData.financeSummary)
-                    console.log('Avatar Data...', playerData.avatarData)
-                    saveToLocalStorage('avatarData', playerData.avatarData)
-                    saveToLocalStorage('attributeData', playerData.attributePoints)
-
-                    // Calculate
-                    const cashflowData = await getCashflowData(playerData)
-                    const discretionaryData = await getDiscretionaryData(cashflowData, playerData)
-                    const avatarData = await getAvatarData(discretionaryData, playerData)
-
-                    saveAvatarDataToFireStore(avatarData)
-               
-                   
-                    
-                    
-     
-
-                    // Render
-                    renderDashboard(playerData);
-                    renderPlayerStats(playerData)
-                    renderHUD(discretionaryData)
-                    
-                    renderAvatarStats();
-                
-                    //startLiveHUDUpdate(discretionaryData)
-
-                    const ctx = document.getElementById('metricsChart').getContext('2d');
-
-                    const metricsChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: ['Income', 'Mandatory', 'Supplementary', 'Discretionary'],
-                            datasets: [{
-                                label: 'Average Daily Totals',
-                                data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary, cashflowData.dAvgSpending_Discretionary],
-                                backgroundColor: [
-                                    '#6200ea',
-                                    '#bb86fc',
-                                    '#985eff',
-                                    '#7f39fb',
-                                    '#3700b3'
-                                ],
-                                borderRadius: 6
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false, // Let the parent container control size
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: { color: '#ccc' },
-                                    grid: { color: '#444' }
-                                },
-                                x: {
-                                    ticks: { color: '#ccc' },
-                                    grid: { color: '#444' }
-                                }
-                            },
-                            plugins: {
-                                legend: {
-                                    labels: {
-                                        color: '#ccc'
-                                    }
-                                }
-                            },
-                            animation: {
-                                duration: 2000, // milliseconds
-                                easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
-                            },
-                        }
-                    });
-
-                    const ctx2 = document.getElementById('metricsChart2').getContext('2d');
-
-                    const metricsChart2 = new Chart(ctx2, {
-                        type: 'line',
-                        data: {
-                            labels: ['Day 1', 'Day 3', 'Day 5', 'Day 7'],
-                            datasets: [{
-                                label: 'Daily Spending',
-                                data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary, cashflowData.dAvgSpending_Discretionary],
-                                backgroundColor: [
-                                    '#6200ea',
-                                    '#bb86fc',
-                                    '#985eff',
-                                    '#7f39fb',
-                                    '#3700b3'
-                                ],
-                                borderRadius: 6
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false, // Let the parent container control size
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: { color: '#ccc' },
-                                    grid: { color: '#444' }
-                                },
-                                x: {
-                                    ticks: { color: '#ccc' },
-                                    grid: { color: '#444' }
-                                }
-                            },
-                            plugins: {
-                                legend: {
-                                    labels: {
-                                        color: '#ccc'
-                                    }
-                                }
-                            },
-                            animation: {
-                                duration: 2000, // milliseconds
-                                easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
-                            },
-                        }
-                    });
-
-                }
-
-    } else {
-        console.error("Alias or balance missing.");
-        //window.location.href = 'login.html';
-    }
-
-    // const userDocRef = doc(db, "players", uid);
-
-    // try {
-    //     const userDoc = await getDoc(userDocRef);
-    //     if (userDoc.exists()) {
-    //         const playerData = userDoc.data();
-    //         console.log("Player data from Firestore:", playerData);
-            
-
-    //         if (playerData.alias && playerData.startBalance !== undefined) {
-                
-    //             // ✅ Handle startDate
-    //             let startDate = null
-    //             if (playerData.financeSummary.transactionStartDate){
-    //                 startDate = playerData.financeSummary.transactionStartDate
-                    
-
-    //                 const [day, month, year] = startDate.split("/");
-    //                 startDate = new Date(`${year}-${month}-${day}`);
-                 
-                    
-    //             } else {
-    //                 startDate = playerData.startDate ? playerData.startDate.toDate() : null;
-    //                 if (!startDate) {
-    //                     console.error("Start date is missing!");
-    //                     return;
-    //                 }
-    //             }
-
-            
-    //             const monthsSinceStart = parseFloat((new Date() - new Date(startDate)) / (1000 * 60 * 60 * 24 * 30.44));
-
-
-    //             await setDoc(userDocRef, { monthsSinceStart: monthsSinceStart }, { merge: true });
-
-    //             if (playerData.sheetId) {
-                    
-    //                 console.log("Linked Account Detected.  Importing Transaction Data...")
-            
-    //                 loadTransactionData(playerData.sheetId);
-
-    //                 hideManualEntryButton();
-    //                 hideLinkAccountButton();
-
-    //                 showUnlinkAccountButton();
-    //             } else {
-    //                 console.log("No Linked Account Detected.  Activating Manual Entry Mode...")
-    //                 showManualEntryButton();
-    //                 showLinkAccountButton();
-    //                 hideUnlinkAccountButton();
-    //             }
-
-    //             if (playerData) {
-    //                 console.log("Storing playerData components to Local Storage:" )
-    //                 console.log('Finance Data...', playerData.financeSummary )
-    //                 saveToLocalStorage('finanaceData', playerData.financeSummary)
-    //                 console.log('Avatar Data...', playerData.avatarData)
-    //                 saveToLocalStorage('avatarData', playerData.avatarData)
-    //                 saveToLocalStorage('attributeData', playerData.attributePoints)
-
-    //                 // Calculate
-    //                 const cashflowData = await getCashflowData(playerData)
-    //                 const discretionaryData = await getDiscretionaryData(cashflowData, playerData)
-    //                 const avatarData = await getAvatarData(discretionaryData, playerData)
-
-    //                 saveAvatarDataToFireStore(avatarData)
-               
-                   
-                    
-                    
-     
-
-    //                 // Render
-    //                 renderDashboard(playerData);
-    //                 renderPlayerStats(playerData)
-    //                 renderHUD(discretionaryData)
-                    
-    //                 renderAvatarStats();
-                
-    //                 //startLiveHUDUpdate(discretionaryData)
-
-    //                 const ctx = document.getElementById('metricsChart').getContext('2d');
-
-    //                 const metricsChart = new Chart(ctx, {
-    //                     type: 'bar',
-    //                     data: {
-    //                         labels: ['Income', 'Mandatory', 'Supplementary', 'Discretionary'],
-    //                         datasets: [{
-    //                             label: 'Average Daily Totals',
-    //                             data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary, cashflowData.dAvgSpending_Discretionary],
-    //                             backgroundColor: [
-    //                                 '#6200ea',
-    //                                 '#bb86fc',
-    //                                 '#985eff',
-    //                                 '#7f39fb',
-    //                                 '#3700b3'
-    //                             ],
-    //                             borderRadius: 6
-    //                         }]
-    //                     },
-    //                     options: {
-    //                         responsive: true,
-    //                         maintainAspectRatio: false, // Let the parent container control size
-    //                         scales: {
-    //                             y: {
-    //                                 beginAtZero: true,
-    //                                 ticks: { color: '#ccc' },
-    //                                 grid: { color: '#444' }
-    //                             },
-    //                             x: {
-    //                                 ticks: { color: '#ccc' },
-    //                                 grid: { color: '#444' }
-    //                             }
-    //                         },
-    //                         plugins: {
-    //                             legend: {
-    //                                 labels: {
-    //                                     color: '#ccc'
-    //                                 }
-    //                             }
-    //                         },
-    //                         animation: {
-    //                             duration: 2000, // milliseconds
-    //                             easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
-    //                         },
-    //                     }
-    //                 });
-
-    //                 const ctx2 = document.getElementById('metricsChart2').getContext('2d');
-
-    //                 const metricsChart2 = new Chart(ctx2, {
-    //                     type: 'line',
-    //                     data: {
-    //                         labels: ['Day 1', 'Day 3', 'Day 5', 'Day 7'],
-    //                         datasets: [{
-    //                             label: 'Daily Spending',
-    //                             data: [cashflowData.dAvgIncome, cashflowData.dAvgSpending_Mandatory, cashflowData.dAvgSpending_Supplementary, cashflowData.dAvgSpending_Discretionary],
-    //                             backgroundColor: [
-    //                                 '#6200ea',
-    //                                 '#bb86fc',
-    //                                 '#985eff',
-    //                                 '#7f39fb',
-    //                                 '#3700b3'
-    //                             ],
-    //                             borderRadius: 6
-    //                         }]
-    //                     },
-    //                     options: {
-    //                         responsive: true,
-    //                         maintainAspectRatio: false, // Let the parent container control size
-    //                         scales: {
-    //                             y: {
-    //                                 beginAtZero: true,
-    //                                 ticks: { color: '#ccc' },
-    //                                 grid: { color: '#444' }
-    //                             },
-    //                             x: {
-    //                                 ticks: { color: '#ccc' },
-    //                                 grid: { color: '#444' }
-    //                             }
-    //                         },
-    //                         plugins: {
-    //                             legend: {
-    //                                 labels: {
-    //                                     color: '#ccc'
-    //                                 }
-    //                             }
-    //                         },
-    //                         animation: {
-    //                             duration: 2000, // milliseconds
-    //                             easing: 'easeOutBounce' // other options: 'linear', 'easeInOutQuart', etc.
-    //                         },
-    //                     }
-    //                 });
-
-    //             }
-
-    //         } else {
-    //             console.error("Alias or balance missing.");
-    //             window.location.href = 'login.html';
-    //         }
-    //     } else {
-    //         console.error("No document found.");
-    //         window.location.href = 'login.html';
-    //     }
-    // } catch (error) {
-    //     console.error("Error fetching Firestore document:", error);
-    // }
-}
 
 export function saveToLocalStorage(storageReference, value){
     window.localStorage.setItem(storageReference, JSON.stringify(value))

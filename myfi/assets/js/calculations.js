@@ -1,10 +1,12 @@
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db } from './auth.js';
 import { categories, subCategories } from './config.js'; // Categories for mandatory, discretionary
-import { getPlayerData, saveToLocalStorage } from "./dashboard.js";
+import { getPlayerData, saveToLocalStorage} from "./dashboard.js";
+import playerDataManager from "./playerDataManager.js";
+
 
 // Function to process transactions from Google Sheets
-export async function getCashflowData(playerDataInput = null) {
+export async function generateCashflowData() {
     // Initialise Function Variables to be exported
     let dAvgIncome = null
     let dAvgSpending_Mandatory = null
@@ -16,7 +18,7 @@ export async function getCashflowData(playerDataInput = null) {
     let dAvgBalance = null
     
     // Get Local Storage Variables
-    const playerData = playerDataInput ?  playerDataInput : JSON.parse(localStorage.getItem('playerData'))
+    let playerData = playerDataManager.get();
 
     // Retreive PlayerData variables
     let availableTransactionStartDate = null
@@ -57,7 +59,7 @@ export async function getCashflowData(playerDataInput = null) {
     dAvgSpending_Discretionary = dAvgSpending_Discretionary_Growth + dAvgSpending_Discretionary_Wants + dAvgSpending_Discretionary_Needs  
     
 
-    let cashflowData = { 
+   const cashflowData = { 
                             dAvgIncome, 
                             dAvgSpending_Mandatory, 
                             dAvgSpending_Supplementary,
@@ -67,17 +69,18 @@ export async function getCashflowData(playerDataInput = null) {
                             dAvgSpending_Discretionary_Needs 
                         }
 
-    window.localStorage.setItem('cashflowData', JSON.stringify(cashflowData))
-    cashflowData = JSON.parse(localStorage.getItem('cashflowData'))
+                        
 
-    return cashflowData 
+ 
+    playerDataManager.update({
+        financeSummary: {cashflowData: cashflowData},
+    });
 
-    // Store the finance summary in Firestore
+    return playerDataManager.get() 
 
-    //await setDoc(userDocRef, playerData, { merge: true });
 }
 
-export async function getDiscretionaryData(cashflowDataInput = null, playerDataInput = null) {
+export async function generateHudData() {
 
     // Initialise Variables
     let dContributionsTarget_Avatar = null
@@ -102,8 +105,8 @@ export async function getDiscretionaryData(cashflowDataInput = null, playerDataI
     const needsAllocation = 0.5 
 
     // Get Local Storage Variables
-    const playerData = playerDataInput ?  playerDataInput : JSON.parse(localStorage.getItem('playerData'))
-    const cashflowData = cashflowDataInput ?  cashflowDataInput : JSON.parse(localStorage.getItem('cashflowData'))
+    let playerData = playerDataManager.get();
+    const cashflowData = playerData.financeSummary.cashflowData
     
     // Retreive PlayerData variables
     let availableTransactionStartDate = null
@@ -159,7 +162,7 @@ export async function getDiscretionaryData(cashflowDataInput = null, playerDataI
     storedDays_Wants = 2//parseInt(totalAccumulatedResource_Wants / dSpendingCap_Wants)
     storedDays_Needs = parseInt(totalAccumulatedResource_Needs / dSpendingCap_Needs)
 
-    let discretionaryData = { 
+    let hudData = { 
         dContributionsTarget_Avatar, 
         dContributionsTarget_Community,
         dContributionsTarget_IGC,
@@ -178,29 +181,29 @@ export async function getDiscretionaryData(cashflowDataInput = null, playerDataI
         storedDays_Needs
     }
 
-    window.localStorage.setItem('discretionaryData', JSON.stringify(discretionaryData))
-    discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
 
 
-    return discretionaryData 
+    playerDataManager.update({
+        hudData: hudData,
+    });
 
-    // Store the finance summary in Firestore
-    //await setDoc(userDocRef, playerData, { merge: true });
+   
+    return playerDataManager.get() 
+
 }
 
-export async function getAvatarData(discretionaryDataInput = null, playerDataInput = null) {
+export async function generateAvatarData() {
 
     // Get Local Storage Variables
-    const playerData = playerDataInput ?  playerDataInput : JSON.parse(localStorage.getItem('playerData'))
-    const discretionaryData = discretionaryDataInput ?  discretionaryDataInput : JSON.parse(localStorage.getItem('discretionaryData'))
-    let avatarData = playerData.avatarData
-    console.log(avatarData)
- 
-    
-        const monthsSinceStart = playerData.monthsSinceStart
-        const dailyTargetContribution = discretionaryData.dContributionsTarget_Avatar ? discretionaryData.dContributionsTarget_Avatar : 1
+    let playerData = playerDataManager.get();
 
-        const totalContributed_Avatar = playerData.avatarData.avatarContribution ? playerData.avatarData.avatarContribution : 0;
+    let hudData = playerData.hudData
+    let avatarData = playerData.avatarData
+
+        const monthsSinceStart = playerData.monthsSinceStart
+        const dailyTargetContribution = hudData.dContributionsTarget_Avatar ? hudData.dContributionsTarget_Avatar : 1
+
+        const totalContributed_Avatar = avatarData.avatarContribution ? avatarData.avatarContribution : 0;
        
 
         const maxContribution_Avatar = dailyTargetContribution * 30.44 * monthsSinceStart
@@ -220,34 +223,30 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
             contributionAmountToNextLevel: contributionAmountToNextLevel,
         };
 
-        console.log(avatarData)
-    
 
-    // After building discretionaryResults dynamically (like we did before):
-    saveToLocalStorage('avatarData', avatarData)
-    avatarData = JSON.parse(localStorage.getItem('avatarData'))
-    return avatarData
 
-    // Store the finance summary in Firestore
+    playerDataManager.update({
+        avatarData: avatarData,
+    });
 
-    //await setDoc(userDocRef, playerData, { merge: true });
+   
+    return playerDataManager.get() 
 }
 
  export async function getAvatarStatData(baseAvatarData){
 
     // Get Local Storage Variables
  
-    const playerData = await getPlayerData()
+    const playerData = playerDataManager.get()
     
     
-    const avatarData = JSON.parse(localStorage.getItem('avatarData'))
-    const discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
+    const avatarData = playerData.avatarData
+  
  
-
     const empowerMultiplier = avatarData.avatarEmpowerLevel * 0.1
-    const hudMultiplier_Health = (discretionaryData.storedDays_Growth * 0.01)
-    const hudMultiplier_Mana = (discretionaryData.storedDays_Wants * 0.01)
-    const hudMultiplier_Stamina = (discretionaryData.storedDays_Stamina * 0.01)
+    const hudMultiplier_Health = (playerData.hudData.storedDays_Growth * 0.01)
+    const hudMultiplier_Mana = (playerData.hudData.storedDays_Wants * 0.01)
+    const hudMultiplier_Stamina = (playerData.hudData.storedDays_Stamina * 0.01)
     const chargeMultiplier = avatarData.contributionPercent_Avatar
     // Skill Tree Stub
     const empowerMultiplier_HealthModifier = 1 + (playerData.attributePoints.resilience * 0.01)
@@ -264,21 +263,17 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
     
 
     // Health
-    let total = baseAvatarData.health.base
+        let total = baseAvatarData.health.base
 
-    baseAvatarData.health.empower = baseAvatarData.health.base * (empowerMultiplier * empowerMultiplier_HealthModifier)
+        baseAvatarData.health.empower = baseAvatarData.health.base * (empowerMultiplier * empowerMultiplier_HealthModifier)
 
-    total += baseAvatarData.health.empower
+        total += baseAvatarData.health.empower
 
-    let hudMultiplier = 1 + (hudMultiplier_Health * hudMultiplier_HealthModifier)
+        let hudMultiplier = 1 + (hudMultiplier_Health * hudMultiplier_HealthModifier)
 
-    total *= hudMultiplier
+        total *= hudMultiplier
 
-    //if (total < baseAvatarData.health.base + baseAvatarData.health.empower){
-     //   baseAvatarData.health.hud = 0
-   // } else {
         baseAvatarData.health.hud = total - (baseAvatarData.health.base + baseAvatarData.health.empower)
-   // }
 
     // Mana
         total = baseAvatarData.mana.base
@@ -291,12 +286,8 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
 
         total *= hudMultiplier
 
-      //  if (total < baseAvatarData.mana.base + baseAvatarData.mana.empower){
-       //     baseAvatarData.mana.hud = 0
-      //  } else {
-            baseAvatarData.mana.hud = total - (baseAvatarData.mana.base + baseAvatarData.mana.empower)
-     //   }
-
+        baseAvatarData.mana.hud = total - (baseAvatarData.mana.base + baseAvatarData.mana.empower)
+   
     // Stamina
     total = baseAvatarData.stamina.base
 
@@ -309,11 +300,7 @@ export async function getAvatarData(discretionaryDataInput = null, playerDataInp
 
     total *= hudMultiplier
 
-    //if (total < baseAvatarData.stamina.base + baseAvatarData.stamina.empower){
-      //  baseAvatarData.stamina.hud = 0
-    //} else {
-        baseAvatarData.stamina.hud = total - (baseAvatarData.stamina.base + baseAvatarData.stamina.empower)
-    //}
+    baseAvatarData.stamina.hud = total - (baseAvatarData.stamina.base + baseAvatarData.stamina.empower)
 
     // Charge
     if (baseAvatarData.lowestStat == "Health"){

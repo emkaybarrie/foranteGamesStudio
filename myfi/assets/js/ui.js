@@ -2,8 +2,9 @@
 import { auth, db } from './auth.js';
 import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { categories, subCategories, incomeCategory } from './config.js';
-import { fetchDataAndRenderMyFiDashboard, getPlayerData, loadFromLocalStorage, saveAttributesToFirestore, saveToLocalStorage } from './dashboard.js';
+import { loadDashboard, getPlayerData, loadFromLocalStorage, saveAttributesToFirestore, saveToLocalStorage } from './dashboard.js';
 import { getAvatarStatData } from './calculations.js'; 
+import playerDataManager from './playerDataManager.js';
 
 
 /* ========== Helpers ========== */
@@ -133,79 +134,74 @@ export  function hideTooltip() {
   });
   
 
-/* ========== Dashboard Renderer ========== */
+/* ============ Profile Rendering =========== */
 
-export function renderDashboard(playerData) {
-    document.getElementById('alias-banner').innerText = playerData.alias || 'No Alias';
+export function renderProfile() {
+    console.log('Rendering Profile...' )
+    const playerData = playerDataManager.get()
+    renderAvatarDetails(playerData)
+    renderAvatarStats(playerData)
+    renderChampionStats()
+    
+}
 
-    const discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'))
-    const discretionaryBalanceElement = document.getElementById('discretionary-current-balance');
-    discretionaryBalanceElement.innerText = discretionaryData.availableResource_Total !== undefined
-        ? `£${discretionaryData.availableResource_Total.toFixed(2)}`
-        : '£0.00';
-    const balanceElement = document.getElementById('current-balance');
-    balanceElement.innerText = playerData.financeSummary.currentBalance !== undefined
-        ? `£${playerData.financeSummary.currentBalance.toFixed(2)}`
-        : '£0.00';
+    function renderAvatarDetails(playerData){
+        document.getElementById('alias-banner').innerText = playerData.alias || 'No Alias';
 
-    const avatarData = JSON.parse(localStorage.getItem('avatarData'))
-    avatarData.avatarContribution = playerData.avatarData.avatarContribution
+    const avatarData = playerData.avatarData
+
+    // Spending Persona
+
+    // Avatar Level
     const avatarLevelElement = document.getElementById('profile-level');
     avatarLevelElement.innerText = avatarData.contributionLevel !== undefined
         ? `Lvl ${avatarData.contributionLevel.toFixed(0)}`
         : 'Lvl 1';
 
+    // Avatar Pic
+    const avatarPic = document.getElementById('profile-picture');
+    avatarPic.style.backgroundImage = "url('./assets/img/default-profile.png')";
+
+    if (avatarData.avatarPictureUrl) {
+        avatarPic.style.backgroundImage = `url('${avatarData.avatarPictureUrl}')`;
+    }
+
+    // Charge
     const powerLevelElement = document.getElementById('power-level');
     powerLevelElement.innerText = avatarData.contributionPercent_Avatar !== undefined
     ? `${avatarData.contributionPercent_Avatar.toFixed(2) * 100}%`
     : '0';
 
+    // Power
     const powerTotalElement = document.getElementById('power-total');
     powerTotalElement.innerText = playerData.avatarData.avatarContribution !== undefined
-    ? `${playerData.avatarData.avatarContribution.toFixed(0)}`
+    ? `${avatarData.avatarContribution.toFixed(0)}`
     : '0';
 
-    const profilePic = document.getElementById('profile-picture');
-    profilePic.style.backgroundImage = "url('./assets/img/default-profile.png')";
-
-    if (playerData.profilePictureUrl) {
-        profilePic.style.backgroundImage = `url('${playerData.profilePictureUrl}')`;
+    
     }
-}
 
+    async function renderAvatarStats(playerData) {
 
-
-/* ============ Profile Renderer =========== */
-
-export async function renderPlayerStats() {
- 
-    console.log('Rendering Profile Stats...' )
-    loadAttributesFromPlayerData();
-
-}
-
-// Attribute Panel
-async function loadAttributesFromPlayerData() {
-
-        const attributeData = loadFromLocalStorage('attributeData') || {};
-        const avatarData = JSON.parse(localStorage.getItem('avatarData'))
+        const attributePoints = playerData.attributePoints
+        const avatarData = playerData.avatarData
         
-        const spentPoints = attributeData.resilience + attributeData.focus + attributeData.adaptability
+        const spentPoints = attributePoints.resilience + attributePoints.focus + attributePoints.adaptability
         const unspentPoints = (avatarData.contributionLevel * 10) - spentPoints ?? 0;//attributeData.unspent ?? 0;
-        attributeData.unspent = unspentPoints
+        attributePoints.unspent = unspentPoints
 
-        updateUI(attributeData)
+        updateUI(attributePoints)
 
         document.querySelectorAll(".increment").forEach(button => {
             button.addEventListener("click", (e) => {
                 
                 const row = e.target.closest(".attribute-row");
                 const attr = row.dataset.attribute;
-                if (attributeData.unspent > 0) {
+                if (attributePoints.unspent > 0) {
                 
-                    attributeData[attr]++;
-                    attributeData.unspent--;
-                    updateUI(attributeData)
+                    attributePoints[attr]++;
+                    attributePoints.unspent--;
+                    updateUI(attributePoints)
 
                 }
             });
@@ -215,10 +211,10 @@ async function loadAttributesFromPlayerData() {
             button.addEventListener("click", (e) => {
             const row = e.target.closest(".attribute-row");
             const attr = row.dataset.attribute;
-            if (attributeData[attr] > 0) {
-                attributeData[attr]--;
-                attributeData.unspent++;
-                updateUI(attributeData);
+            if (attributePoints[attr] > 0) {
+                attributePoints[attr]--;
+                attributePoints.unspent++;
+                updateUI(attributePoints);
             }
             });
         });
@@ -226,163 +222,139 @@ async function loadAttributesFromPlayerData() {
         document.querySelector("#reset-attributes").addEventListener("click", () => {
             let totalSpent = 0;
 
-            for (const key in attributeData) {
+            for (const key in attributePoints) {
                 if (key !== "unspent") {
-                    totalSpent += attributeData[key];
-                    attributeData[key] = 0;
+                    totalSpent += attributePoints[key];
+                    attributePoints[key] = 0;
                 }
             }
 
-            attributeData.unspent += totalSpent;
-            updateUI(attributeData);
+            attributePoints.unspent += totalSpent;
+            updateUI(attributePoints);
         });
-
-        // Clear points
-
-
-}
-
-function updateUI(attributeData){
-    for (let key in attributeData) {
-        document.getElementById(`${key}-value`).textContent = attributeData[key];
     }
 
-    saveToLocalStorage('attributeData', attributeData)
-}
+        function updateUI(attributePoints){
+            for (let key in attributePoints) {
+                document.getElementById(`${key}-value`).textContent = attributePoints[key];
+            }
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById("save-attributes").addEventListener("click", () => {
-            const attributeData = loadFromLocalStorage('attributeData')
-            saveAttributesToFirestore(attributeData);
+            saveToLocalStorage('attributeData', attributePoints)
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("save-attributes").addEventListener("click", () => {
+                    const attributeData = loadFromLocalStorage('attributeData')
+                    saveAttributesToFirestore(attributeData);
+                });
         });
-});
 
-const avatarStatConfig = {
-  health: { color: '#e53935', glow: '#ff8a80' },
-  mana: { color: '#1e88e5', glow: '#82b1ff' },
-  stamina: { color: '#43a047', glow: '#b9f6ca' },
-};
+    const avatarStatConfig = {
+    health: { color: '#e53935', glow: '#ff8a80' },
+    mana: { color: '#1e88e5', glow: '#82b1ff' },
+    stamina: { color: '#43a047', glow: '#b9f6ca' },
+    };
 
-export async function renderAvatarStats(statData = null) {
-    if(!statData){
+    async function renderChampionStats(statData = null) {
+        if(!statData){
+            
+            const selectedavatarStub = {
+                            health: {
+                                base:1,
+                                empower: 0,
+                                hud:0,
+                            },
+                            mana: {
+                                base:1.5,
+                                empower:0,
+                                hud:0,
+                            },
+                            stamina: {
+                                base:3,
+                                empower:0,
+                                hud:0,
+                            }, 
+                            lowestStat: "Health"
+                        }
+
+            statData = await getAvatarStatData(selectedavatarStub)
+
+        }
+
         
-        const selectedavatarStub = {
-                        health: {
-                            base:1,
-                            empower: 0,
-                            hud:0,
-                        },
-                        mana: {
-                            base:1.5,
-                            empower:0,
-                            hud:0,
-                        },
-                        stamina: {
-                            base:3,
-                            empower:0,
-                            hud:0,
-                        }, 
-                        lowestStat: "Health"
-                    }
 
-        statData = await getAvatarStatData(selectedavatarStub)
+    const container = document.getElementById('avatar-stats');
 
+    const rows = container.querySelectorAll('.avatar-stat');
+
+    rows.forEach(row => {
+        
+        
+        const stat = row.dataset.stat;
+        const value_Base = statData[stat].base || 0;
+        const value_Empower = statData[stat].empower || 0;
+        const value_Charge = statData[stat].charge || 0;
+        const value_Hud = statData[stat].hud || 0;
+        
+        const blocksWrapper = row.querySelector('.stat-blocks');
+        blocksWrapper.innerHTML = ''; // Clear old blocks
+
+
+        // Base
+        for (let i = 0; i < value_Base; i++) {
+        const block = document.createElement('div');
+        block.classList.add('block');
+        
+            block.classList.add('filled');
+            block.style.backgroundColor = avatarStatConfig[stat].color;
+            block.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].glow}`;
+            block.style.animationDelay = `${i * 50}ms`;
+        
+        blocksWrapper.appendChild(block);
+        }
+        // Empower 
+        for (let i = 0; i < value_Empower; i++) {
+        const bonusBlock = document.createElement('div');
+        bonusBlock.classList.add('block', 'bonus');
+        bonusBlock.style.backgroundColor = '#6435e5' //'purple';
+        bonusBlock.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].color}`; //purple';
+        bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
+        blocksWrapper.appendChild(bonusBlock);
+        }
+
+        // Charge 
+        for (let i = 0; i < value_Charge; i++) {
+        const bonusBlock = document.createElement('div');
+        bonusBlock.classList.add('block', 'bonus');
+        bonusBlock.style.backgroundColor = '#4a25af' //'purple';'
+        bonusBlock.style.boxShadow = '0 0 5px purple';
+        bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
+        blocksWrapper.appendChild(bonusBlock);
+        }
+
+
+        // Hud
+        for (let i = 0; i < value_Hud; i++) {
+        const bonusBlock = document.createElement('div');
+        bonusBlock.classList.add('block', 'bonus');
+        bonusBlock.style.backgroundColor = 'orange';
+        bonusBlock.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].glow}`;
+        bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
+        blocksWrapper.appendChild(bonusBlock);
+        }
+
+        
+
+        
+
+        
+    });
     }
-
-    
-
-  const container = document.getElementById('avatar-stats');
-
-  const rows = container.querySelectorAll('.avatar-stat');
-
-  rows.forEach(row => {
-    
-    
-    const stat = row.dataset.stat;
-    const value_Base = statData[stat].base || 0;
-    const value_Empower = statData[stat].empower || 0;
-    const value_Charge = statData[stat].charge || 0;
-    const value_Hud = statData[stat].hud || 0;
-    
-    const blocksWrapper = row.querySelector('.stat-blocks');
-    blocksWrapper.innerHTML = ''; // Clear old blocks
-
-
-    // Base
-     for (let i = 0; i < value_Base; i++) {
-      const block = document.createElement('div');
-      block.classList.add('block');
-      
-        block.classList.add('filled');
-        block.style.backgroundColor = avatarStatConfig[stat].color;
-        block.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].glow}`;
-        block.style.animationDelay = `${i * 50}ms`;
-      
-      blocksWrapper.appendChild(block);
-    }
-    // Empower 
-    for (let i = 0; i < value_Empower; i++) {
-      const bonusBlock = document.createElement('div');
-      bonusBlock.classList.add('block', 'bonus');
-      bonusBlock.style.backgroundColor = '#6435e5' //'purple';
-      bonusBlock.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].color}`; //purple';
-      bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
-      blocksWrapper.appendChild(bonusBlock);
-    }
-
-    // Charge 
-    for (let i = 0; i < value_Charge; i++) {
-      const bonusBlock = document.createElement('div');
-      bonusBlock.classList.add('block', 'bonus');
-      bonusBlock.style.backgroundColor = '#4a25af' //'purple';'
-      bonusBlock.style.boxShadow = '0 0 5px purple';
-      bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
-      blocksWrapper.appendChild(bonusBlock);
-    }
-
-
-    // Hud
-    for (let i = 0; i < value_Hud; i++) {
-      const bonusBlock = document.createElement('div');
-      bonusBlock.classList.add('block', 'bonus');
-      bonusBlock.style.backgroundColor = 'orange';
-      bonusBlock.style.boxShadow = `0 0 5px ${avatarStatConfig[stat].glow}`;
-      bonusBlock.style.animationDelay = `${(i + 10) * 50}ms`;
-      blocksWrapper.appendChild(bonusBlock);
-    }
-
-    
-
-    
-
-    
-  });
-}
 
 
 
 
 /* ========== HUD Renderer ========== */
-
-// Refresh Dashboard UI with latest player data
-function refreshDashboard(playerData) {
-    const aliasBanner = document.getElementById('alias-banner');
-    const currentBalanceElement = document.getElementById('current-balance');
-    const profilePic = document.getElementById('profile-picture');
-
-    // Alias
-    aliasBanner.innerText = playerData.alias || 'No Alias';
-
-    // Current Balance
-    currentBalanceElement.innerText = playerData.financeSummary.currentBalance !== undefined
-        ? `Balance: £${playerData.financeSummary.currentBalance.toFixed(2)}`
-        : 'Balance: £0.00';
-
-    // Profile Picture (fallback to default if missing)
-    profilePic.style.backgroundImage = playerData.profilePictureUrl 
-        ? `url('${playerData.profilePictureUrl}')`
-        : "url('./assets/img/default-profile.png')";
-}
 
 
 // export async function renderHUD(discretionaryData) {
@@ -438,7 +410,12 @@ function refreshDashboard(playerData) {
 //     });
 // }
 
-export async function renderHUD(discretionaryData) {
+export async function renderHUD() {
+    console.log('Rendering HUD...' )
+    const playerData = playerDataManager.get()
+
+    const hudData = playerData.hudData
+
     const upperHudContainer_Vitals = document.getElementById('upper-hud-vitals');
     upperHudContainer_Vitals.innerHTML = "";
 
@@ -452,9 +429,9 @@ export async function renderHUD(discretionaryData) {
 
         if (subCat.toLowerCase() !== 'unallocated') {
 
-            const availableResource = discretionaryData[`availableResource_${subCat}`] ?? 0;
-            const dSpendingCap = discretionaryData[`dSpendingCap_${subCat}`] ?? 1;
-            const storedDays = discretionaryData[`storedDays_${subCat}`] ?? 0;
+            const availableResource = hudData[`availableResource_${subCat}`] ?? 0;
+            const dSpendingCap = hudData[`dSpendingCap_${subCat}`] ?? 1;
+            const storedDays = hudData[`storedDays_${subCat}`] ?? 0;
 
             const percentage = Math.min((availableResource / dSpendingCap) * 100, 100);
 
@@ -470,49 +447,10 @@ export async function renderHUD(discretionaryData) {
             barFill.className = `bar-fill ${subCat.toLowerCase()}`;
             barFill.style.width = `0%`;
 
+            // Bar segment overlay
             const stripeOverlay = document.createElement('div');
             stripeOverlay.className = 'bar-stripes';
             
-
-            // const segmentCount = segmentsPerSubCat[subCat.toLowerCase()] || 7;
-            // const segmentWidthPercent = 100 / segmentCount;
-
-            // barFill.style.setProperty('--segment-size', `${segmentWidthPercent}%`);
-            // barFill.style.setProperty('--segment-image', `
-            // repeating-linear-gradient(
-            //     to right,
-            //     rgba(255, 255, 255, 0.15),
-            //     rgba(255, 255, 255, 0.15) 1px,
-            //     transparent 1px,
-            //     transparent ${segmentWidthPercent}%
-            // )
-            // `);
-
-            // Instead of one barFill, create segmentsCount bar-fill-segment divs
-            // const segmentWidthPercent = 100 / segmentsCount;
-
-            // const segmentFills = [];
-
-            // for (let i = 0; i < segmentsCount; i++) {
-            //     const segment = document.createElement('div');
-            //     segment.className = `bar-fill-segment ${subCat.toLowerCase()}`;
-            //     segment.style.width = `${segmentWidthPercent}%`;
-            //     segment.style.float = 'left';
-            //     segment.style.position = 'relative';
-
-            //     // Create inner fill that will animate width from 0 to 100% inside this segment
-            //     const fill = document.createElement('div');
-            //     fill.className = 'bar-fill-segment-inner';
-            //     fill.style.width = '0%';  // start empty
-            //     fill.style.height = '100%';
-            //     fill.style.backgroundColor = 'inherit'; // keep color based on subCat class
-
-            //     segment.appendChild(fill);
-            //     barBackground.appendChild(segment);
-
-            //     segmentFills.push(fill);
-            // }
-
             // Bar content overlay
             const barContent = document.createElement('div');
             barContent.className = 'bar-inner-content';
@@ -551,125 +489,77 @@ export async function renderHUD(discretionaryData) {
             badgeWrapper.appendChild(storedDaysBadge);  
             barBackground.appendChild(stripeOverlay);
             barBackground.append(barFill, barContent,icon);
-            // barBackground.append(barContent,icon);
             barWrapper.append(barBackground, badgeWrapper);
             upperHudContainer_Vitals.append(barWrapper);
 
             // Animate
              animateProgressBar(barFill, percentage);
-            // Animate the segments fill one after another
-            // async function animateSegments(fills, totalPercent) {
-            //     let remainingPercent = totalPercent;
-            //     for (let i = 0; i < fills.length; i++) {
-            //         const fillPercent = Math.min(remainingPercent, segmentWidthPercent);
-            //         remainingPercent -= fillPercent;
-
-            //         await animateSegmentFill(fills[i], fillPercent / segmentWidthPercent * 100);
-            //     }
-            // }
-
-            // function animateSegmentFill(element, targetWidthPercent) {
-            //     return new Promise(resolve => {
-            //         let width = 0;
-            //         const step = 2; // animation speed control
-            //         const interval = setInterval(() => {
-            //             width += step;
-            //             if (width >= targetWidthPercent) {
-            //                 width = targetWidthPercent;
-            //                 clearInterval(interval);
-            //                 resolve();
-            //             }
-            //             element.style.width = width + '%';
-            //         }, 20);
-            //     });
-            // }
-
-            // animateSegments(segmentFills, percentage);
             animateAmount(rightText, 0, availableResource, dSpendingCap);
 
             if (percentage >= 90) {
                 barFill.classList.add('pulse');
-                // segmentFills.forEach(f => f.classList.add('pulse'));
+
 
             }
         }
     });
+
+   
+    const hudBalanceElement = document.getElementById('discretionary-current-balance');
+    hudBalanceElement.innerText = hudData.availableResource_Total !== undefined
+        ? `£${hudData.availableResource_Total.toFixed(2)}`
+        : '£0.00';
+    // const balanceElement = document.getElementById('current-balance');
+    // balanceElement.innerText = playerData.financeSummary.currentBalance !== undefined
+    //     ? `£${playerData.financeSummary.currentBalance.toFixed(2)}`
+    //     : '£0.00';
 }
-
-    // function applyPulseSettings(badgeEl, storedDays, {
-    //     minDays = 1,
-    //     maxDays = 31,
-    //     minDuration = 0.6,
-    //     maxDuration = 3.0,
-    //     } = {}) {
-    //     // If below threshold, remove pulse animation
-    //     if (storedDays < minDays) {
-    //         badgeEl.style.removeProperty('--pulse-duration');
-    //         badgeEl.classList.remove('growth-pulse', 'wants-pulse', 'needs-pulse');
-    //         return;
-    //     }
-
-    //     // Clamp and normalize
-    //     const clamped = Math.min(maxDays, Math.max(minDays, storedDays));
-    //     const normalized = (clamped - minDays) / (maxDays - minDays); // 0 to 1
-
-    //     // Scale duration: faster when storedDays is higher
-    //     const duration = maxDuration - normalized * (maxDuration - minDuration);
-
-    //     // Set duration
-    //     badgeEl.style.setProperty('--pulse-duration', `${duration.toFixed(2)}s`);
-
-    //     // Make sure the correct pulse class is added
-    //     if (badgeEl.classList.contains('growth')) badgeEl.classList.add('growth-pulse');
-    //     if (badgeEl.classList.contains('wants')) badgeEl.classList.add('wants-pulse');
-    //     if (badgeEl.classList.contains('needs')) badgeEl.classList.add('needs-pulse');
-    // }
 
     function applyPulseSettings(badgeEl, storedDays, {
-  minDays = 1,
-  maxDays = 31,
-  minDuration = 0.6,
-  maxDuration = 3.0,
-  crackMin = -1,
-  crackMax = -31,
-} = {}) {
-  const category = badgeEl.classList.contains('growth') ? 'growth'
-                  : badgeEl.classList.contains('wants') ? 'wants'
-                  : badgeEl.classList.contains('needs') ? 'needs'
-                  : null;
+    minDays = 1,
+    maxDays = 31,
+    minDuration = 0.6,
+    maxDuration = 3.0,
+    crackMin = -1,
+    crackMax = -31,
+    } = {}) {
+    const category = badgeEl.classList.contains('growth') ? 'growth'
+                    : badgeEl.classList.contains('wants') ? 'wants'
+                    : badgeEl.classList.contains('needs') ? 'needs'
+                    : null;
 
-  badgeEl.classList.remove('growth-pulse', 'wants-pulse', 'needs-pulse', 'crack-effect');
-  badgeEl.style.removeProperty('--pulse-duration');
-  badgeEl.style.removeProperty('--crack-magnitude');
-  badgeEl.style.removeProperty('--crack-duration');
+    badgeEl.classList.remove('growth-pulse', 'wants-pulse', 'needs-pulse', 'crack-effect');
+    badgeEl.style.removeProperty('--pulse-duration');
+    badgeEl.style.removeProperty('--crack-magnitude');
+    badgeEl.style.removeProperty('--crack-duration');
 
-  if (!category) return;
+    if (!category) return;
 
-  if (storedDays < minDays) {
-    const clampedNeg = Math.max(crackMin, Math.min(crackMax, storedDays));
-    const normalized = (clampedNeg - crackMin) / (crackMax - crackMin); // [0, 1]
-    const magnitude = 1 + normalized * 4; // Range [1, 5]
-    const duration = 1.8 - normalized * 0.8; // Faster if more negative, e.g. 1s to 1.8s
+    if (storedDays < minDays) {
+        const clampedNeg = Math.max(crackMin, Math.min(crackMax, storedDays));
+        const normalized = (clampedNeg - crackMin) / (crackMax - crackMin); // [0, 1]
+        const magnitude = 1 + normalized * 4; // Range [1, 5]
+        const duration = 1.8 - normalized * 0.8; // Faster if more negative, e.g. 1s to 1.8s
 
-    badgeEl.style.setProperty('--crack-magnitude', magnitude.toFixed(2));
-    badgeEl.style.setProperty('--crack-duration', `${duration.toFixed(2)}s`);
-    badgeEl.classList.add('crack-effect');
-    return;
-  }
+        badgeEl.style.setProperty('--crack-magnitude', magnitude.toFixed(2));
+        badgeEl.style.setProperty('--crack-duration', `${duration.toFixed(2)}s`);
+        badgeEl.classList.add('crack-effect');
+        return;
+    }
 
-  // Otherwise, apply normal pulsing
-  const clamped = Math.min(maxDays, Math.max(minDays, storedDays));
-  const normalized = (clamped - minDays) / (maxDays - minDays);
-  const duration = maxDuration - normalized * (maxDuration - minDuration);
+    // Otherwise, apply normal pulsing
+    const clamped = Math.min(maxDays, Math.max(minDays, storedDays));
+    const normalized = (clamped - minDays) / (maxDays - minDays);
+    const duration = maxDuration - normalized * (maxDuration - minDuration);
 
-  badgeEl.style.setProperty('--pulse-duration', `${duration.toFixed(2)}s`);
-  badgeEl.classList.add(`${category}-pulse`);
-}
-
-
+    badgeEl.style.setProperty('--pulse-duration', `${duration.toFixed(2)}s`);
+    badgeEl.classList.add(`${category}-pulse`);
+    }
 
 
-/* ========== HUD Live Updater ========== */
+
+
+/* ========== Animation Engine ========== */
 
 export function startLiveHUDUpdate(discretionaryBreakdownData) {
     const growthRates = {};
@@ -895,12 +785,6 @@ document.addEventListener('DOMContentLoaded', () => {
         '/assets/sounds/drain-sound.mp3'
     );
 });
-
-
-
-
-
-    
 
 
 
