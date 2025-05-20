@@ -239,13 +239,19 @@ export function renderProfile() {
                 document.getElementById(`${key}-value`).textContent = attributePoints[key];
             }
 
+            playerDataManager.update({
+                attributePoints: attributePoints,
+            });
             saveToLocalStorage('attributeData', attributePoints)
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById("save-attributes").addEventListener("click", () => {
-                    const attributeData = loadFromLocalStorage('attributeData')
-                    saveAttributesToFirestore(attributeData);
+                    //const attributeData = loadFromLocalStorage('attributeData')
+                    //saveAttributesToFirestore(attributeData);
+                    playerDataManager.save()
+
+                   
                 });
         });
 

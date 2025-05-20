@@ -707,6 +707,12 @@
   display: flex;
   justify-content: flex-end;
 }
+
+#discretionary-current-balance {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-top: 5px;
+}
 #hud-upper-misc{
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

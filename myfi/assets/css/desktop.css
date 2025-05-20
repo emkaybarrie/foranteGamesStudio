@@ -47,7 +47,7 @@
 /* Desktop Grid Layout (Default) */
 .panel-container {
   display: grid;
-  grid-template-columns: 25% 45% auto; /* 3 panels for Profile, HUD, Metrics */
+  grid-template-columns: 30% 40% auto; /* 3 panels for Profile, HUD, Metrics */
   grid-gap: 1rem;
   width: 100%;
   /* height: 100%; */

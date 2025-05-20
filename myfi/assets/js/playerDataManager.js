@@ -210,6 +210,7 @@ const playerDataManager = (() => {
   function startAutoSync() {
     stopAutoSync();
     syncInterval = setInterval(() => {
+      console.log('Auto-Backup triggered...')
       save();
     }, syncFrequencyMs);
   }
