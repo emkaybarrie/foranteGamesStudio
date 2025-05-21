@@ -432,85 +432,27 @@ export async function renderHUD() {
     };
 
     subCategories[categories.discretionary].forEach(subCat => {
+    if (subCat.toLowerCase() === 'unallocated') return;
 
-        if (subCat.toLowerCase() !== 'unallocated') {
+        createBar({
+            container: upperHudContainer_Vitals,
+            subCat: subCat.toLowerCase(),
+            availableAmount: hudData[`availableResource_${subCat}`] ?? 0,
+            availableAmountPath: `hudData.availableResource_${subCat}` ?? 0,
+            capAmount: hudData[`dSpendingCap_${subCat}`] ?? 1,
+            capAmountPath: `hudData.dSpendingCap_${subCat}` ?? 1,
+            storedDays: hudData[`storedDays_${subCat}`] ?? 0,
+            storedDaysPath: `hudData.storedDays_${subCat}` ?? 0,
+            type: 'static',
+            playerDataManager: playerDataManager,
+            //ratePerSecond: 
+        });
 
-            const availableResource = hudData[`availableResource_${subCat}`] ?? 0;
-            const dSpendingCap = hudData[`dSpendingCap_${subCat}`] ?? 1;
-            const storedDays = hudData[`storedDays_${subCat}`] ?? 0;
-
-            const percentage = Math.min((availableResource / dSpendingCap) * 100, 100);
-
-            const barWrapper = document.createElement('div');
-            barWrapper.className = 'bar-wrapper';
-
-            // Bar background
-            const barBackground = document.createElement('div');
-            barBackground.className = 'bar-background';
-
-            // Bar fill
-            const barFill = document.createElement('div');
-            barFill.className = `bar-fill ${subCat.toLowerCase()}`;
-            barFill.style.width = `0%`;
-
-            // Bar segment overlay
-            const stripeOverlay = document.createElement('div');
-            stripeOverlay.className = 'bar-stripes';
-            
-            // Bar content overlay
-            const barContent = document.createElement('div');
-            barContent.className = 'bar-inner-content';
-
-            const leftText = document.createElement('div');
-            leftText.className = 'bar-left-text';
-            leftText.innerText = subCat // `£${availableResource.toFixed(2)} / £${dSpendingCap.toFixed(2)}`;
-
-            const rightText = document.createElement('div');
-            rightText.className = 'bar-right-text';
-            rightText.innerText = `£${availableResource.toFixed(2)} / £${dSpendingCap.toFixed(2)}`;
-
-            barContent.append(leftText, rightText);
-
-            // Icon inside bar (replace storedDays badge)
-            const icon = document.createElement('img');
-            icon.className = 'vital-icon';
-            icon.src = `/assets/img/${subCat.toLowerCase()}.png`; // Ensure you have matching icons
-
-            // New storedDays circle badge (outside right)
-            const storedDaysBadge = document.createElement('div');
-            storedDaysBadge.className = 'circle-badge outside-right';
-            storedDaysBadge.innerText = `${Math.round(storedDays)}`;
-            storedDaysBadge.classList.add(subCat.toLowerCase()); // E.g., 'needs', 'wants'
-
-            applyPulseSettings(storedDaysBadge, storedDays, {
-                minDays: 1,
-                maxDays: 31,
-                minDuration: 0.6,
-                maxDuration: 3.0
-            });
-                        
-
-            const badgeWrapper = document.createElement('div');
-            badgeWrapper.className = 'badge-wrapper';
-            badgeWrapper.appendChild(storedDaysBadge);  
-            barBackground.appendChild(stripeOverlay);
-            barBackground.append(barFill, barContent,icon);
-            barWrapper.append(barBackground, badgeWrapper);
-            upperHudContainer_Vitals.append(barWrapper);
-
-            // Animate
-             animateProgressBar(barFill, percentage);
-            animateAmount(rightText, 0, availableResource, dSpendingCap);
-
-            if (percentage >= 90) {
-                barFill.classList.add('pulse');
-
-
-            }
-        }
     });
 
-   
+    
+    
+
     const hudBalanceElement = document.getElementById('discretionary-current-balance');
     hudBalanceElement.innerText = hudData.availableResource_Total !== undefined
         ? `£${hudData.availableResource_Total.toFixed(2)}`
@@ -778,19 +720,417 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseCapAmount = discretionaryData.dContributionsTarget_Avatar
    
     const contributionsResource = {
-        availableAmount: baseCapAmount * 30,
-        capAmount: baseCapAmount * 30,
-        ratePerSecond: baseCapAmount * 0.25 * 30
+        availableAmount: 1000,//baseCapAmount * 30,
+        capAmount: 10000, //baseCapAmount * 30,
+        ratePerSecond: 100// baseCapAmount 
     };
 
-    createDrainBar(
-        contributionsResource,
-        document.getElementById('contributions-bar'),
-        document.getElementById('contributions-drain-btn'),
-        document.getElementById('contributions-bar-label'),
-        '/assets/sounds/drain-sound.mp3'
-    );
+
+
+    createBar({
+        container: document.getElementById('contributions-bar-container'),
+        subCat: 'Empower', // Style category
+        availableAmount: contributionsResource.availableAmount,
+        //availableAmountPath: 'hudDate.dContributionsTarget_Avatar',
+        capAmount: contributionsResource.capAmount,
+        capAmountPath: 'hudDate.dContributionsTarget_Avatar',
+        storedDays: 2,
+        //storedDaysPath: ,
+        type: 'drainable',
+        button: document.getElementById('contributions-drain-btn'),
+        label: 'Contributions',
+        ratePerSecond: contributionsResource.ratePerSecond,
+        soundEffectPath: '/assets/sounds/drain-sound.mp3',
+        onComplete: (amount, empowerLevel) => {
+            openPaymentModal(amount.toFixed(2), empowerLevel);
+        }
+    });
+
+    
 });
+
+/// BAr
+
+function createBar({
+    container,
+    subCat,
+    availableAmount = 0,
+    capAmount = 100,
+    storedDays = 0,
+    availableAmountPath = null,
+    capAmountPath = null,
+    storedDaysPath = null,
+    playerDataManager = null,
+    type = 'static',
+    iconPath = '',
+    label = '',
+    ratePerSecond = null,
+    button = null,
+    soundEffectPath = '',
+    onComplete = () => {},
+    lastUpdated = Date.now(),
+    lerpFactor = 0.15, // ✅ ADDED: configurable smoothing speed
+    precision = 0.005   // ✅ ADDED: prevents jitter
+}) {
+    const getFromPath = (obj, path) =>
+        path ? path.split('.').reduce((o, k) => o?.[k], obj) : undefined;
+
+    let currentPlayer = playerDataManager?.get?.() || {};
+    let resource = {
+        availableAmount: availableAmountPath ? getFromPath(currentPlayer, availableAmountPath) ?? availableAmount : availableAmount,
+        capAmount: capAmountPath ? getFromPath(currentPlayer, capAmountPath) ?? capAmount : capAmount,
+        storedDays: storedDaysPath ? getFromPath(currentPlayer, storedDaysPath) ?? storedDays : storedDays,
+        lastUpdated
+    };
+
+    let displayedPercent = 0;
+    let animationFrame;
+
+    // DOM setup
+    const barWrapper = document.createElement('div');
+    barWrapper.className = 'bar-wrapper';
+
+    const barBackground = document.createElement('div');
+    barBackground.className = 'bar-background';
+
+    const barFill = document.createElement('div');
+    barFill.className = `bar-fill ${subCat}`;
+    barFill.style.width = '0%';
+
+    const stripeOverlay = document.createElement('div');
+    stripeOverlay.className = 'bar-stripes';
+
+    const barContent = document.createElement('div');
+    barContent.className = 'bar-inner-content';
+
+    const leftText = document.createElement('div');
+    leftText.className = 'bar-left-text';
+    leftText.innerText = subCat.charAt(0).toUpperCase() + subCat.slice(1);//subCat;
+
+    const rightText = document.createElement('div');
+    rightText.className = 'bar-right-text';
+    rightText.innerText = `£${resource.availableAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
+
+    barContent.append(leftText, rightText);
+
+    const icon = document.createElement('img');
+    icon.className = 'vital-icon';
+    icon.src = iconPath || `/assets/img/${subCat}.png`;
+
+    const storedDaysBadge = document.createElement('div');
+    storedDaysBadge.className = `circle-badge outside-right ${subCat}`;
+    storedDaysBadge.innerText = `${Math.round(resource.storedDays)}`;
+
+    const badgeWrapper = document.createElement('div');
+    badgeWrapper.className = 'badge-wrapper';
+    badgeWrapper.appendChild(storedDaysBadge);
+
+    barBackground.append(stripeOverlay, barFill, barContent, icon);
+    barWrapper.append(barBackground, badgeWrapper);
+    container.appendChild(barWrapper);
+
+    // ✅ Unified smoothing loop
+    const animate = () => {
+        const targetPercent = (resource.capAmount === 0) ? 0 : (resource.availableAmount / resource.capAmount) * 100;
+        if (Math.abs(targetPercent - displayedPercent) > precision) {
+            displayedPercent += (targetPercent - displayedPercent) * lerpFactor;
+            barFill.style.width = `${displayedPercent}%`;
+        } else {
+            displayedPercent = targetPercent;
+            barFill.style.width = `${targetPercent}%`;
+        }
+
+        rightText.innerText = `£${resource.availableAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
+        barFill.classList.toggle('glow-effect', targetPercent > 0);
+        barFill.classList.toggle('pulse', targetPercent >= 90);
+
+        animationFrame = requestAnimationFrame(animate);
+    };
+
+    animate();
+    applyPulseSettings(storedDaysBadge, resource.storedDays);
+
+    let paused = false;
+
+    const updateLoop = () => {
+        if (!paused && ratePerSecond !== null && ['regen', 'degen', 'drainable'].includes(type)) {
+            const now = Date.now();
+            const elapsed = (now - resource.lastUpdated) / 1000;
+            resource.lastUpdated = now;
+            const delta = ratePerSecond * elapsed;
+
+            resource.availableAmount = Math.max(0, Math.min(resource.capAmount, resource.availableAmount + delta));
+
+            if (resource.availableAmount === 0 || resource.availableAmount === resource.capAmount) {
+                onComplete();
+            }
+        }
+        requestAnimationFrame(updateLoop);
+    };
+
+    if (['regen', 'degen', 'drainable'].includes(type)) requestAnimationFrame(updateLoop);
+
+    const pause = () => { paused = true; };
+    const resume = () => {
+        resource.lastUpdated = Date.now();
+        paused = false;
+    };
+
+    const updateFromPlayerData = () => {
+        const player = playerDataManager?.get?.();
+        if (!player) return;
+        const newAvailable = availableAmountPath ? getFromPath(player, availableAmountPath) : resource.availableAmount;
+        const newCap = capAmountPath ? getFromPath(player, capAmountPath) : resource.capAmount;
+        const newDays = storedDaysPath ? getFromPath(player, storedDaysPath) : resource.storedDays;
+        resource.availableAmount = newAvailable;
+        resource.capAmount = newCap;
+        resource.storedDays = newDays;
+        storedDaysBadge.innerText = `${Math.round(newDays)}`;
+        applyPulseSettings(storedDaysBadge, newDays);
+    };
+
+    if (playerDataManager?.on && (availableAmountPath || capAmountPath || storedDaysPath)) {
+        playerDataManager.on('update', updateFromPlayerData);
+    }
+
+    if (type === 'drainable' && button && ratePerSecond) {
+        setupDrainBehavior({
+            resource,
+            barElement: barFill,
+            labelElement: rightText,
+            buttonElement: button,
+            soundEffectPath,
+            onComplete
+        });
+    }
+
+    return {
+        pause,
+        resume,
+        updateFromManager: updateFromPlayerData,
+        updateResource: (newSettings = {}) => Object.assign(resource, newSettings),
+        getCurrentState: () => ({ ...resource }),
+        destroy: () => cancelAnimationFrame(animationFrame) // ✅ cleanup
+    };
+}
+
+
+// Optimized and smoothed createBar function v1
+// function createBar({
+//     container,
+//     subCat,
+//     availableAmount = 0,
+//     capAmount = 100,
+//     storedDays = 0,
+//     availableAmountPath = null,
+//     capAmountPath = null,
+//     storedDaysPath = null,
+//     playerDataManager = null,
+//     type = 'static',
+//     iconPath = '',
+//     label = '',
+//     ratePerSecond = null,
+//     button = null,
+//     soundEffectPath = '',
+//     onComplete = () => {},
+//     lastUpdated = Date.now()
+// }) {
+//     const getFromPath = (obj, path) =>
+//         path ? path.split('.').reduce((o, k) => o?.[k], obj) : undefined;
+
+//     let currentPlayer = playerDataManager?.get?.() || {};
+//     let resource = {
+//         availableAmount: availableAmountPath ? getFromPath(currentPlayer, availableAmountPath) ?? availableAmount : availableAmount,
+//         capAmount: capAmountPath ? getFromPath(currentPlayer, capAmountPath) ?? capAmount : capAmount,
+//         storedDays: storedDaysPath ? getFromPath(currentPlayer, storedDaysPath) ?? storedDays : storedDays,
+//         lastUpdated
+//     };
+
+//     const barWrapper = document.createElement('div');
+//     barWrapper.className = 'bar-wrapper';
+
+//     const barBackground = document.createElement('div');
+//     barBackground.className = 'bar-background';
+
+//     const barFill = document.createElement('div');
+//     barFill.className = `bar-fill ${subCat}`;
+//     barFill.style.width = '0%';
+
+//     const stripeOverlay = document.createElement('div');
+//     stripeOverlay.className = 'bar-stripes';
+
+//     const barContent = document.createElement('div');
+//     barContent.className = 'bar-inner-content';
+
+//     const leftText = document.createElement('div');
+//     leftText.className = 'bar-left-text';
+//     leftText.innerText = subCat;
+
+//     const rightText = document.createElement('div');
+//     rightText.className = 'bar-right-text';
+//     rightText.innerText = `£${resource.availableAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
+
+//     barContent.append(leftText, rightText);
+
+//     const icon = document.createElement('img');
+//     icon.className = 'vital-icon';
+//     icon.src = iconPath || `/assets/img/${subCat}.png`;
+
+//     const storedDaysBadge = document.createElement('div');
+//     storedDaysBadge.className = `circle-badge outside-right ${subCat}`;
+//     storedDaysBadge.innerText = `${Math.round(resource.storedDays)}`;
+
+//     const badgeWrapper = document.createElement('div');
+//     badgeWrapper.className = 'badge-wrapper';
+//     badgeWrapper.appendChild(storedDaysBadge);
+
+//     barBackground.append(stripeOverlay, barFill, barContent, icon);
+//     barWrapper.append(barBackground, badgeWrapper);
+//     container.appendChild(barWrapper);
+
+//     // Animation function
+//     const smoothBarUpdate = (target) => {
+//         const update = () => {
+//             const percent = (resource.availableAmount / resource.capAmount) * 100;
+//             const currentPercent = parseFloat(barFill.style.width);
+//             const nextPercent = currentPercent + (percent - currentPercent) * 0.15;
+//             barFill.style.width = `${nextPercent}%`;
+//             rightText.innerText = `£${resource.availableAmount.toFixed(5)} / £${resource.capAmount.toFixed(5)}`;
+//             barFill.classList.toggle('glow-effect', percent > 0);
+//             if (Math.abs(nextPercent - percent) > 0.5) requestAnimationFrame(update);
+//         };
+//         requestAnimationFrame(update);
+//     };
+
+//     smoothBarUpdate();
+//     applyPulseSettings(storedDaysBadge, resource.storedDays);
+//     if (resource.availableAmount / resource.capAmount >= 0.9) barFill.classList.add('pulse');
+
+//     let paused = false;
+//     const loop = () => {
+//         if (!paused && ratePerSecond !== null && ['regen', 'degen', 'drainable'].includes(type)) {
+//             const now = Date.now();
+//             const elapsed = (now - resource.lastUpdated) / 1000;
+//             resource.lastUpdated = now;
+//             const delta = ratePerSecond * elapsed;
+//             resource.availableAmount = Math.max(0, Math.min(resource.capAmount, resource.availableAmount + delta));
+//             smoothBarUpdate();
+//             if (resource.availableAmount === resource.capAmount || resource.availableAmount === 0) {
+//                 onComplete();
+//             }
+//         }
+//         requestAnimationFrame(loop);
+//     };
+
+//     if (['regen', 'degen', 'drainable'].includes(type)) requestAnimationFrame(loop);
+
+//     const pause = () => { paused = true; };
+//     const resume = () => {
+//         resource.lastUpdated = Date.now();
+//         paused = false;
+//     };
+
+//     const updateFromPlayerData = () => {
+//         const player = playerDataManager?.get?.();
+//         if (!player) return;
+//         const newAvailable = availableAmountPath ? getFromPath(player, availableAmountPath) : resource.availableAmount;
+//         const newCap = capAmountPath ? getFromPath(player, capAmountPath) : resource.capAmount;
+//         const newDays = storedDaysPath ? getFromPath(player, storedDaysPath) : resource.storedDays;
+//         resource.availableAmount = newAvailable;
+//         resource.capAmount = newCap;
+//         resource.storedDays = newDays;
+//         storedDaysBadge.innerText = `${Math.round(newDays)}`;
+//         applyPulseSettings(storedDaysBadge, newDays);
+//         smoothBarUpdate();
+//     };
+
+//     if (playerDataManager?.on && (availableAmountPath || capAmountPath || storedDaysPath)) {
+//         playerDataManager.on('update', updateFromPlayerData);
+//     }
+
+//     if (type === 'drainable' && button && ratePerSecond) {
+//         setupDrainBehavior({
+//             resource,
+//             barElement: barFill,
+//             labelElement: rightText,
+//             buttonElement: button,
+//             soundEffectPath,
+//             onComplete
+//         });
+//     }
+
+//     return {
+//         pause,
+//         resume,
+//         updateFromManager: updateFromPlayerData,
+//         updateResource: (newSettings = {}) => Object.assign(resource, newSettings),
+//         getCurrentState: () => ({ ...resource })
+//     };
+// }
+
+
+
+function setupDrainBehavior({
+    resource,
+    barElement,
+    labelElement,
+    buttonElement,
+    soundEffectPath,
+    onComplete
+}) {
+    let isDraining = false;
+    let accumulatedAmount = 0;
+    let empowerLevel;
+    const audio = soundEffectPath ? new Audio(soundEffectPath) : null;
+
+    buttonElement.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const queuedEmpowerLevel = JSON.parse(localStorage.getItem('empowerLevel')) || 0;
+        if (queuedEmpowerLevel >= 5 || isDraining || resource.availableAmount <= 0) return;
+
+        isDraining = true;
+        accumulatedAmount = 0;
+
+        const drainInterval = setInterval(() => {
+            const drainPerTick = resource.ratePerSecond * 0.1;
+            resource.availableAmount = Math.max(0, resource.availableAmount - drainPerTick);
+            accumulatedAmount += drainPerTick;
+
+            const unitsEarned = Math.floor(accumulatedAmount / (resource.capAmount * 0.195));
+            const addToEmpowerLevel = Math.min(unitsEarned, 5 - queuedEmpowerLevel);
+            empowerLevel = addToEmpowerLevel + queuedEmpowerLevel;
+
+            // Update UI
+            for (let i = 1; i <= empowerLevel; i++) {
+                const el = document.getElementById(`empower-level-${i}`);
+                if (el) el.classList.replace('empower-inactive', 'empower-active');
+            }
+
+            const percentage = (resource.availableAmount / resource.capAmount) * 100;
+            barElement.style.width = `${percentage}%`;
+            barElement.classList.toggle('glow-effect', percentage > 0);
+
+            labelElement.innerText = `£${resource.availableAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
+        }, 100);
+
+        const stopDrain = () => {
+            if (!isDraining) return;
+            clearInterval(drainInterval);
+            isDraining = false;
+
+            localStorage.setItem('empowerLevel', JSON.stringify(empowerLevel));
+            if (onComplete) onComplete(accumulatedAmount, empowerLevel);
+
+            // Reset bar visually
+            resource.availableAmount = resource.capAmount;
+            barElement.style.width = '100%';
+            labelElement.innerText = `£${resource.capAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
+        };
+
+        buttonElement.addEventListener('pointerup', stopDrain, { once: true });
+        buttonElement.addEventListener('pointerleave', stopDrain, { once: true });
+    });
+}
 
 
 

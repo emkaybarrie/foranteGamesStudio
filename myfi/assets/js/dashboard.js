@@ -238,21 +238,52 @@ export async function loadDashboard(playerData) {
                 }
 
               
+                    // Run every 5 seconds
+                    //setInterval(setRandomHUDUpdate, 5000);
                     
                     // Calculate
                     console.log("Refreshing Cashflow Data...")
-                    await generateCashflowData()
+                     await generateCashflowData()
                     console.log("Refreshing HUD Data...")
-                    await generateHudData()
+                     await generateHudData()
                     console.log("Refreshing Avatar Data...")
-                    await generateAvatarData()
+                     await generateAvatarData()
+                    //  setInterval(() => {
+                    
+                    //     generateCashflowData()
+                    //      generateHudData()
+                    //     const player = playerDataManager.get();
+                    //         if (!player) {
+                    //             console.warn('No player loaded yet');
+                    //             return;
+                    //         }
+
+                    //         player.hudData ??= {};
+                    //     const key = 'hudData.availableResource_Growth';
+                    //     const current = player.hudData.availableResource_Growth ?? 0;
+                    //     const cap = player.hudData.dSpendingCap_Growth ?? 100;
+                    //     const newVal = Math.min(current + 1, cap);
+                    //     playerDataManager.updateByKey(key, newVal);
+
+                    // }, 500);
 
     
                     playerData = await playerDataManager.save();
                
                     // Render
+                    //setInterval(() => {
+                    // your regeneration or rendering logic here
                     renderProfile()
                     renderHUD()
+                   // }, 1000);
+
+
+
+
+playerDataManager.on('update', (player) => {
+  console.log('Player data updated:', player.hudData);
+  // Here you can call your HUD render/update logic to refresh UI
+});
             
 
                     // renderMetrics 
@@ -361,6 +392,59 @@ export async function loadDashboard(playerData) {
 
 
 }
+
+
+
+
+function setRandomHUDUpdate() {
+    console.log('Random Update')
+    const subCats = ['Wants'];
+  const subCat = subCats[Math.floor(Math.random() * subCats.length)];
+  const logicIndex = 2// Math.floor(Math.random() * 3);
+
+  const player = playerDataManager.get();
+  if (!player) {
+    console.warn('No player loaded yet');
+    return;
+  }
+
+  player.hudData ??= {};
+
+  
+  switch (logicIndex) {
+    case 0:
+      {
+        const key = `hudData.availableResource_${subCat}`;
+        const current = player.hudData[`availableResource_${subCat}`] ?? 0;
+        const cap = player.hudData[`dSpendingCap_${subCat}`] ?? 100;
+        const newVal = Math.min(current + 5, cap);
+        playerDataManager.updateByKey(key, newVal);
+
+      }
+      break;
+    case 1:
+      {
+        const key = `hudData.availableResource_${subCat}`;
+        const current = player.hudData[`availableResource_${subCat}`] ?? 0;
+        const newVal = Math.max(current - 10, 0);
+        playerDataManager.updateByKey(key, newVal);
+      }
+      break;
+    case 2:
+      {
+        const key = `hudData.storedDays_${subCat}`;
+        const current = player.hudData[`storedDays_${subCat}`] ?? 0;
+        const newVal = current + 1;
+        playerDataManager.updateByKey(key, newVal);
+      }
+      break;
+  }
+
+
+}
+
+
+
 
 
 

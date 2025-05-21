@@ -145,21 +145,25 @@ export async function generateHudData() {
     dContributionsTarget_IGC = (discretionaryPool * 0.2) || 0;
 
     const personalDiscretionaryPool = discretionaryPool - (dContributionsTarget_Avatar + dContributionsTarget_Community + dContributionsTarget_IGC)  
-    dSpendingCap_Growth = personalDiscretionaryPool * growthAllocation
-    dSpendingCap_Wants = personalDiscretionaryPool * wantsAllocation
-    dSpendingCap_Needs = personalDiscretionaryPool * needsAllocation    
+    dSpendingCap_Growth = personalDiscretionaryPool * growthAllocation 
+    dSpendingCap_Wants = personalDiscretionaryPool * wantsAllocation 
+    dSpendingCap_Needs = personalDiscretionaryPool * needsAllocation 
     
-    totalAccumulatedResource_Growth = dSpendingCap_Growth + (dSpendingCap_Growth * daysSinceFirstTransaction) - discretionarySpendingToDate_ADJ_Growth
-    totalAccumulatedResource_Wants = dSpendingCap_Wants + (dSpendingCap_Wants * daysSinceFirstTransaction) - discretionarySpendingToDate_ADJ_Wants
-    totalAccumulatedResource_Needs = dSpendingCap_Needs + (dSpendingCap_Needs * daysSinceFirstTransaction) - discretionarySpendingToDate_ADJ_Needs  
+    const dRegenRate_Growth = personalDiscretionaryPool * growthAllocation
+    const dRegenRate_Wants = personalDiscretionaryPool * wantsAllocation
+    const dRegenRate_Needs = personalDiscretionaryPool * needsAllocation
+    
+    totalAccumulatedResource_Growth = dSpendingCap_Growth + (dRegenRate_Growth * daysSinceFirstTransaction) - discretionarySpendingToDate_ADJ_Growth
+    totalAccumulatedResource_Wants = dSpendingCap_Wants + (dRegenRate_Wants * daysSinceFirstTransaction) - discretionarySpendingToDate_ADJ_Wants
+    totalAccumulatedResource_Needs = dSpendingCap_Needs + (dRegenRate_Needs * daysSinceFirstTransaction) - discretionarySpendingToDate_ADJ_Needs  
     
     availableResource_Growth = Math.abs(totalAccumulatedResource_Growth % dSpendingCap_Growth)
     availableResource_Wants = Math.abs(totalAccumulatedResource_Wants % dSpendingCap_Wants)
     availableResource_Needs = Math.abs(totalAccumulatedResource_Needs % dSpendingCap_Needs)
     availableResource_Total = availableResource_Growth + availableResource_Wants + availableResource_Needs
 
-    storedDays_Growth = 20 //parseInt(totalAccumulatedResource_Growth / dSpendingCap_Growth)
-    storedDays_Wants = 2//parseInt(totalAccumulatedResource_Wants / dSpendingCap_Wants)
+    storedDays_Growth = parseInt(totalAccumulatedResource_Growth / dSpendingCap_Growth)
+    storedDays_Wants = parseInt(totalAccumulatedResource_Wants / dSpendingCap_Wants)
     storedDays_Needs = parseInt(totalAccumulatedResource_Needs / dSpendingCap_Needs)
 
     let hudData = { 
@@ -169,6 +173,9 @@ export async function generateHudData() {
         dSpendingCap_Growth, 
         dSpendingCap_Wants,
         dSpendingCap_Needs,
+        dRegenRate_Growth,
+        dRegenRate_Wants,
+        dRegenRate_Needs,
         totalAccumulatedResource_Growth,
         totalAccumulatedResource_Wants,
         totalAccumulatedResource_Needs,

@@ -196,42 +196,40 @@
                         </div>
         
                     </div>
-                    <div class="sub-panel  tooltip-target coming-soon-hover" id="hud-lower">
+                    <div class="sub-panel" id="hud-lower">
+                        <!-- Grid Area -->
+                        <div id="action-grid"></div>
+
+                        <!-- Selection Menu Trigger Buttons -->
                         <div class="section" id="hud-lower-top">
-                            <div id="action-buttons-wants-container">
-                                    <button class="action-button-growth" data-category="growth" >Action 1 - Growth</button>
-                                    <button class="action-button-growth" data-category="growth" >Action 2 - Growth</button>
-        
-                                </div>
+                            <div class="category-buttons">
+                            <button class="open-action-menu" data-category="growth">+ Add Growth</button>
+                            </div>
                         </div>
                         <div class="section" id="hud-lower-middle">
-                            
                             <div class="sub-section">
-                         
-                                <div id="action-buttons-wants-container">
-                                    <button class="action-button-wants" data-category="wants" >Action 1 - Wants</button>
-                                    <button class="action-button-wants" data-category="wants" >Action 2 - Wants</button>
-                                    <button class="action-button-wants" data-category="wants" >Action 3 - Wants</button>
-        
-                                </div>
-                         
+                            <div class="category-buttons">
+                                <button class="open-action-menu" data-category="wants">+ Add Wants</button>
                             </div>
-
+                            </div>
                             <div class="sub-section">
-                            
-                                <div id="action-buttons-needs-container">
-                                    <button class="action-button-needs" data-category="needs" >Action 1 - Needs</button>
-                                    <button class="action-button-needs" data-category="needs" >Action 2 - Needs</button>
-                                    <button class="action-button-needs" data-category="needs" >Action 3 - Needs</button>
-                                    <button class="action-button-needs" data-category="needs" >Action 4 - Needs</button>
-                                    <button class="action-button-needs" data-category="needs" >Action 5 - Needs</button>
-                                    <button class="action-button-needs" data-category="needs" >Action 6 - Needs</button>
-                                    <button class="action-button-needs" data-category="needs" >Action 7 - Needs</button>
-                                </div>
-                          
+                            <div class="category-buttons">
+                                <button class="open-action-menu" data-category="needs">+ Add Needs</button>
+                            </div>
                             </div>
                         </div>
-                    </div>
+
+                        <!-- Action Selection Modal -->
+                        <div id="action-menu" class="hidden">
+                            <div class="menu-overlay"></div>
+                            <div class="menu-content">
+                            <button id="close-action-menu">X</button>
+                            <h3 id="action-menu-title">Select an Action</h3>
+                            <div id="action-list"></div>
+                            </div>
+                        </div>
+                        </div>
+
                 </div>
                 
              </div>
@@ -358,7 +356,7 @@
 
     </script>
 
-
+    <script src="./assets/js/actionGrid.js"></script>
 
 </body>
 </html>

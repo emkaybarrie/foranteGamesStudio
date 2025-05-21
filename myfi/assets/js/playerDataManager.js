@@ -1,11 +1,5 @@
 import Dexie from "https://cdn.jsdelivr.net/npm/dexie@3.2.4/+esm";
-// import { getAuth } from "firebase/auth";
-// import {
-//   getFirestore,
-//   doc,
-//   getDoc,
-//   setDoc
-// } from "firebase/firestore";
+
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -44,7 +38,12 @@ function createDefaultPlayer(id) {
     financeData: {},
     avatarData: {},
     heroData: {},
-    lastUpdated: Date.now()
+    lastUpdated: Date.now(),
+    actions: {
+      equipped: [],
+      available: [],
+      configVersion: "grid"
+    },
   };
 }
 
