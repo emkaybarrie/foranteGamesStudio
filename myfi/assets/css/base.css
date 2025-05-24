@@ -156,7 +156,7 @@
     rgba(255, 255, 255, 0.25) 1px,
     
     transparent 4px,
-    transparent calc(100% / 4)
+    transparent calc(100% / var(--segments, 3))
   );
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
   animation: pulse-glow 1.5s infinite;

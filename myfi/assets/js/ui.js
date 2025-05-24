@@ -3,7 +3,7 @@ import { auth, db } from './auth.js';
 import { getDoc, doc, setDoc, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { categories, subCategories, incomeCategory } from './config.js';
 import { loadDashboard, getPlayerData, loadFromLocalStorage, saveAttributesToFirestore, saveToLocalStorage } from './dashboard.js';
-import { getAvatarStatData } from './calculations.js'; 
+import { generateCashflowData, generateHudData, getAvatarStatData } from './calculations.js'; 
 import playerDataManager from './playerDataManager.js';
 
 
@@ -362,105 +362,72 @@ export function renderProfile() {
 
 /* ========== HUD Renderer ========== */
 
-
-// export async function renderHUD(discretionaryData) {
-//     const upperHudContainer_Vitals = document.getElementById('upper-hud-vitals');
-//     upperHudContainer_Vitals.innerHTML = "";
-
-//     subCategories[categories.discretionary].forEach(subCat => {
-//         if (subCat.toLowerCase() !== 'unallocated')  {
-            
-//             const availableResource = discretionaryData[`availableResource_${subCat}`] ?? 0;
-//             const dSpendingCap = discretionaryData[`dSpendingCap_${subCat}`] ?? 1;
-//             const storedDays = discretionaryData[`storedDays_${subCat}`] ?? 0;
-
-//             // Use the variables as needed
-           
-
-//             const percentage = Math.min((availableResource / dSpendingCap) * 100, 100);
-
-            
-
-//             const barWrapper = document.createElement('div');
-//             barWrapper.className = 'bar-wrapper';
-
-//             const label = document.createElement('div');
-//             label.className = 'bar-label';
-//             label.innerText = `£0.00 / £${dSpendingCap.toFixed(2)}`;
-
-//             const barBackground = document.createElement('div');
-//             barBackground.className = 'bar-background';
-
-//             const barFill = document.createElement('div');
-//             barFill.className = `bar-fill ${subCat.toLowerCase()}`;
-//             barFill.style.width = `0%`;
-
-//             // Circle badge for stored days
-//             const circleBadge = document.createElement('div');
-//             circleBadge.className = 'circle-badge';
-//             circleBadge.innerText = `${Math.round(storedDays)}`;
-
-//             barBackground.append(barFill, circleBadge);
-//             barWrapper.append(label, barBackground);
-//             upperHudContainer_Vitals.append(subCat, barWrapper);
-
-//             // Animate
-//             animateProgressBar(barFill, percentage);
-//             animateAmount(label, 0, availableResource, dSpendingCap);
-
-//             if (percentage >= 90) {
-//                 barFill.classList.add('pulse');
-//             }
-        
-//     }
-//     });
-// }
-
 export async function renderHUD() {
     console.log('Rendering HUD...' )
     const playerData = playerDataManager.get()
 
     const hudData = playerData.hudData
 
+
     const upperHudContainer_Vitals = document.getElementById('upper-hud-vitals');
     upperHudContainer_Vitals.innerHTML = "";
-
-    const segmentsPerSubCat = {
-        needs: 7,
-        wants: 7,
-        growth: 7
-    };
 
     subCategories[categories.discretionary].forEach(subCat => {
     if (subCat.toLowerCase() === 'unallocated') return;
 
-        createBar({
+        const barInstance = createBar({
             container: upperHudContainer_Vitals,
             subCat: subCat.toLowerCase(),
             availableAmount: hudData[`availableResource_${subCat}`] ?? 0,
-            availableAmountPath: `hudData.availableResource_${subCat}` ?? 0,
+            //availableAmountPath: `hudData.availableResource_${subCat}` ?? 0,
             capAmount: hudData[`dSpendingCap_${subCat}`] ?? 1,
-            capAmountPath: `hudData.dSpendingCap_${subCat}` ?? 1,
+            //capAmountPath: `hudData.dSpendingCap_${subCat}` ?? 1,
             storedDays: hudData[`storedDays_${subCat}`] ?? 0,
-            storedDaysPath: `hudData.storedDays_${subCat}` ?? 0,
-            type: 'static',
+            //storedDaysPath: `hudData.storedDays_${subCat}` ?? 0,
+            regenRate: hudData[`dRegenRate_${subCat}`] * 7500 ?? 0,
+            type: 'regen',
             playerDataManager: playerDataManager,
-            //ratePerSecond: 
+            onComplete: () => {
+                const barData = barInstance.getCurrentState()
+                // Read current storedDays from playerDataManager or default 0
+                //const keyStoredDays = `storedDays_${subCat}`;
+                //const keyAvailable = `availableResource_${subCat}`;
+            
+                //const playerData = playerDataManager.get();
+                //const currentDays = playerData?.hudData?.[keyStoredDays] ?? 0;
+                const currentDays = barData.storedDays ?? 0;
+    
+                // Update storedDays +1 in persistent store
+                //playerDataManager.updateByKey(keyStoredDays, currentDays + 1);
+
+                // Reset available resource to 0 in persistent store
+                //playerDataManager.updateByKey(keyAvailable, 0);
+
+                // 2. Update the bar's internal resource state and displayed badge
+                barInstance.updateResource({ 
+                    storedDays: currentDays + 1, 
+                    availableAmount: 0 
+                });
+
+                // 3. Also update the badge text so the UI reflects the increment immediately
+                barInstance.storedDaysBadge.textContent = `${Math.round(currentDays + 1)}`;
+
+
+                // Optional: trigger any UI refresh or dashboard updates here if needed
+                // generateHudData();
+                // loadDashboard();
+
+            }
         });
 
     });
 
-    
-    
+    //setSegmentsCount(2)
 
     const hudBalanceElement = document.getElementById('discretionary-current-balance');
     hudBalanceElement.innerText = hudData.availableResource_Total !== undefined
         ? `£${hudData.availableResource_Total.toFixed(2)}`
         : '£0.00';
-    // const balanceElement = document.getElementById('current-balance');
-    // balanceElement.innerText = playerData.financeSummary.currentBalance !== undefined
-    //     ? `£${playerData.financeSummary.currentBalance.toFixed(2)}`
-    //     : '£0.00';
 }
 
     function applyPulseSettings(badgeEl, storedDays, {
@@ -504,216 +471,135 @@ export async function renderHUD() {
     badgeEl.classList.add(`${category}-pulse`);
     }
 
-
-
-
 /* ========== Animation Engine ========== */
 
-export function startLiveHUDUpdate(discretionaryBreakdownData) {
-    const growthRates = {};
-    let isUserActive = true;
-    let lastActivityTime = Date.now();
-    let isRewinding = false;
+// export function startLiveHUDUpdate(discretionaryBreakdownData) {
+//     const growthRates = {};
+//     let isUserActive = true;
+//     let lastActivityTime = Date.now();
+//     let isRewinding = false;
 
-    subCategories[categories.discretionary].forEach(subCat => {
-        if (subCat.toLowerCase() !== 'unallocated') {
-            const { available = 0, dailyCap = 1 } = discretionaryBreakdownData?.[subCat] || {};
-            const ratePerSecond = dailyCap / 86400;
+//     subCategories[categories.discretionary].forEach(subCat => {
+//         if (subCat.toLowerCase() !== 'unallocated') {
+//             const { available = 0, dailyCap = 1 } = discretionaryBreakdownData?.[subCat] || {};
+//             const ratePerSecond = dailyCap / 86400;
 
-            growthRates[subCat] = {
-                availableAmount: available,
-                capAmount: dailyCap,
-                ratePerSecond,
-                savedAvailableAmount: available
-            };
+//             growthRates[subCat] = {
+//                 availableAmount: available,
+//                 capAmount: dailyCap,
+//                 ratePerSecond,
+//                 savedAvailableAmount: available
+//             };
 
-            growthRates["Power"] = {
-                availableAmount: 0,
-                capAmount: discretionaryBreakdownData.maxEmpower,
-                ratePerSecond : discretionaryBreakdownData.maxEmpower / 86400 ,
-                savedAvailableAmount: 0
-            };
+//             growthRates["Power"] = {
+//                 availableAmount: 0,
+//                 capAmount: discretionaryBreakdownData.maxEmpower,
+//                 ratePerSecond : discretionaryBreakdownData.maxEmpower / 86400 ,
+//                 savedAvailableAmount: 0
+//             };
 
             
-        }
-    });
+//         }
+//     });
 
-    function updateBars() {
-        const bars = document.querySelectorAll('.bar-fill');
-        const labels = document.querySelectorAll('.bar-label');
+//     function updateBars() {
+//         const bars = document.querySelectorAll('.bar-fill');
+//         const labels = document.querySelectorAll('.bar-label');
    
-        subCategories[categories.discretionary].forEach((subCat, index) => {
+//         subCategories[categories.discretionary].forEach((subCat, index) => {
             
-            if (subCat.toLowerCase() !== 'unallocated') {
-                const data = growthRates[subCat];
-                const bar = bars[index + 1];
-                const label = labels[index + 1];
+//             if (subCat.toLowerCase() !== 'unallocated') {
+//                 const data = growthRates[subCat];
+//                 const bar = bars[index + 1];
+//                 const label = labels[index + 1];
 
-                const speedMultiplier = isUserActive ? 1 : 100;
-                data.availableAmount = Math.min(data.availableAmount + (data.ratePerSecond * speedMultiplier), data.capAmount);
+//                 const speedMultiplier = isUserActive ? 1 : 100;
+//                 data.availableAmount = Math.min(data.availableAmount + (data.ratePerSecond * speedMultiplier), data.capAmount);
 
-                if (bar) {
-                    bar.style.width = `${(data.availableAmount / data.capAmount) * 100}%`;
-                    bar.classList.toggle('fast-forward', !isUserActive);
-                }
-                if (label) {
-                    label.innerText = `£${data.availableAmount.toFixed(2)} / £${data.capAmount.toFixed(2)}`;
-                }
-            }
-        });
+//                 if (bar) {
+//                     bar.style.width = `${(data.availableAmount / data.capAmount) * 100}%`;
+//                     bar.classList.toggle('fast-forward', !isUserActive);
+//                 }
+//                 if (label) {
+//                     label.innerText = `£${data.availableAmount.toFixed(2)} / £${data.capAmount.toFixed(2)}`;
+//                 }
+//             }
+//         });
 
 
-    }
+//     }
 
-    function startRewind() {
-        if (isRewinding) return;
-        isRewinding = true;
-        const rewindStart = Date.now();
-        const rewindFrom = {};
+//     function startRewind() {
+//         if (isRewinding) return;
+//         isRewinding = true;
+//         const rewindStart = Date.now();
+//         const rewindFrom = {};
 
-        subCategories[categories.discretionary].forEach(subCat => {
-            if (subCat.toLowerCase() !== 'unallocated') {
-                rewindFrom[subCat] = growthRates[subCat].availableAmount;
-            }
-        });
+//         subCategories[categories.discretionary].forEach(subCat => {
+//             if (subCat.toLowerCase() !== 'unallocated') {
+//                 rewindFrom[subCat] = growthRates[subCat].availableAmount;
+//             }
+//         });
 
-        function animateRewind() {
-            const elapsed = Date.now() - rewindStart;
-            const progress = Math.min(elapsed / 100, 1);
+//         function animateRewind() {
+//             const elapsed = Date.now() - rewindStart;
+//             const progress = Math.min(elapsed / 100, 1);
 
-            subCategories[categories.discretionary].forEach(subCat => {
-                if (subCat.toLowerCase() !== 'unallocated') {
-                    const start = rewindFrom[subCat];
-                    const end = growthRates[subCat].savedAvailableAmount;
-                    growthRates[subCat].availableAmount = start - (start - end) * progress;
-                }
-            });
+//             subCategories[categories.discretionary].forEach(subCat => {
+//                 if (subCat.toLowerCase() !== 'unallocated') {
+//                     const start = rewindFrom[subCat];
+//                     const end = growthRates[subCat].savedAvailableAmount;
+//                     growthRates[subCat].availableAmount = start - (start - end) * progress;
+//                 }
+//             });
 
-            updateBars();
+//             updateBars();
 
-            if (progress < 1) {
-                requestAnimationFrame(animateRewind);
-            } else {
-                triggerRipple();
-                isRewinding = false;
-            }
-        }
+//             if (progress < 1) {
+//                 requestAnimationFrame(animateRewind);
+//             } else {
+//                 triggerRipple();
+//                 isRewinding = false;
+//             }
+//         }
 
-        function triggerRipple() {
-            document.querySelectorAll('.bar-fill').forEach(bar => {
-                bar.classList.add('ripple');
-                setTimeout(() => bar.classList.remove('ripple'), 500);
-            });
-        }
+//         function triggerRipple() {
+//             document.querySelectorAll('.bar-fill').forEach(bar => {
+//                 bar.classList.add('ripple');
+//                 setTimeout(() => bar.classList.remove('ripple'), 500);
+//             });
+//         }
 
-        requestAnimationFrame(animateRewind);
-    }
+//         requestAnimationFrame(animateRewind);
+//     }
 
-    function resetActivityTimer() {
-        if (!isUserActive) startRewind();
-        isUserActive = true;
-        lastActivityTime = Date.now();
-    }
+//     function resetActivityTimer() {
+//         if (!isUserActive) startRewind();
+//         isUserActive = true;
+//         lastActivityTime = Date.now();
+//     }
 
-    ['mousemove', 'keydown', 'click', 'touchstart'].forEach(event =>
-        document.addEventListener(event, resetActivityTimer)
-    );
+//     ['mousemove', 'keydown', 'click', 'touchstart'].forEach(event =>
+//         document.addEventListener(event, resetActivityTimer)
+//     );
 
-    setInterval(() => {
-        if (Date.now() - lastActivityTime > 12000) {
-            if (isUserActive) {
-                subCategories[categories.discretionary].forEach(subCat => {
-                    if (subCat.toLowerCase() !== 'unallocated') {
-                        growthRates[subCat].savedAvailableAmount = growthRates[subCat].availableAmount;
-                    }
-                });
-            }
-            isUserActive = false;
-        }
-    }, 1000);
+//     setInterval(() => {
+//         if (Date.now() - lastActivityTime > 12000) {
+//             if (isUserActive) {
+//                 subCategories[categories.discretionary].forEach(subCat => {
+//                     if (subCat.toLowerCase() !== 'unallocated') {
+//                         growthRates[subCat].savedAvailableAmount = growthRates[subCat].availableAmount;
+//                     }
+//                 });
+//             }
+//             isUserActive = false;
+//         }
+//     }, 1000);
 
-    setInterval(updateBars, 100);
-}
+//     setInterval(updateBars, 100);
+// }
 
 /* ========== Contribution Bar Drainer (for Avatar) ========== */
-
-function createDrainBar(resource, barElement, buttonElement, labelElement, soundEffectPath) {
-    let drainInterval;
-    let accumulatedAmount = 0;
-    let empowerLevel
-    let addToEmpowerLevel = 0;
-    let isDraining = false;
-    const audio = soundEffectPath ? new Audio(soundEffectPath) : null;
-
-    window.localStorage.setItem('empowerLevel', JSON.stringify(0));
-
-    buttonElement.addEventListener('pointerdown', (e) => {
-        const queuedEmpowerLevel = JSON.parse(localStorage.getItem('empowerLevel'))
-        if(queuedEmpowerLevel < 5){
-        e.preventDefault(); // Prevents mobile from interpreting touch as a gesture
-        if (!resource || resource.availableAmount <= 0 || isDraining) return;
-        isDraining = true;
-        accumulatedAmount = 0;
-        
-
-        
-        
-
-       // if (audio) audio.play();
-
-        drainInterval = setInterval(() => {
-            const drainPerTick = resource.ratePerSecond * 0.1;
-            resource.availableAmount = Math.max(0, resource.availableAmount - drainPerTick);
-            accumulatedAmount += drainPerTick;
-
-            // const unitsEarned = Math.floor((resource.capAmount - resource.availableAmount) / (resource.capAmount * 0.195) );
-            const unitsEarned = Math.floor( accumulatedAmount/ (resource.capAmount * 0.195) );
-            console.log(unitsEarned, queuedEmpowerLevel)
-
-            
-            
-            //if (unitsEarned > empowerLevel) {
-                 addToEmpowerLevel = Math.min(unitsEarned,5 - queuedEmpowerLevel);
-                empowerLevel = addToEmpowerLevel + queuedEmpowerLevel
-
-
-            // Loop through all levels up to the new empower level
-            for (let i = 1; i <= queuedEmpowerLevel + addToEmpowerLevel; i++) {
-                const el = document.getElementById(`empower-level-${i}`);
-                if (el) {
-                    el.classList.add('empower-active');
-                    el.classList.remove('empower-inactive');
-                }
-            }
-            //}
-            
-
-            const percentage = (resource.availableAmount / resource.capAmount) * 100;
-            barElement.style.width = `${percentage}%`;
-            barElement.classList.toggle('glow-effect', percentage > 0);
-
-            labelElement.innerText = `£${resource.availableAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
-        }, 100);
-        } 
-    });
-
-    const stopDrain = () => {
-        if (!isDraining) return;
-        clearInterval(drainInterval);
-        isDraining = false;
-        
-        window.localStorage.setItem('empowerLevel', JSON.stringify(empowerLevel));
-        openPaymentModal(accumulatedAmount.toFixed(2), empowerLevel);
-        barElement.classList.remove('glow-effect');
-
-        barElement.style.width = `${100}%`;
-        resource.availableAmount = resource.capAmount
-            labelElement.innerText = `£${resource.capAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
-    };
-
-    buttonElement.addEventListener('pointerup', stopDrain);
-    buttonElement.addEventListener('pointerleave', stopDrain);
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     const discretionaryData = JSON.parse(localStorage.getItem('discretionaryData'));
@@ -739,7 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'drainable',
         button: document.getElementById('contributions-drain-btn'),
         label: 'Contributions',
-        ratePerSecond: contributionsResource.ratePerSecond,
+        regenRate: contributionsResource.ratePerSecond,
         soundEffectPath: '/assets/sounds/drain-sound.mp3',
         onComplete: (amount, empowerLevel) => {
             openPaymentModal(amount.toFixed(2), empowerLevel);
@@ -757,14 +643,15 @@ function createBar({
     availableAmount = 0,
     capAmount = 100,
     storedDays = 0,
+    regenRate = null,
     availableAmountPath = null,
     capAmountPath = null,
     storedDaysPath = null,
+    regenRatePath = null, 
     playerDataManager = null,
     type = 'static',
     iconPath = '',
     label = '',
-    ratePerSecond = null,
     button = null,
     soundEffectPath = '',
     onComplete = () => {},
@@ -780,6 +667,9 @@ function createBar({
         availableAmount: availableAmountPath ? getFromPath(currentPlayer, availableAmountPath) ?? availableAmount : availableAmount,
         capAmount: capAmountPath ? getFromPath(currentPlayer, capAmountPath) ?? capAmount : capAmount,
         storedDays: storedDaysPath ? getFromPath(currentPlayer, storedDaysPath) ?? storedDays : storedDays,
+        //regenRate: regenRatePath ? getFromPath(currentPlayer, regenRatePath) ?? regenRate : regenRate,
+        
+        regenRate: regenRatePath ? (getFromPath(currentPlayer, regenRatePath) ?? regenRate) / 86400 : (regenRate !== null ? regenRate / 86400 : null),
         lastUpdated
     };
 
@@ -818,7 +708,10 @@ function createBar({
     icon.src = iconPath || `/assets/img/${subCat}.png`;
 
     const storedDaysBadge = document.createElement('div');
+
     storedDaysBadge.className = `circle-badge outside-right ${subCat}`;
+    storedDaysBadge.dataset.type = "stored";  // <- Add this line
+    storedDaysBadge.dataset.subcat = subCat.toLowerCase();  // <- Optional: for extra safety
     storedDaysBadge.innerText = `${Math.round(resource.storedDays)}`;
 
     const badgeWrapper = document.createElement('div');
@@ -853,11 +746,11 @@ function createBar({
     let paused = false;
 
     const updateLoop = () => {
-        if (!paused && ratePerSecond !== null && ['regen', 'degen', 'drainable'].includes(type)) {
+        if (!paused && regenRate !== null && ['regen', 'degen', 'drainable'].includes(type)) {
             const now = Date.now();
             const elapsed = (now - resource.lastUpdated) / 1000;
             resource.lastUpdated = now;
-            const delta = ratePerSecond * elapsed;
+            const delta = resource.regenRate * elapsed;
 
             resource.availableAmount = Math.max(0, Math.min(resource.capAmount, resource.availableAmount + delta));
 
@@ -882,9 +775,13 @@ function createBar({
         const newAvailable = availableAmountPath ? getFromPath(player, availableAmountPath) : resource.availableAmount;
         const newCap = capAmountPath ? getFromPath(player, capAmountPath) : resource.capAmount;
         const newDays = storedDaysPath ? getFromPath(player, storedDaysPath) : resource.storedDays;
+        const newRegen = regenRatePath ? getFromPath(player, regenRatePath) : resource.regenRate;
+    
         resource.availableAmount = newAvailable;
         resource.capAmount = newCap;
         resource.storedDays = newDays;
+
+        resource.regenRate = newRegen != null ? (newRegen / 86400) : null;
         storedDaysBadge.innerText = `${Math.round(newDays)}`;
         applyPulseSettings(storedDaysBadge, newDays);
     };
@@ -893,14 +790,14 @@ function createBar({
         playerDataManager.on('update', updateFromPlayerData);
     }
 
-    if (type === 'drainable' && button && ratePerSecond) {
+    if (type === 'drainable' && button && regenRate) {
         setupDrainBehavior({
             resource,
             barElement: barFill,
             labelElement: rightText,
             buttonElement: button,
             soundEffectPath,
-            onComplete
+            onComplete,
         });
     }
 
@@ -910,165 +807,11 @@ function createBar({
         updateFromManager: updateFromPlayerData,
         updateResource: (newSettings = {}) => Object.assign(resource, newSettings),
         getCurrentState: () => ({ ...resource }),
-        destroy: () => cancelAnimationFrame(animationFrame) // ✅ cleanup
+        destroy: () => cancelAnimationFrame(animationFrame), // ✅ cleanup
+        storedDaysBadge, 
+        //badgeWrapper
     };
 }
-
-
-// Optimized and smoothed createBar function v1
-// function createBar({
-//     container,
-//     subCat,
-//     availableAmount = 0,
-//     capAmount = 100,
-//     storedDays = 0,
-//     availableAmountPath = null,
-//     capAmountPath = null,
-//     storedDaysPath = null,
-//     playerDataManager = null,
-//     type = 'static',
-//     iconPath = '',
-//     label = '',
-//     ratePerSecond = null,
-//     button = null,
-//     soundEffectPath = '',
-//     onComplete = () => {},
-//     lastUpdated = Date.now()
-// }) {
-//     const getFromPath = (obj, path) =>
-//         path ? path.split('.').reduce((o, k) => o?.[k], obj) : undefined;
-
-//     let currentPlayer = playerDataManager?.get?.() || {};
-//     let resource = {
-//         availableAmount: availableAmountPath ? getFromPath(currentPlayer, availableAmountPath) ?? availableAmount : availableAmount,
-//         capAmount: capAmountPath ? getFromPath(currentPlayer, capAmountPath) ?? capAmount : capAmount,
-//         storedDays: storedDaysPath ? getFromPath(currentPlayer, storedDaysPath) ?? storedDays : storedDays,
-//         lastUpdated
-//     };
-
-//     const barWrapper = document.createElement('div');
-//     barWrapper.className = 'bar-wrapper';
-
-//     const barBackground = document.createElement('div');
-//     barBackground.className = 'bar-background';
-
-//     const barFill = document.createElement('div');
-//     barFill.className = `bar-fill ${subCat}`;
-//     barFill.style.width = '0%';
-
-//     const stripeOverlay = document.createElement('div');
-//     stripeOverlay.className = 'bar-stripes';
-
-//     const barContent = document.createElement('div');
-//     barContent.className = 'bar-inner-content';
-
-//     const leftText = document.createElement('div');
-//     leftText.className = 'bar-left-text';
-//     leftText.innerText = subCat;
-
-//     const rightText = document.createElement('div');
-//     rightText.className = 'bar-right-text';
-//     rightText.innerText = `£${resource.availableAmount.toFixed(2)} / £${resource.capAmount.toFixed(2)}`;
-
-//     barContent.append(leftText, rightText);
-
-//     const icon = document.createElement('img');
-//     icon.className = 'vital-icon';
-//     icon.src = iconPath || `/assets/img/${subCat}.png`;
-
-//     const storedDaysBadge = document.createElement('div');
-//     storedDaysBadge.className = `circle-badge outside-right ${subCat}`;
-//     storedDaysBadge.innerText = `${Math.round(resource.storedDays)}`;
-
-//     const badgeWrapper = document.createElement('div');
-//     badgeWrapper.className = 'badge-wrapper';
-//     badgeWrapper.appendChild(storedDaysBadge);
-
-//     barBackground.append(stripeOverlay, barFill, barContent, icon);
-//     barWrapper.append(barBackground, badgeWrapper);
-//     container.appendChild(barWrapper);
-
-//     // Animation function
-//     const smoothBarUpdate = (target) => {
-//         const update = () => {
-//             const percent = (resource.availableAmount / resource.capAmount) * 100;
-//             const currentPercent = parseFloat(barFill.style.width);
-//             const nextPercent = currentPercent + (percent - currentPercent) * 0.15;
-//             barFill.style.width = `${nextPercent}%`;
-//             rightText.innerText = `£${resource.availableAmount.toFixed(5)} / £${resource.capAmount.toFixed(5)}`;
-//             barFill.classList.toggle('glow-effect', percent > 0);
-//             if (Math.abs(nextPercent - percent) > 0.5) requestAnimationFrame(update);
-//         };
-//         requestAnimationFrame(update);
-//     };
-
-//     smoothBarUpdate();
-//     applyPulseSettings(storedDaysBadge, resource.storedDays);
-//     if (resource.availableAmount / resource.capAmount >= 0.9) barFill.classList.add('pulse');
-
-//     let paused = false;
-//     const loop = () => {
-//         if (!paused && ratePerSecond !== null && ['regen', 'degen', 'drainable'].includes(type)) {
-//             const now = Date.now();
-//             const elapsed = (now - resource.lastUpdated) / 1000;
-//             resource.lastUpdated = now;
-//             const delta = ratePerSecond * elapsed;
-//             resource.availableAmount = Math.max(0, Math.min(resource.capAmount, resource.availableAmount + delta));
-//             smoothBarUpdate();
-//             if (resource.availableAmount === resource.capAmount || resource.availableAmount === 0) {
-//                 onComplete();
-//             }
-//         }
-//         requestAnimationFrame(loop);
-//     };
-
-//     if (['regen', 'degen', 'drainable'].includes(type)) requestAnimationFrame(loop);
-
-//     const pause = () => { paused = true; };
-//     const resume = () => {
-//         resource.lastUpdated = Date.now();
-//         paused = false;
-//     };
-
-//     const updateFromPlayerData = () => {
-//         const player = playerDataManager?.get?.();
-//         if (!player) return;
-//         const newAvailable = availableAmountPath ? getFromPath(player, availableAmountPath) : resource.availableAmount;
-//         const newCap = capAmountPath ? getFromPath(player, capAmountPath) : resource.capAmount;
-//         const newDays = storedDaysPath ? getFromPath(player, storedDaysPath) : resource.storedDays;
-//         resource.availableAmount = newAvailable;
-//         resource.capAmount = newCap;
-//         resource.storedDays = newDays;
-//         storedDaysBadge.innerText = `${Math.round(newDays)}`;
-//         applyPulseSettings(storedDaysBadge, newDays);
-//         smoothBarUpdate();
-//     };
-
-//     if (playerDataManager?.on && (availableAmountPath || capAmountPath || storedDaysPath)) {
-//         playerDataManager.on('update', updateFromPlayerData);
-//     }
-
-//     if (type === 'drainable' && button && ratePerSecond) {
-//         setupDrainBehavior({
-//             resource,
-//             barElement: barFill,
-//             labelElement: rightText,
-//             buttonElement: button,
-//             soundEffectPath,
-//             onComplete
-//         });
-//     }
-
-//     return {
-//         pause,
-//         resume,
-//         updateFromManager: updateFromPlayerData,
-//         updateResource: (newSettings = {}) => Object.assign(resource, newSettings),
-//         getCurrentState: () => ({ ...resource })
-//     };
-// }
-
-
 
 function setupDrainBehavior({
     resource,
@@ -1092,7 +835,7 @@ function setupDrainBehavior({
         accumulatedAmount = 0;
 
         const drainInterval = setInterval(() => {
-            const drainPerTick = resource.ratePerSecond * 0.1;
+            const drainPerTick = resource.regenRate * 0.1;
             resource.availableAmount = Math.max(0, resource.availableAmount - drainPerTick);
             accumulatedAmount += drainPerTick;
 
@@ -1134,6 +877,15 @@ function setupDrainBehavior({
 
 
 
+export function setSegmentsCount(count) {
+    const barStripesElements = document.querySelectorAll('.bar-stripes');
+  barStripesElements.forEach(el => {
+    el.style.setProperty('--segments', count);
+  });
+}
+
+
+
 /* ========== Modal Helpers ========== */
 
 export function openPaymentModal(amountSpent) {
@@ -1154,7 +906,6 @@ export function openPaymentModal(amountSpent) {
  export async function submitPayment(amountSpent){
 
     const alias = loadFromLocalStorage('alias')
-    console.log(alias)
 
     const submitURL = "https://monzo.me/emkaybarrie?amount=10.00&d=MyFi_" + alias
 

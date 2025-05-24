@@ -145,9 +145,27 @@ export async function generateHudData() {
     dContributionsTarget_IGC = (discretionaryPool * 0.2) || 0;
 
     const personalDiscretionaryPool = discretionaryPool - (dContributionsTarget_Avatar + dContributionsTarget_Community + dContributionsTarget_IGC)  
-    dSpendingCap_Growth = personalDiscretionaryPool * growthAllocation 
-    dSpendingCap_Wants = personalDiscretionaryPool * wantsAllocation 
-    dSpendingCap_Needs = personalDiscretionaryPool * needsAllocation 
+    
+    let modeMultiplier = 1
+    let mode = playerData.hudData.mode
+    console.log(playerData.hudData.mode)
+    switch(mode) {
+        case 'Weekly':
+            modeMultiplier = 7;
+          break;
+        case 'Monthly':
+            modeMultiplier = 30.44;
+          break;
+        default:
+            modeMultiplier = 1;
+      }
+
+      console.log("Mode Multiplier: " + modeMultiplier)
+
+
+    dSpendingCap_Growth = personalDiscretionaryPool * growthAllocation * modeMultiplier
+    dSpendingCap_Wants = personalDiscretionaryPool * wantsAllocation * modeMultiplier 
+    dSpendingCap_Needs = personalDiscretionaryPool * needsAllocation * modeMultiplier 
     
     const dRegenRate_Growth = personalDiscretionaryPool * growthAllocation
     const dRegenRate_Wants = personalDiscretionaryPool * wantsAllocation

@@ -2,6 +2,7 @@
 import { auth, db } from './auth.js';
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { loadTransactionData, loadDashboard } from './dashboard.js';
+import playerDataManager from './playerDataManager.js';
 
 // ─── GCP Credentials ─────────────────────────────────────────────────────────
 const API_KEY   = 'AIzaSyAZVC4hK92uYH8xQ5eB9GRWayUPcTJo84o';
@@ -300,7 +301,8 @@ function saveTransactionDataToLocalStorage(data, sheetId) {
 
       loadTransactionData();
       const user = JSON.parse(window.localStorage.getItem('user'));
-      fetchDataAndRenderMyFiDashboard(user.uid)
+      const playerData = playerDataManager.get()
+      loadDashboard(playerData)
       return null; // Return null if no data is found
   } else {
       console.error('Invalid data format for localStorage.');

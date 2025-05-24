@@ -8,7 +8,7 @@ import playerDataManager from "./playerDataManager.js";
 
 import { generateCashflowData, generateHudData, generateAvatarData  } from './calculations.js';  
 import { renderProfile, renderHUD, showManualEntryButton, hideManualEntryButton,showLinkAccountButton, 
-    hideLinkAccountButton, hideUnlinkAccountButton , showUnlinkAccountButton, startLiveHUDUpdate, openPaymentModal, 
+    hideLinkAccountButton, hideUnlinkAccountButton , showUnlinkAccountButton, setSegmentsCount, openPaymentModal, 
     openLinkSheetModal, closeSheetModal, showTooltip, hideTooltip,updateTooltipPosition,
     submitPayment} from './ui.js';
 
@@ -442,6 +442,71 @@ function setRandomHUDUpdate() {
 
 
 }
+
+  const modes = ['Daily', 'Weekly', 'Monthly'];
+  const modeColors = {
+    Daily: '#3498db',   // Blue
+    Weekly: '#2ecc71',  // Green
+    Monthly: '#e67e22'  // Orange
+  };
+
+  let currentModeIndex = 0;
+
+  const modeButton = document.getElementById('modeToggle');
+
+  function updateButtonUI(mode) {
+    modeButton.textContent = `${mode}`;
+    modeButton.style.backgroundColor = modeColors[mode];
+  }
+
+  function triggerModeLogic(mode) {
+    console.log("Switched to mode:", mode);
+    
+    // TODO: Insert your logic here for each mode
+    if (mode === 'Daily') {
+      // triggerDailyLogic();
+      playerDataManager.update({
+          hudData: {
+            mode: "Daily"
+          } 
+      });
+      console.log(playerDataManager.get())
+      
+      setSegmentsCount(3)
+    } else if (mode === 'Weekly') {
+      // triggerWeeklyLogic();
+      playerDataManager.update({
+        hudData: {
+          mode: "Weekly"
+        } 
+    });
+  
+      setSegmentsCount(7)
+    } else if (mode === 'Monthly') {
+      // triggerMonthlyLogic();
+      setSegmentsCount(30.44)
+      playerDataManager.update({
+        hudData: {
+          mode: "Monthly"
+        } 
+    });
+      
+    }
+    const playerData = playerDataManager.get()
+    generateHudData()
+    loadDashboard(playerData)
+  }
+
+  modeButton.addEventListener('pointerdown', () => {
+    currentModeIndex = (currentModeIndex + 1) % modes.length;
+    const newMode = modes[currentModeIndex];
+    updateButtonUI(newMode);
+    triggerModeLogic(newMode);
+  });
+
+  // Initialize on page load
+  updateButtonUI(modes[currentModeIndex]);
+
 
 
 
